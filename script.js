@@ -3,6 +3,62 @@ document.addEventListener('DOMContentLoaded', () => {
     window.lucide.createIcons();
   }
 
+  function initializeDashboardCharts() {
+    if (!window.Chart) return;
+
+    const growthCtx = document.getElementById('growthChart');
+    if (growthCtx) {
+      new window.Chart(growthCtx, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+          datasets: [{
+            label: 'Membros',
+            data: [1120, 1160, 1188, 1225, 1260, 1248],
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.14)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { grid: { color: 'rgba(148,163,184,0.12)' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } }
+        }
+      });
+    }
+
+    const frequencyCtx = document.getElementById('frequencyChart');
+    if (frequencyCtx) {
+      new window.Chart(frequencyCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Culto', 'EBD', 'PG', 'Ação Social'],
+          datasets: [{ data: [38, 24, 19, 19], backgroundColor: ['#f59e0b', '#38bdf8', '#8b5cf6', '#10b981'] }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1' } } },
+          cutout: '68%'
+        }
+      });
+    }
+
+    const socialCtx = document.getElementById('socialChart');
+    if (socialCtx) {
+      new window.Chart(socialCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+          datasets: [{ label: 'Famílias assistidas', data: [22, 24, 27, 30, 33, 38], backgroundColor: ['#8b5cf6', '#8b5cf6', '#8b5cf6', '#8b5cf6', '#8b5cf6', '#8b5cf6'] }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { grid: { color: 'rgba(148,163,184,0.12)' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } }
+        }
+      });
+    }
+  }
+
   const memberDatabase = [
     {
       id: 1,
@@ -104,12 +160,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.querySelectorAll('.tab-btn').forEach((btn) => {
-      btn.className = 'tab-btn px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-750 whitespace-nowrap';
+      btn.className = 'tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap';
     });
 
     const activeBtn = document.getElementById(`tab-btn-${tabId}`);
     if (activeBtn) {
-      activeBtn.className = 'tab-btn px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 whitespace-nowrap';
+      activeBtn.className = 'tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 whitespace-nowrap';
     }
   }
 
@@ -178,6 +234,17 @@ document.addEventListener('DOMContentLoaded', () => {
     openNotificationToast(`Interface ajustada para: ${role.toUpperCase()}`);
   }
 
+  function toggleTheme() {
+    document.body.classList.toggle('theme-light');
+    const icon = document.querySelector('[onclick="toggleTheme()"] i');
+    if (icon) {
+      icon.setAttribute('data-lucide', document.body.classList.contains('theme-light') ? 'sun' : 'moon-star');
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }
+  }
+
   window.switchTab = switchTab;
   window.openNotificationToast = openNotificationToast;
   window.openCertificateModal = openCertificateModal;
@@ -185,7 +252,9 @@ document.addEventListener('DOMContentLoaded', () => {
   window.confirmCertificateIssue = confirmCertificateIssue;
   window.openTheologianDetail = openTheologianDetail;
   window.changeRoleView = changeRoleView;
+  window.toggleTheme = toggleTheme;
 
+  initializeDashboardCharts();
   renderMemberList();
-  switchTab('admin-membros');
+  switchTab('dashboard');
 });
