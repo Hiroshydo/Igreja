@@ -273,18 +273,56 @@ function initializeApp() {
     localStorage.setItem('churchAdminModule', adminActiveModule);
   }
 
+  function buildGalleryPlaceholderImage(item) {
+    const title = (item?.title || 'Galeria da Igreja').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const category = (item?.category || 'Momento especial').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const date = (item?.date || '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const accent = category.includes('Batismo') ? '#f59e0b' : category.includes('Louvor') ? '#8b5cf6' : category.includes('Culto') ? '#38bdf8' : '#10b981';
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+        <rect width="800" height="1000" fill="#020617" />
+        <rect x="34" y="34" width="732" height="932" rx="42" fill="rgba(15, 23, 42, 0.96)" stroke="${accent}" stroke-width="4" />
+        <circle cx="620" cy="200" r="150" fill="${accent}" opacity="0.2" />
+        <path d="M220 720c60-140 180-220 330-220s270 80 330 220" fill="none" stroke="${accent}" stroke-width="10" stroke-linecap="round" opacity="0.35" />
+        <rect x="120" y="140" width="560" height="120" rx="24" fill="rgba(248, 250, 252, 0.08)" />
+        <text x="400" y="210" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="700" fill="#f8fafc">${title}</text>
+        <text x="400" y="300" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="600" fill="${accent}">${category}</text>
+        <text x="400" y="860" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" fill="#cbd5e1">${date || 'Registro da igreja'}</text>
+        <text x="400" y="910" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" fill="#94a3b8">Imagem indisponível — exibindo fallback local</text>
+      </svg>
+    `;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  }
+
+  function resolveGalleryImageSource(item) {
+    if (item?.image && typeof item.image === 'string' && item.image.trim()) {
+      return item.image;
+    }
+    return buildGalleryPlaceholderImage(item);
+  }
+
+  function attachGalleryImageFallback(img, item) {
+    if (!img) return;
+    img.addEventListener('error', () => {
+      if (img.dataset.fallbackApplied === 'true') return;
+      img.dataset.fallbackApplied = 'true';
+      img.src = buildGalleryPlaceholderImage(item);
+    }, { once: true });
+  }
+
   function getPublicGalleryItems() {
+    const baseGalleryItems = galleryItems.map((item) => ({ ...item }));
     const adminGalleryItems = (adminData.gallery || []).map((item) => ({
       id: item.id,
       title: item.title,
       date: item.date,
       category: item.category,
       ratio: 'landscape',
-      image: item.images?.[0]?.dataUrl || item.images?.[0]?.url || 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=900&q=80',
+      image: item.images?.[0]?.dataUrl || item.images?.[0]?.url || buildGalleryPlaceholderImage({ title: item.title, category: item.category, date: item.date }),
       description: item.description || 'Registro administrativo da igreja.'
     }));
 
-    return adminGalleryItems.length ? adminGalleryItems : galleryItems;
+    return [...baseGalleryItems, ...adminGalleryItems];
   }
 
   function renderAdminView() {
@@ -431,7 +469,7 @@ function initializeApp() {
           ${adminData.gallery.length ? adminData.gallery.map((item) => `
             <div class="admin-list-item">
               <div class="flex items-center gap-3">
-                <img class="admin-thumb" src="${item.images?.[0]?.dataUrl || item.images?.[0]?.url || 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=200&q=80'}" alt="${item.title}">
+                <img class="admin-thumb" src="${resolveGalleryImageSource({ title: item.title, category: item.category, date: item.date, image: item.images?.[0]?.dataUrl || item.images?.[0]?.url })}" alt="${item.title}">
                 <div class="admin-list-item__info">
                   <p class="admin-list-item__title">${item.title}</p>
                   <p class="admin-list-item__meta">${item.category} · ${item.date}</p>
@@ -952,7 +990,7 @@ function initializeApp() {
         card.className = `gallery-card gallery-card--${item.ratio}`;
         card.innerHTML = `
           <div class="gallery-card__media">
-            <img src="${item.image}" alt="${item.title}" loading="lazy" decoding="async" />
+            <img src="${resolveGalleryImageSource(item)}" alt="${item.title}" loading="lazy" decoding="async" />
             <div class="gallery-card__overlay">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
@@ -968,6 +1006,11 @@ function initializeApp() {
             </div>
           </div>
         `;
+        const image = card.querySelector('img');
+        if (image) {
+          attachGalleryImageFallback(image, item);
+        }
+
         card.addEventListener('click', () => openGalleryLightbox(item.id));
         container.appendChild(card);
 
@@ -1086,8 +1129,9 @@ function initializeApp() {
     const media = document.getElementById('galleryLightboxMedia');
 
     if (image) {
-      image.src = item.image;
+      image.src = resolveGalleryImageSource(item);
       image.alt = item.title;
+      attachGalleryImageFallback(image, item);
     }
 
     if (title) title.textContent = item.title;
