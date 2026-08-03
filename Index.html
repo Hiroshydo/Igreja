@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Painel institucional da Comunidade Viva com visão pastoral, administrativo e de comunicação." />
-    <meta name="theme-color" content="#020617" />
+    <meta name="msapplication-TileColor" content="#020617" />
     <title>Comunidade Viva</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -107,7 +107,7 @@
         </div>
         <p id="galleryLightboxDescription"></p>
         <div class="lightbox-actions">
-          <button type="button" id="galleryZoomButton" class="btn btn-secondary" onclick="toggleGalleryZoom()"></button>
+          <button type="button" id="galleryZoomButton" class="btn btn-secondary" onclick="toggleGalleryZoom()" aria-label="Ação" title="Ação"></button>
           <button type="button" class="btn btn-secondary" onclick="changeGalleryImage(-1)">Anterior</button>
           <button type="button" class="btn btn-secondary" onclick="changeGalleryImage(1)">Próxima</button>
           <button type="button" class="btn btn-primary" onclick="downloadCurrentGalleryImage()">Download</button>
