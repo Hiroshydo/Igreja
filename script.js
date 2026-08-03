@@ -1,3 +1,9 @@
+/*
+  Comunidade Viva - script de navegação e funções administrativas.
+  Este arquivo oferece suporte à galeria, ao painel de membros, aos módulos de administração
+  e aos controles de exibição de modais e notificações.
+*/
+
 function switchTab(tabId) {
   if (typeof window.__appSwitchTab === 'function') {
     window.__appSwitchTab(tabId);
@@ -955,6 +961,7 @@ function initializeApp() {
     });
   }
 
+  // Renderiza os cards de imagem na galeria, usando filtros e animação suave.
   function renderGalleryItems() {
     const container = document.getElementById('galleryGrid');
     if (!container) return;
@@ -1229,11 +1236,11 @@ function initializeApp() {
     if (!toast || !toastMsg) return;
 
     toastMsg.textContent = text;
-    toast.classList.remove('translate-y-20', 'opacity-0');
+    toast.classList.remove('hidden');
 
     clearTimeout(openNotificationToast.timeoutId);
     openNotificationToast.timeoutId = setTimeout(() => {
-      toast.classList.add('translate-y-20', 'opacity-0');
+      toast.classList.add('hidden');
     }, 3500);
   }
 
