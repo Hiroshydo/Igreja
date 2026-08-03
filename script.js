@@ -261,10 +261,30 @@ function initializeApp() {
     }
     const authSaved = localStorage.getItem('churchAdminAuth');
     adminAuthenticated = authSaved === 'true';
+
+    const savedModule = localStorage.getItem('churchAdminModule');
+    if (savedModule && ['gallery', 'events', 'members', 'books'].includes(savedModule)) {
+      adminActiveModule = savedModule;
+    }
   }
 
   function saveAdminData() {
     localStorage.setItem('churchAdminData', JSON.stringify(adminData));
+    localStorage.setItem('churchAdminModule', adminActiveModule);
+  }
+
+  function getPublicGalleryItems() {
+    const adminGalleryItems = (adminData.gallery || []).map((item) => ({
+      id: item.id,
+      title: item.title,
+      date: item.date,
+      category: item.category,
+      ratio: 'landscape',
+      image: item.images?.[0]?.dataUrl || item.images?.[0]?.url || 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=900&q=80',
+      description: item.description || 'Registro administrativo da igreja.'
+    }));
+
+    return adminGalleryItems.length ? adminGalleryItems : galleryItems;
   }
 
   function renderAdminView() {
@@ -301,6 +321,7 @@ function initializeApp() {
     document.querySelectorAll('.admin-nav-btn').forEach((button) => {
       button.addEventListener('click', () => {
         adminActiveModule = button.dataset.adminModule;
+        localStorage.setItem('churchAdminModule', adminActiveModule);
         updateAdminNav();
         renderAdminModuleContent();
       });
@@ -335,6 +356,8 @@ function initializeApp() {
   function handleAdminLogout() {
     adminAuthenticated = false;
     localStorage.removeItem('churchAdminAuth');
+    adminActiveModule = 'gallery';
+    localStorage.setItem('churchAdminModule', adminActiveModule);
     adminEditing = { gallery: null, events: null, members: null, books: null };
     renderAdminView();
     openNotificationToast('Sessão encerrada com sucesso.');
@@ -898,9 +921,10 @@ function initializeApp() {
     const container = document.getElementById('galleryGrid');
     if (!container) return;
 
+    const publicItems = getPublicGalleryItems();
     const filteredItems = activeGalleryFilter === 'Todos'
-      ? galleryItems
-      : galleryItems.filter((item) => item.category === activeGalleryFilter);
+      ? publicItems
+      : publicItems.filter((item) => item.category === activeGalleryFilter);
 
     currentGalleryCollection = filteredItems;
     currentGalleryIndex = 0;
@@ -1023,12 +1047,13 @@ function initializeApp() {
   }
 
   function openGalleryLightbox(id) {
-    const item = galleryItems.find((entry) => entry.id === id);
+    const publicItems = getPublicGalleryItems();
+    const item = publicItems.find((entry) => entry.id === id);
     if (!item) return;
 
     currentGalleryCollection = activeGalleryFilter === 'Todos'
-      ? galleryItems
-      : galleryItems.filter((entry) => entry.category === activeGalleryFilter);
+      ? publicItems
+      : publicItems.filter((entry) => entry.category === activeGalleryFilter);
 
     currentGalleryIndex = currentGalleryCollection.findIndex((entry) => entry.id === id);
     if (currentGalleryIndex < 0) currentGalleryIndex = 0;
