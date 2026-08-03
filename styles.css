@@ -119,6 +119,191 @@ h1 {
   line-height: 1.6;
 }
 
+/* Seções adicionais para a landing page e galeria */
+.section-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.section-description,
+.gallery-description {
+  margin: 0;
+  color: #94a3b8;
+  max-width: 720px;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.gallery-section,
+.member-section {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.gallery-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.gallery-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.member-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 360px);
+  gap: 1rem;
+}
+
+.member-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.member-detail {
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 1.5rem;
+  background: rgba(15, 23, 42, 0.9);
+  padding: 1.2rem;
+}
+
+.lightbox,
+.modal,
+.toast {
+  font-family: inherit;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(2, 6, 23, 0.9);
+  padding: 1.5rem;
+}
+
+.lightbox-panel {
+  max-width: 920px;
+  width: min(100%, 920px);
+  position: relative;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border: none;
+  background: rgba(15, 23, 42, 0.85);
+  color: #f8fafc;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.lightbox-panel img {
+  width: 100%;
+  border-radius: 1.5rem;
+  object-fit: contain;
+  max-height: 70vh;
+  background: #020617;
+}
+
+.lightbox-details {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.85rem;
+  width: min(100%, 920px);
+}
+
+.lightbox-meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.gallery-counter {
+  color: #94a3b8;
+  font-size: 0.92rem;
+}
+
+.lightbox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: rgba(2, 6, 23, 0.8);
+  padding: 1.5rem;
+}
+
+.modal-card {
+  width: min(560px, 100%);
+  border-radius: 1.5rem;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 1.5rem;
+}
+
+.modal-header,
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.modal-body {
+  margin: 1rem 0;
+}
+
+.modal-close {
+  border: none;
+  background: rgba(15, 23, 42, 0.85);
+  color: #f8fafc;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+  padding: 0.95rem 1.25rem;
+  color: #f8fafc;
+  box-shadow: 0 12px 40px -20px rgba(2, 6, 23, 0.9);
+}
+
+.hidden {
+  display: none !important;
+}
+
 .dashboard-card {
   border: 1px solid rgba(148, 163, 184, 0.16);
   border-radius: 1.4rem;

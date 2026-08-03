@@ -10,32 +10,136 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- Página principal do projeto e estrutura de navegação interna -->
     <main class="app-shell">
       <section class="hero-card">
         <p class="eyebrow">Comunidade Viva</p>
         <h1>Ecossistema eclesiástico, saúde pastoral e presença digital.</h1>
-        <p class="lead">Esta é a página principal do projeto, preparada para ser servida corretamente pela Vercel na raiz do repositório.</p>
+        <p class="lead">Página institucional e painel de controle leve para a Comunidade Viva. Use os blocos abaixo para navegar e conhecer os principais recursos.</p>
         <div class="actions">
           <a href="#dashboard" class="btn btn-primary">Ver painel</a>
           <a href="#sobre" class="btn btn-secondary">Conhecer a proposta</a>
         </div>
       </section>
 
+      <!-- Seção sobre a missão e funcionalidades do projeto -->
+      <section id="sobre" class="about-card">
+        <header class="section-heading">
+          <h2>Sobre a Comunidade Viva</h2>
+          <p class="section-description">Uma plataforma pensada para igrejas e ministérios que desejam unir pastorais, gestão de membros e comunicação em um único espaço digital.</p>
+        </header>
+
+        <div class="feature-grid">
+          <article class="info-card">
+            <h3>Missão</h3>
+            <p>Fortalecer a vida espiritual e social da comunidade com ferramentas de acompanhamento pastoral, eventos e acompanhamento de membros.</p>
+          </article>
+          <article class="info-card">
+            <h3>Visão</h3>
+            <p>Entregar uma experiência moderna e segura para líderes e irmãos, apoiando decisões com dados e ações contextualizadas.</p>
+          </article>
+          <article class="info-card">
+            <h3>Valores</h3>
+            <p>Transparência, cuidado, colaboração e missão. Cada parte do projeto foi desenhada para apoiar esses valores.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- Painel de destaques para recursos principais e estatísticas -->
       <section id="dashboard" class="info-grid">
         <article class="info-card">
           <h2>Dashboard</h2>
-          <p>Métricas, calendário e acompanhamento pastoral em um único lugar.</p>
+          <p>Visão geral com estatísticas rápidas, gráficos de crescimento e atualizações de eventos.</p>
         </article>
         <article class="info-card">
           <h2>Administração</h2>
-          <p>Gestão de membros, cultos, biblioteca e conteúdos com experiência moderna.</p>
+          <p>Área administrativa que pode ser habilitada para gerir galeria, eventos, membros e biblioteca localmente no navegador.</p>
         </article>
         <article class="info-card">
           <h2>Comunicação</h2>
-          <p>Estrutura pensada para integração com ministérios, mídias e eventos da igreja.</p>
+          <p>A plataforma também contempla conteúdo para ministérios, comunicação de eventos e registros das principais ações.</p>
         </article>
       </section>
+
+      <!-- Bloco de galeria interativa construído dinamicamente pelo script -->
+      <section id="galeria" class="gallery-section">
+        <div class="gallery-header">
+          <div>
+            <h2>Galeria de momentos</h2>
+            <p class="gallery-description">Explore imagens de batismos, louvor, construções e eventos especiais. Os filtros funcionam com as categorias criadas pelo sistema.</p>
+          </div>
+          <div id="galleryFilters" class="gallery-filters" aria-label="Filtros de galeria"></div>
+        </div>
+        <div id="galleryGrid" class="gallery-grid" aria-live="polite"></div>
+      </section>
+
+      <!-- Bloco de membros cadastrados com painel de detalhes -->
+      <section id="comunidade" class="member-section">
+        <div>
+          <h2>Membros em destaque</h2>
+          <p class="section-description">Um pequeno painel de acompanhamento de irmãos com histórico de visitas, status e linha do tempo.</p>
+        </div>
+        <div class="member-grid">
+          <div id="memberListContainer" class="member-list"></div>
+          <aside id="memberDetailPanel" class="member-detail"></aside>
+        </div>
+      </section>
     </main>
+
+    <!-- Notificações e modal de galeria/certificado utilizados pelo script -->
+    <div id="toastNotification" class="toast hidden" role="status" aria-live="polite">
+      <p id="toastMsg"></p>
+    </div>
+
+    <div id="galleryLightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="Visualizador de galeria">
+      <div class="lightbox-panel" id="galleryLightboxMedia">
+        <button type="button" class="lightbox-close" data-close-gallery-lightbox"">Fechar</button>
+        <img id="galleryLightboxImage" alt="Imagem da galeria" />
+      </div>
+      <div class="lightbox-details">
+        <div class="lightbox-meta">
+          <div>
+            <p id="galleryLightboxBadge" class="gallery-card__badge"></p>
+            <h3 id="galleryLightboxTitle"></h3>
+            <p id="galleryLightboxDate"></p>
+          </div>
+          <p id="galleryLightboxCounter" class="gallery-counter"></p>
+        </div>
+        <p id="galleryLightboxDescription"></p>
+        <div class="lightbox-actions">
+          <button type="button" id="galleryZoomButton" class="btn btn-secondary" onclick="toggleGalleryZoom()"></button>
+          <button type="button" class="btn btn-secondary" onclick="changeGalleryImage(-1)">Anterior</button>
+          <button type="button" class="btn btn-secondary" onclick="changeGalleryImage(1)">Próxima</button>
+          <button type="button" class="btn btn-primary" onclick="downloadCurrentGalleryImage()">Download</button>
+          <button type="button" class="btn btn-secondary" onclick="shareCurrentGalleryImage()">Compartilhar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="certificateModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Gerar certificado">
+      <div class="modal-card">
+        <header class="modal-header">
+          <h3>Emitir certificado</h3>
+          <button type="button" class="modal-close" onclick="closeCertificateModal()">Fechar</button>
+        </header>
+        <div class="modal-body">
+          <label class="admin-field">
+            <span>Nome do membro</span>
+            <input id="certMemberName" type="text" placeholder="Digite o nome" />
+          </label>
+          <label class="admin-field">
+            <span>Tipo de certificado</span>
+            <select id="certTypeSelect">
+              <option value="Certificado de Participação">Certificado de Participação</option>
+              <option value="Certificado de Agradecimento">Certificado de Agradecimento</option>
+            </select>
+          </label>
+        </div>
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="confirmCertificateIssue()">Gerar PDF</button>
+        </footer>
+      </div>
+    </div>
 
     <script src="script.js" defer></script>
   </body>
