@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comunidade Viva - Ecossistema Eclesiástico & Saúde Pastoral</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="h-full flex flex-col justify-center items-center bg-slate-950 p-0 sm:p-2 md:p-4 custom-scrollbar selection:bg-amber-500/30 selection:text-amber-200">
+
+  <!-- Application Main Shell -->
+  <div class="w-full max-w-7xl h-full md:h-[96vh] max-h-[1050px] bg-slate-900 md:rounded-3xl border border-slate-800/80 shadow-2xl overflow-hidden flex flex-col relative">
+    
+    <!-- Top Header -->
+    <header class="px-5 py-3 bg-slate-900/95 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 z-20 backdrop-blur-md">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <i data-lucide="church" class="w-5 h-5 text-slate-950 font-bold"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-base md:text-lg text-slate-100 flex items-center gap-2">
+            Comunidade Viva
+            <span class="text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 font-bold">Ecossistema Protestante</span>
+          </h1>
+          <p class="text-xs text-slate-400">Saúde Eclesiástica, Discipulado e Governança Integrada</p>
+        </div>
+      </div>
+
+      <!-- Historical Event Daily Banner -->
+      <div class="hidden xl:flex items-center gap-2 bg-amber-950/30 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs text-amber-200">
+        <i data-lucide="history" class="w-4 h-4 text-amber-400 shrink-0"></i>
+        <span><strong>Hoje na História:</strong> Lutero publica as 95 Teses na porta de Wittenberg (1517)</span>
+      </div>
+
+      <!-- Role Switcher & Notifications -->
+      <div class="flex items-center gap-2">
+        <select id="userRoleSelect" onchange="changeRoleView()" class="bg-slate-950 border border-slate-700/80 text-xs font-semibold rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer">
+          <option value="pastor">Visão: Liderança Pastoral</option>
+          <option value="louvor">Visão: Ministério de Louvor / Mídia</option>
+          <option value="ebd">Visão: Professor / EBD</option>
+          <option value="membro">Visão: Membro / Espaço Acolher</option>
+        </select>
+
+        <button onclick="openNotificationToast('Notificação: Roteiro do Culto de Domingo atualizado pelo Pr. Eduardo.')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 relative transition-all border border-slate-700/50">
+          <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i>
+          <span class="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+          <span class="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 8 Main Pillar Navigation Bar -->
+    <nav class="bg-slate-950 border-b border-slate-800 px-4 py-2 flex gap-1.5 overflow-x-auto custom-scrollbar">
+      <button onclick="switchTab('admin-membros')" id="tab-btn-admin-membros" class="tab-btn px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 whitespace-nowrap">
+        <i data-lucide="users" class="w-3.5 h-3.5"></i> 1. Membros & Prontuário
+      </button>
+
+      <button onclick="switchTab('ministerios-musica')" id="tab-btn-ministerios-musica" class="tab-btn px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-750 whitespace-nowrap">
+        <i data-lucide="music" class="w-3.5 h-3.5 text-violet-400"></i> 2. Louvor & Ministérios
+      </button>
+
+      <button onclick="switchTab('ebd-ensino')" id="tab-btn-ebd-ensino" class="tab-btn px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-750 whitespace-nowrap">
+        <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-sky-400"></i> 3. Escola Bíblica (EBD)
+      </button>
+
+      <button onclick="switchTab('biblioteca-historia')" id="tab-btn-biblioteca-historia" class="tab-btn px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-750 whitespace-nowrap">
+        <i data-lucide="book-marked" class="w-3.5 h-3.5 text-amber-400"></i> 4. Biblioteca & História
+      </button>
+
+      <button onclick="switchTab('centro-doutrinas')" id="tab-btn-centro-doutrinas" class="tab-btn px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-750 whitespace-nowrap">
+        <i data-lucide="scroll" class="w-3.5 h-3.5 text-emerald-400"></i> 5. Doutrinas & Teologia
+      </button>
+
+      <button onclick="switchTab('scorecard-saude')" id="tab-btn-scorecard-saude" class="tab-btn px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-750 whitespace-nowrap">
+        <i data-lucide="activity" class="w-3.5 h-3.5 text-rose-400"></i> 6. Scorecard de Saúde
+      </button>
+
+      <button onclick="switchTab('liturgia-comunicacao')" id="tab-btn-liturgia-comunicacao" class="tab-btn px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-750 whitespace-nowrap">
+        <i data-lucide="radio" class="w-3.5 h-3.5 text-indigo-400"></i> 7. Roteiro Culto & Mídia
+      </button>
+
+      <button onclick="switchTab('mapa-discipulado')" id="tab-btn-mapa-discipulado" class="tab-btn px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-750 whitespace-nowrap">
+        <i data-lucide="compass" class="w-3.5 h-3.5 text-teal-400"></i> 8. Mapa do Discipulado
+      </button>
+    </nav>
+
+    <!-- Main Content Panel Area -->
+    <main class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6 space-y-6 bg-slate-900/50">
+
+      <!-- ==========================================
+           PILAR 1: ADMINISTRAÇÃO & LINHA DO TEMPO
+           ========================================== -->
+      <div id="tab-admin-membros" class="tab-content space-y-4">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-slate-950/80 p-4 rounded-2xl border border-slate-800">
+          <div>
+            <h2 class="text-base font-extrabold text-slate-100 flex items-center gap-2">
+              <i data-lucide="user-check" class="w-5 h-5 text-amber-400"></i> Prontuário & Linha do Tempo do Membro
+            </h2>
+            <p class="text-xs text-slate-400">Acompanhamento pastoral individual com histórico espiritual completo e gerador de certificados.</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="openCertificateModal()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5">
+              <i data-lucide="file-badge" class="w-4 h-4"></i> Emitir Certificado
+            </button>
+          </div>
+        </div>
+
+        <!-- Member Search & Selection -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          
+          <!-- Member Selector List -->
+          <div class="space-y-3">
+            <div class="relative">
+              <input type="text" id="memberSearchInput" oninput="filterMemberList()" placeholder="Buscar membro por nome ou status..." class="w-full bg-slate-950 border border-slate-800 text-xs rounded-xl px-3.5 py-2.5 pl-9 text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-500">
+              <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            </div>
+
+            <div class="space-y-2 max-h-[500px] overflow-y-auto custom-scrollbar pr-1" id="memberListContainer">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Member Timeline Detail View -->
+          <div class="lg:col-span-2 glass-panel p-5 rounded-2xl border border-slate-800 space-y-5" id="memberDetailPanel">
+            <!-- Rendered via JS -->
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ==========================================
+           PILAR 2: LOUVOR & MINISTÉRIOS
+           ========================================== -->
+      <div id="tab-ministerios-musica" class="tab-content hidden space-y-6">
+        
+        <div class="bg-gradient-to-r from-violet-950 via-slate-900 to-slate-900 p-5 rounded-2xl border border-violet-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-violet-400">Louvor & Equipe de Mídia</span>
+            <h2 class="text-lg font-extrabold text-slate-100 mt-0.5">Gestor de Repertório & Escala de Música</h2>
+            <p class="text-xs text-slate-300">Evite repetição excessiva de canções e conecte o repertório de louvor à pregação bíblica.</p>
+          </div>
+          <button onclick="openNotificationToast('Escala de Música de Domingo enviada via WhatsApp!')" class="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2">
+            <i data-lucide="share-2" class="w-4 h-4"></i> Notificar Escala do Culto
+          </button>
+        </div>
+
+        <!-- Song Bank & Worship Schedule Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          
+          <!-- Worship Setlist for Next Service -->
+          <div class="glass-panel p-4 rounded-2xl border border-slate-800 space-y-3 lg:col-span-1">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2 border-b border-slate-800 pb-2">
+              <i data-lucide="list-music" class="w-4 h-4"></i> Setlist do Próximo Culto (Domingo)
+            </h3>
+            
+            <div class="space-y-2">
+              <div class="bg-slate-950 p-3 rounded-xl border border-indigo-500/30 text-xs space-y-1">
+                <div class="flex justify-between items-center font-bold text-slate-100">
+                  <span>1. Castelo Forte é Nosso Deus</span>
+                  <span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded font-mono text-[10px]">Tom: D</span>
+                </div>
+                <div class="text-[11px] text-slate-400">Hino Histórico • Martinho Lutero</div>
+                <div class="flex justify-between text-[10px] text-emerald-400 pt-1">
+                  <span>Última vez tocada: Há 35 dias ✅</span>
+                  <a href="#" class="hover:underline">Cifra/Partitura</a>
+                </div>
+              </div>
+
+              <div class="bg-slate-950 p-3 rounded-xl border border-indigo-500/30 text-xs space-y-1">
+                <div class="flex justify-between items-center font-bold text-slate-100">
+                  <span>2. Ele Exaltado (Exaltar)</span>
+                  <span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded font-mono text-[10px]">Tom: F</span>
+                </div>
+                <div class="text-[11px] text-slate-400">Adoração Expositiva • Sl 97</div>
+                <div class="flex justify-between text-[10px] text-emerald-400 pt-1">
+                  <span>Última vez tocada: Há 21 dias ✅</span>
+                  <a href="#" class="hover:underline">Cifra/Partitura</a>
+                </div>
+              </div>
+
+              <div class="bg-slate-950 p-3 rounded-xl border border-rose-500/40 text-xs space-y-1">
+                <div class="flex justify-between items-center font-bold text-slate-100">
+                  <span>3. Graça Incalculável</span>
+                  <span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded font-mono text-[10px]">Tom: G</span>
+                </div>
+                <div class="text-[11px] text-slate-400">Tema alinhado ao sermão de Romanos 8</div>
+                <div class="flex justify-between text-[10px] text-rose-400 font-bold pt-1">
+                  <span>Alerta: Tocada no domingo passado! ⚠️</span>
+                  <a href="#" class="hover:underline">Trocar Música</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Roster / Musician Schedule -->
+          <div class="glass-panel p-4 rounded-2xl border border-slate-800 space-y-3 lg:col-span-2">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-violet-400 flex items-center gap-2 border-b border-slate-800 pb-2">
+              <i data-lucide="users" class="w-4 h-4"></i> Escala de Instrumentistas & Mídia (Domingo 19h)
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                <span class="text-[10px] text-slate-400 block font-bold uppercase">Ministro de Louvor</span>
+                <span class="font-bold text-slate-100 block">Lucas Gabriel</span>
+                <span class="text-[11px] text-emerald-400 font-medium">Confirmado ✅</span>
+              </div>
+
+              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                <span class="text-[10px] text-slate-400 block font-bold uppercase">Teclado / Piano</span>
+                <span class="font-bold text-slate-100 block">Beatriz Santos</span>
+                <span class="text-[11px] text-emerald-400 font-medium">Confirmado ✅</span>
+              </div>
+
+              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                <span class="text-[10px] text-slate-400 block font-bold uppercase">Violão / Guitarra</span>
+                <span class="font-bold text-slate-100 block">Daniel Ferreira</span>
+                <span class="text-[11px] text-amber-400 font-medium">Aguardando resposta ⏳</span>
+              </div>
+
+              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                <span class="text-[10px] text-slate-400 block font-bold uppercase">Bateria</span>
+                <span class="font-bold text-slate-100 block">Mateus Rocha</span>
+                <span class="text-[11px] text-emerald-400 font-medium">Confirmado ✅</span>
+              </div>
+
+              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                <span class="text-[10px] text-slate-400 block font-bold uppercase">Mídia & Projeção</span>
+                <span class="font-bold text-slate-100 block">Camila Andrade</span>
+                <span class="text-[11px] text-emerald-400 font-medium">Confirmado ✅</span>
+              </div>
+
+              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                <span class="text-[10px] text-slate-400 block font-bold uppercase">Som / Livestream</span>
+                <span class="font-bold text-slate-100 block">Rodrigo Alves</span>
+                <span class="text-[11px] text-emerald-400 font-medium">Confirmado ✅</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ==========================================
+           PILAR 3: ESCOLA BÍBLICA DOMINICAL (EBD)
+           ========================================== -->
+      <div id="tab-ebd-ensino" class="tab-content hidden space-y-6">
+        
+        <div class="bg-gradient-to-r from-sky-950 via-slate-900 to-slate-900 p-5 rounded-2xl border border-sky-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-sky-400">Educação Cristã & Discipulado</span>
+            <h2 class="text-lg font-extrabold text-slate-100 mt-0.5">Escola Bíblica Dominical (EBD)</h2>
+            <p class="text-xs text-slate-300">Acompanhamento acadêmico, controle de presença e ementa teológica por faixa etária.</p>
+          </div>
+          <button onclick="openNotificationToast('Chamada da EBD iniciada com sucesso!')" class="px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2">
+            <i data-lucide="check-square" class="w-4 h-4"></i> Registrar Chamada da Semana
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          <div class="glass-card p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-bold text-sm text-slate-100">Classe Adultos: Cartas Paulinas</h3>
+                <p class="text-xs text-slate-400">Prof: Pr. Eduardo • Sala 01</p>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 bg-sky-500/10 text-sky-300 rounded-lg">28 Alunos</span>
+            </div>
+            <div class="text-xs text-slate-300 space-y-1">
+              <div class="flex justify-between"><span>Frequência Média:</span><span class="font-bold text-emerald-400">88%</span></div>
+              <div class="flex justify-between"><span>Módulo Atual:</span><span class="font-bold text-slate-200">Exegese de Romanos</span></div>
+            </div>
+          </div>
+
+          <div class="glass-card p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-bold text-sm text-slate-100">Classe Jovens: Apologética</h3>
+                <p class="text-xs text-slate-400">Prof: Sarah • Sala 03</p>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 bg-sky-500/10 text-sky-300 rounded-lg">19 Alunos</span>
+            </div>
+            <div class="text-xs text-slate-300 space-y-1">
+              <div class="flex justify-between"><span>Frequência Média:</span><span class="font-bold text-emerald-400">92%</span></div>
+              <div class="flex justify-between"><span>Módulo Atual:</span><span class="font-bold text-slate-200">Fé e Razão na Faculdade</span></div>
+            </div>
+          </div>
+
+          <div class="glass-card p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-bold text-sm text-slate-100">Classe Infantil: Heróis da Fé</h3>
+                <p class="text-xs text-slate-400">Prof: Ana Maria • Sala Infantil</p>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 bg-sky-500/10 text-sky-300 rounded-lg">15 Crianças</span>
+            </div>
+            <div class="text-xs text-slate-300 space-y-1">
+              <div class="flex justify-between"><span>Frequência Média:</span><span class="font-bold text-emerald-400">95%</span></div>
+              <div class="flex justify-between"><span>Módulo Atual:</span><span class="font-bold text-slate-200">Histórias do Antigo Testamento</span></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ==========================================
+           PILAR 4: BIBLIOTECA & HISTÓRIA PROTESTANTE
+           ========================================== -->
+      <div id="tab-biblioteca-historia" class="tab-content hidden space-y-6">
+        
+        <div class="bg-gradient-to-r from-amber-950 via-slate-900 to-slate-900 p-5 rounded-2xl border border-amber-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Patrimônio Histórico & Teológico</span>
+            <h2 class="text-lg font-extrabold text-slate-100 mt-0.5">Biblioteca dos Reformadores & Teólogos</h2>
+            <p class="text-xs text-slate-300">Biografias, sermões clássicos, frases e contribuições históricas para edificação da igreja.</p>
+          </div>
+        </div>
+
+        <!-- Theologians Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          
+          <div class="glass-card p-4 rounded-2xl border border-slate-800 space-y-2">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-sm border border-amber-500/30">ML</div>
+              <div>
+                <h3 class="font-bold text-sm text-slate-100">Martinho Lutero (1483–1546)</h3>
+                <span class="text-[10px] text-amber-400 font-semibold uppercase">Pai da Reforma Protestante</span>
+              </div>
+            </div>
+            <p class="text-xs text-slate-300 line-clamp-2">Afixou as 95 Teses em Wittenberg contra a venda de indulgências, reafirmando a Justificação pela Fé.</p>
+            <div class="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px] text-slate-400">
+              <span>Obras: <em>Nascido Escravo</em>, <em>95 Teses</em></span>
+              <button onclick="openTheologianDetail('Martinho Lutero')" class="text-amber-400 hover:underline font-bold">Ver Perfil</button>
+            </div>
+          </div>
+
+          <div class="glass-card p-4 rounded-2xl border border-slate-800 space-y-2">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 font-bold flex items-center justify-center text-sm border border-indigo-500/30">JC</div>
+              <div>
+                <h3 class="font-bold text-sm text-slate-100">João Calvino (1509–1564)</h3>
+                <span class="text-[10px] text-indigo-400 font-semibold uppercase">Teólogo de Genebra</span>
+              </div>
+            </div>
+            <p class="text-xs text-slate-300 line-clamp-2">Sistematizou a teologia reformada através da monumental obra *As Institutas da Religião Cristã*.</p>
+            <div class="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px] text-slate-400">
+              <span>Obras: <em>Institutas da Religião Cristã</em></span>
+              <button onclick="openTheologianDetail('João Calvino')" class="text-amber-400 hover:underline font-bold">Ver Perfil</button>
+            </div>
+          </div>
+
+          <div class="glass-card p-4 rounded-2xl border border-slate-800 space-y-2">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 font-bold flex items-center justify-center text-sm border border-emerald-500/30">JW</div>
+              <div>
+                <h3 class="font-bold text-sm text-slate-100">John Wesley (1703–1791)</h3>
+                <span class="text-[10px] text-emerald-400 font-semibold uppercase">Líder do Avivamento Metodista</span>
+              </div>
+            </div>
+            <p class="text-xs text-slate-300 line-clamp-2">Promoveu o avivamento espiritual na Inglaterra com pregações itinerantes e forte impacto social na sociedade.</p>
+            <div class="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px] text-slate-400">
+              <span>Marco: <em>Experiência de Aldersgate</em></span>
+              <button onclick="openTheologianDetail('John Wesley')" class="text-amber-400 hover:underline font-bold">Ver Perfil</button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ==========================================
+           PILAR 5: CENTRO DE DOUTRINAS & TEOLOGIA
+           ========================================== -->
+      <div id="tab-centro-doutrinas" class="tab-content hidden space-y-6">
+        
+        <div class="bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-900 p-5 rounded-2xl border border-emerald-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Matriz Teológica & Unidade</span>
+            <h2 class="text-lg font-extrabold text-slate-100 mt-0.5">Os Cinco Solas & Doutrinas Fundamentais</h2>
+            <p class="text-xs text-slate-300">Base doutrinária e comparação respeitosa entre tradições protestantes.</p>
+          </div>
+        </div>
+
+        <!-- 5 Solas Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-amber-500/30 text-center space-y-1">
+            <span class="text-xs font-extrabold text-amber-400 block">SOLA SCRIPTURA</span>
+            <p class="text-[11px] text-slate-300">Somente a Escritura como regra de fé e prática.</p>
+          </div>
+
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-indigo-500/30 text-center space-y-1">
+            <span class="text-xs font-extrabold text-indigo-400 block">SOLUS CHRISTUS</span>
+            <p class="text-[11px] text-slate-300">Somente Cristo como único Mediador.</p>
+          </div>
+
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-emerald-500/30 text-center space-y-1">
+            <span class="text-xs font-extrabold text-emerald-400 block">SOLA GRATIA</span>
+            <p class="text-[11px] text-slate-300">Somente a Graça, inmerecida dádiva divina.</p>
+          </div>
+
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-sky-500/30 text-center space-y-1">
+            <span class="text-xs font-extrabold text-sky-400 block">SOLA FIDE</span>
+            <p class="text-[11px] text-slate-300">Somente a Fé para a justificação.</p>
+          </div>
+
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-rose-500/30 text-center space-y-1 col-span-2 md:col-span-1">
+            <span class="text-xs font-extrabold text-rose-400 block">SOLI DEO GLORIA</span>
+            <p class="text-[11px] text-slate-300">Somente a Deus a Glória eterna.</p>
+          </div>
+        </div>
+
+        <!-- Comparative Tradition Table -->
+        <div class="glass-panel p-4 rounded-2xl border border-slate-800 space-y-3">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Matriz de Ênfases e Tradições Protestantes</h3>
+          
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-xs text-left text-slate-300">
+              <thead class="bg-slate-950 text-slate-200 border-b border-slate-800 uppercase text-[10px]">
+                <tr>
+                  <th class="p-2.5">Tradição</th>
+                  <th class="p-2.5">Governança</th>
+                  <th class="p-2.5">Sacramentos</th>
+                  <th class="p-2.5">Ênfase Ministerial</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                <tr>
+                  <td class="p-2.5 font-bold text-amber-300">Luterana</td>
+                  <td class="p-2.5">Episcopal / Sinodal</td>
+                  <td class="p-2.5">Consubstanciação (Ceia)</td>
+                  <td class="p-2.5">Liturgia e Justificação pela Fé</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-indigo-300">Reformada / Presbiteriana</td>
+                  <td class="p-2.5">Presbiteriana (Conselhos)</td>
+                  <td class="p-2.5">Presença Espiritual Real</td>
+                  <td class="p-2.5">Soberania de Deus e Aliança</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-emerald-300">Metodista</td>
+                  <td class="p-2.5">Episcopal Connexional</td>
+                  <td class="p-2.5">Meios de Graça</td>
+                  <td class="p-2.5">Santificação e Ação Social</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-sky-300">Batista</td>
+                  <td class="p-2.5">Congregacional Democrática</td>
+                  <td class="p-2.5">Memorial / Ordenanças</td>
+                  <td class="p-2.5">Batismo por Imersão e Liberdade de Consciência</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-violet-300">Pentecostal</td>
+                  <td class="p-2.5">Episcopal / Congregacional</td>
+                  <td class="p-2.5">Ordenanças Simbólicas</td>
+                  <td class="p-2.5">Avivamento e Dons do Espírito Santo</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==========================================
+           PILAR 6: BALANCED SCORECARD DA SAÚDE
+           ========================================== -->
+      <div id="tab-scorecard-saude" class="tab-content hidden space-y-6">
+        
+        <div class="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-xs font-bold text-rose-400 uppercase tracking-wider">Acompanhamento de Saúde Comunitária</span>
+              <h2 class="text-lg font-bold text-slate-100">Balanced Scorecard da Igreja (7 Dimensões)</h2>
+              <p class="text-xs text-slate-400">Avaliação holística da comunidade de fé em vez de métricas puramente numéricas.</p>
+            </div>
+
+            <div class="flex items-center gap-3 bg-slate-950 p-3.5 rounded-2xl border border-slate-800 glow-indigo">
+              <div class="text-center">
+                <span class="text-2xl font-black text-indigo-400 block" id="scorecardTotal">82%</span>
+                <span class="text-[10px] text-slate-400 font-semibold uppercase">Índice Global</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7 Dimensions Sliders -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            
+            <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-1.5">
+              <div class="flex justify-between text-xs font-bold">
+                <span class="text-slate-200">1. Vida Espiritual</span>
+                <span class="text-amber-400">80%</span>
+              </div>
+              <p class="text-[10px] text-slate-400">Frequência e engajamento devocional.</p>
+            </div>
+
+            <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-1.5">
+              <div class="flex justify-between text-xs font-bold">
+                <span class="text-slate-200">2. Cuidado Pastoral</span>
+                <span class="text-rose-400">75%</span>
+              </div>
+              <p class="text-[10px] text-slate-400">Visitações e acompanhamento pastoral.</p>
+            </div>
+
+            <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-1.5">
+              <div class="flex justify-between text-xs font-bold">
+                <span class="text-slate-200">3. Evangelismo</span>
+                <span class="text-emerald-400">85%</span>
+              </div>
+              <p class="text-[10px] text-slate-400">Novas conversões e batismos.</p>
+            </div>
+
+            <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-1.5">
+              <div class="flex justify-between text-xs font-bold">
+                <span class="text-slate-200">4. Ensino (EBD)</span>
+                <span class="text-sky-400">88%</span>
+              </div>
+              <p class="text-[10px] text-slate-400">Presença e formação teológica.</p>
+            </div>
+
+            <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-1.5">
+              <div class="flex justify-between text-xs font-bold">
+                <span class="text-slate-200">5. Missões</span>
+                <span class="text-violet-400">70%</span>
+              </div>
+              <p class="text-[10px] text-slate-400">Sustento e envio de missionários.</p>
+            </div>
+
+            <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-1.5">
+              <div class="flex justify-between text-xs font-bold">
+                <span class="text-slate-200">6. Ação Social</span>
+                <span class="text-amber-400">90%</span>
+              </div>
+              <p class="text-[10px] text-slate-400">Apoio a famílias vulneráveis.</p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ==========================================
+           PILAR 7: ROTEIRO DO CULTO & MÍDIA
+           ========================================== -->
+      <div id="tab-liturgia-comunicacao" class="tab-content hidden space-y-6">
+        
+        <div class="bg-gradient-to-r from-indigo-950 via-slate-900 to-slate-900 p-5 rounded-2xl border border-indigo-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Planejador em Tempo Real</span>
+            <h2 class="text-lg font-extrabold text-slate-100 mt-0.5">Roteiro Litúrgico Sincronizado do Culto</h2>
+            <p class="text-xs text-slate-300">Pregador, Músicos e Mídia alinhados com o mesmo roteiro em tempo real.</p>
+          </div>
+          <button onclick="openNotificationToast('Roteiro sincronizado com os tablets da Mídia e Púlpito!')" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Sincronizar ao Vivo
+          </button>
+        </div>
+
+        <!-- Liturgy Steps Live Sync -->
+        <div class="glass-panel p-5 rounded-2xl border border-slate-800 space-y-3">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2 border-b border-slate-800 pb-2">
+            <i data-lucide="clock" class="w-4 h-4"></i> Liturgia do Culto de Domingo (19:00 às 20:30)
+          </h3>
+
+          <div class="space-y-2 text-xs">
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 flex justify-between items-center">
+              <div>
+                <span class="font-bold text-slate-200">19:00 - Abertura & Oração Inicial</span>
+                <p class="text-[11px] text-slate-400">Responsável: Diácono Carlos • Projeção: Versículo do dia (Sl 100)</p>
+              </div>
+              <span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 font-bold text-[10px] rounded">Concluído</span>
+            </div>
+
+            <div class="p-3 bg-slate-950 rounded-xl border border-amber-500/40 flex justify-between items-center">
+              <div>
+                <span class="font-bold text-amber-300">19:10 - Momento de Louvor Congregacional (3 Músicas)</span>
+                <p class="text-[11px] text-slate-400">Equipe de Louvor • Cifras disponíveis no app do músico</p>
+              </div>
+              <span class="px-2 py-1 bg-amber-500/20 text-amber-300 font-bold text-[10px] rounded animate-pulse">EM ANDAMENTO</span>
+            </div>
+
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 flex justify-between items-center opacity-75">
+              <div>
+                <span class="font-bold text-slate-200">19:35 - Pregador: Sermão Expositivo (Romanos 8:1-11)</span>
+                <p class="text-[11px] text-slate-400">Pr. Eduardo • Esboço carregado na tela do púlpito</p>
+              </div>
+              <span class="px-2 py-1 bg-slate-800 text-slate-400 font-bold text-[10px] rounded">Aguardando</span>
+            </div>
+
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 flex justify-between items-center opacity-75">
+              <div>
+                <span class="font-bold text-slate-200">20:15 - Dízimos, Ofertas & Avisos</span>
+                <p class="text-[11px] text-slate-400">Mídia: QR Code de contribuição na tela principal</p>
+              </div>
+              <span class="px-2 py-1 bg-slate-800 text-slate-400 font-bold text-[10px] rounded">Aguardando</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==========================================
+           PILAR 8: MAPA DO DISCIPULADO
+           ========================================== -->
+      <div id="tab-mapa-discipulado" class="tab-content hidden space-y-6">
+        
+        <div class="bg-gradient-to-r from-teal-950 via-slate-900 to-slate-900 p-5 rounded-2xl border border-teal-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-teal-400">Jornada de Maturidade Espiritual</span>
+            <h2 class="text-lg font-extrabold text-slate-100 mt-0.5">Funil do Discipulado & Crescimento</h2>
+            <p class="text-xs text-slate-300">Acompanhe a evolução de cada membro desde a primeira visita até a liderança e plantação.</p>
+          </div>
+        </div>
+
+        <!-- Discipled Journey Pipeline -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+            <span class="text-xs font-bold text-sky-400 block border-b border-slate-800 pb-1">1. Visitante / Interessado</span>
+            <div class="bg-slate-900 p-2.5 rounded-xl text-xs space-y-1">
+              <span class="font-bold text-slate-200 block">Carlos Eduardo</span>
+              <span class="text-[10px] text-slate-400">Visitou há 2 semanas</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+            <span class="text-xs font-bold text-amber-400 block border-b border-slate-800 pb-1">2. Batizado & Classe Bíblica</span>
+            <div class="bg-slate-900 p-2.5 rounded-xl text-xs space-y-1">
+              <span class="font-bold text-slate-200 block">João Pedro Costa</span>
+              <span class="text-[10px] text-amber-300 font-semibold">Batizado em Out/2025</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+            <span class="text-xs font-bold text-indigo-400 block border-b border-slate-800 pb-1">3. Integrado em PG / Voluntário</span>
+            <div class="bg-slate-900 p-2.5 rounded-xl text-xs space-y-1">
+              <span class="font-bold text-slate-200 block">Ana Maria Fernandes</span>
+              <span class="text-[10px] text-indigo-300 font-semibold">Voluntária na Ação Social</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+            <span class="text-xs font-bold text-emerald-400 block border-b border-slate-800 pb-1">4. Líder / Discipulador</span>
+            <div class="bg-slate-900 p-2.5 rounded-xl text-xs space-y-1">
+              <span class="font-bold text-slate-200 block">Marcos Vinícius</span>
+              <span class="text-[10px] text-emerald-400 font-semibold">Líder de Pequeno Grupo</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Certificate Generator Modal -->
+  <div id="certificateModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl p-5 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-sm text-slate-100 flex items-center gap-2">
+          <i data-lucide="award" class="w-4 h-4 text-amber-400"></i> Emissor de Certificados Eclesiásticos
+        </h3>
+        <button onclick="closeCertificateModal()" class="text-slate-400 hover:text-slate-200"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="text-slate-400 block mb-1 font-semibold">Tipo de Certificado</label>
+          <select id="certTypeSelect" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500">
+            <option>Certificado de Batismo nas Águas</option>
+            <option>Apresentação de Criança</option>
+            <option>Certidão de Matrimônio Eclesiástico</option>
+            <option>Carta de Transferência</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-slate-400 block mb-1 font-semibold">Nome do Membro</label>
+          <input type="text" id="certMemberName" value="Ana Maria Fernandes" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeCertificateModal()" class="flex-1 py-2 bg-slate-800 text-slate-300 font-bold text-xs rounded-xl">Cancelar</button>
+        <button onclick="confirmCertificateIssue()" class="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl">Gerar e Baixar PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification System -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 bg-indigo-600 text-white px-4 py-3 rounded-2xl shadow-2xl border border-indigo-400/30 text-xs font-semibold flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <i data-lucide="check-circle" class="w-5 h-5 text-emerald-300"></i>
+    <span id="toastMsg">Ação realizada com sucesso!</span>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
