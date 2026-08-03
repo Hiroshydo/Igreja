@@ -59,6 +59,101 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  const galleryCategories = ['Todos', 'Batismo', 'Reuniões', 'Louvorzão', 'Acompanhamento da Construção', 'Culto de Ensino', 'Culto de Ação de Graças', 'Congressos', 'Santa Ceia', 'Eventos Especiais'];
+
+  const galleryItems = [
+    {
+      id: 1,
+      title: 'Batismo de novos irmãos',
+      date: '18 de maio de 2026',
+      category: 'Batismo',
+      ratio: 'portrait',
+      image: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=900&q=80',
+      description: 'Momento especial de fé, comunhão e renovação para a comunidade recém-batizada.'
+    },
+    {
+      id: 2,
+      title: 'Reunião de oração da semana',
+      date: '09 de maio de 2026',
+      category: 'Reuniões',
+      ratio: 'landscape',
+      image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80',
+      description: 'Encontro de intercessão com reflexão bíblica, oração e acolhimento pastoral.'
+    },
+    {
+      id: 3,
+      title: 'Louvorzão com jovens e crianças',
+      date: '04 de maio de 2026',
+      category: 'Louvorzão',
+      ratio: 'portrait',
+      image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=80',
+      description: 'Uma noite de adoração intensa, energia congregacional e presença do Espírito.'
+    },
+    {
+      id: 4,
+      title: 'Acompanhamento da construção',
+      date: '27 de abril de 2026',
+      category: 'Acompanhamento da Construção',
+      ratio: 'landscape',
+      image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80',
+      description: 'Equipe unida acompanhando cada etapa da construção do novo espaço da igreja.'
+    },
+    {
+      id: 5,
+      title: 'Culto de ensino bíblico',
+      date: '20 de abril de 2026',
+      category: 'Culto de Ensino',
+      ratio: 'landscape',
+      image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=80',
+      description: 'Estudo aprofundado da Palavra com ensino claro, prático e edificante.'
+    },
+    {
+      id: 6,
+      title: 'Culto de ação de graças',
+      date: '13 de abril de 2026',
+      category: 'Culto de Ação de Graças',
+      ratio: 'portrait',
+      image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=900&q=80',
+      description: 'Uma celebração acolhedora, repleta de gratidão, testemunhos e comunhão.'
+    },
+    {
+      id: 7,
+      title: 'Congressos de jovens',
+      date: '06 de abril de 2026',
+      category: 'Congressos',
+      ratio: 'landscape',
+      image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80',
+      description: 'Congresso com ensino, interação e um ambiente vibrante para a juventude.'
+    },
+    {
+      id: 8,
+      title: 'Santa Ceia especial',
+      date: '30 de março de 2026',
+      category: 'Santa Ceia',
+      ratio: 'portrait',
+      image: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=900&q=80',
+      description: 'Momento de reflexão, memória do Senhor e renovação espiritual da igreja.'
+    },
+    {
+      id: 9,
+      title: 'Evento especial de fim de ano',
+      date: '22 de dezembro de 2025',
+      category: 'Eventos Especiais',
+      ratio: 'landscape',
+      image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=900&q=80',
+      description: 'Confraternização marcada por alegria, carinho e lembranças duradouras.'
+    },
+    {
+      id: 10,
+      title: 'Culto de louvor congregacional',
+      date: '15 de março de 2026',
+      category: 'Louvorzão',
+      ratio: 'landscape',
+      image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=900&q=80',
+      description: 'Momento de adoração congregacional com presença, música e unção.'
+    }
+  ];
+
   const memberDatabase = [
     {
       id: 1,
@@ -87,6 +182,94 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   let selectedMember = memberDatabase[0];
+  let activeGalleryFilter = 'Todos';
+  let selectedGalleryImageId = null;
+  let currentGalleryCollection = [];
+  let currentGalleryIndex = 0;
+  let galleryZoomEnabled = false;
+
+  function renderGalleryFilters() {
+    const container = document.getElementById('galleryFilters');
+    if (!container) return;
+
+    container.innerHTML = '';
+    galleryCategories.forEach((category) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `gallery-filter-pill ${activeGalleryFilter === category ? 'is-active' : ''}`;
+      button.textContent = category;
+      button.addEventListener('click', () => {
+        activeGalleryFilter = category;
+        renderGalleryFilters();
+        renderGalleryItems();
+      });
+      container.appendChild(button);
+    });
+  }
+
+  function renderGalleryItems() {
+    const container = document.getElementById('galleryGrid');
+    if (!container) return;
+
+    const filteredItems = activeGalleryFilter === 'Todos'
+      ? galleryItems
+      : galleryItems.filter((item) => item.category === activeGalleryFilter);
+
+    currentGalleryCollection = filteredItems;
+    currentGalleryIndex = 0;
+    selectedGalleryImageId = filteredItems[0]?.id ?? null;
+    galleryZoomEnabled = false;
+
+    container.innerHTML = Array.from({ length: 6 }, (_, index) => `
+      <div class="gallery-skeleton" style="animation-delay:${index * 70}ms"></div>
+    `).join('');
+
+    window.setTimeout(() => {
+      container.innerHTML = '';
+
+      if (!filteredItems.length) {
+        container.innerHTML = `
+          <div class="rounded-[1.4rem] border border-slate-800 bg-slate-900/70 p-5 text-sm text-slate-400">
+            Nenhuma foto foi encontrada para esta categoria ainda.
+          </div>
+        `;
+        return;
+      }
+
+      filteredItems.forEach((item, index) => {
+        const card = document.createElement('article');
+        card.className = `gallery-card gallery-card--${item.ratio}`;
+        card.innerHTML = `
+          <div class="gallery-card__media">
+            <img src="${item.image}" alt="${item.title}" loading="lazy" decoding="async" />
+            <div class="gallery-card__overlay">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <p class="gallery-card__title">${item.title}</p>
+                  <p class="mt-1 text-[11px] uppercase tracking-[0.28em] text-slate-400">${item.date}</p>
+                </div>
+                <span class="gallery-card__icon"><i data-lucide="zoom-in"></i></span>
+              </div>
+              <div class="gallery-card__meta">
+                <span class="gallery-card__badge">${item.category}</span>
+                <span class="text-[11px] text-slate-400">Clique para abrir</span>
+              </div>
+            </div>
+          </div>
+        `;
+        card.addEventListener('click', () => openGalleryLightbox(item.id));
+        container.appendChild(card);
+
+        window.setTimeout(() => {
+          card.classList.add('is-visible');
+        }, index * 80);
+      });
+
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }, 650);
+  }
 
   function renderMemberList() {
     const container = document.getElementById('memberListContainer');
@@ -149,6 +332,120 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (window.lucide) {
       window.lucide.createIcons();
+    }
+  }
+
+  function openGalleryLightbox(id) {
+    const item = galleryItems.find((entry) => entry.id === id);
+    if (!item) return;
+
+    currentGalleryCollection = activeGalleryFilter === 'Todos'
+      ? galleryItems
+      : galleryItems.filter((entry) => entry.category === activeGalleryFilter);
+
+    currentGalleryIndex = currentGalleryCollection.findIndex((entry) => entry.id === id);
+    if (currentGalleryIndex < 0) currentGalleryIndex = 0;
+
+    selectedGalleryImageId = item.id;
+    galleryZoomEnabled = false;
+    renderGalleryLightbox();
+
+    const modal = document.getElementById('galleryLightbox');
+    if (modal) {
+      modal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+  }
+
+  function renderGalleryLightbox() {
+    const modal = document.getElementById('galleryLightbox');
+    if (!modal) return;
+
+    const item = currentGalleryCollection[currentGalleryIndex];
+    if (!item) return;
+
+    const image = document.getElementById('galleryLightboxImage');
+    const title = document.getElementById('galleryLightboxTitle');
+    const date = document.getElementById('galleryLightboxDate');
+    const badge = document.getElementById('galleryLightboxBadge');
+    const description = document.getElementById('galleryLightboxDescription');
+    const counter = document.getElementById('galleryLightboxCounter');
+    const zoomButton = document.getElementById('galleryZoomButton');
+    const media = document.getElementById('galleryLightboxMedia');
+
+    if (image) {
+      image.src = item.image;
+      image.alt = item.title;
+    }
+
+    if (title) title.textContent = item.title;
+    if (date) date.textContent = item.date;
+    if (badge) badge.textContent = item.category;
+    if (description) description.textContent = item.description;
+    if (counter) counter.textContent = `Foto ${currentGalleryIndex + 1} de ${currentGalleryCollection.length}`;
+    if (zoomButton) zoomButton.innerHTML = `<i data-lucide="${galleryZoomEnabled ? 'minimize-2' : 'maximize-2'}" class="h-4 w-4"></i> ${galleryZoomEnabled ? 'Diminuir zoom' : 'Zoom'}`;
+    if (media) {
+      media.classList.toggle('is-zoomed', galleryZoomEnabled);
+    }
+
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  }
+
+  function closeGalleryLightbox() {
+    const modal = document.getElementById('galleryLightbox');
+    if (!modal) return;
+
+    modal.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  function changeGalleryImage(direction) {
+    if (!currentGalleryCollection.length) return;
+    currentGalleryIndex = (currentGalleryIndex + direction + currentGalleryCollection.length) % currentGalleryCollection.length;
+    renderGalleryLightbox();
+  }
+
+  function toggleGalleryZoom() {
+    galleryZoomEnabled = !galleryZoomEnabled;
+    renderGalleryLightbox();
+  }
+
+  function downloadCurrentGalleryImage() {
+    const item = currentGalleryCollection[currentGalleryIndex];
+    if (!item) return;
+
+    const link = document.createElement('a');
+    link.href = item.image;
+    link.download = `${item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.jpg`;
+    link.target = '_blank';
+    link.click();
+    openNotificationToast(`Download iniciado para ${item.title}.`);
+  }
+
+  function shareCurrentGalleryImage() {
+    const item = currentGalleryCollection[currentGalleryIndex];
+    if (!item) return;
+
+    const shareData = {
+      title: item.title,
+      text: `Confira ${item.title} — ${item.description}`,
+      url: item.image
+    };
+
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(item.image);
+        }
+      });
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(item.image).then(() => {
+        openNotificationToast('Link da imagem copiado para a área de transferência.');
+      });
+    } else {
+      openNotificationToast('Compartilhamento indisponível neste navegador.');
     }
   }
 
@@ -253,8 +550,33 @@ document.addEventListener('DOMContentLoaded', () => {
   window.openTheologianDetail = openTheologianDetail;
   window.changeRoleView = changeRoleView;
   window.toggleTheme = toggleTheme;
+  window.openGalleryLightbox = openGalleryLightbox;
+  window.closeGalleryLightbox = closeGalleryLightbox;
+  window.changeGalleryImage = changeGalleryImage;
+  window.toggleGalleryZoom = toggleGalleryZoom;
+  window.downloadCurrentGalleryImage = downloadCurrentGalleryImage;
+  window.shareCurrentGalleryImage = shareCurrentGalleryImage;
+
+  document.addEventListener('keydown', (event) => {
+    const modal = document.getElementById('galleryLightbox');
+    if (!modal || modal.classList.contains('hidden')) return;
+
+    if (event.key === 'Escape') {
+      closeGalleryLightbox();
+    } else if (event.key === 'ArrowRight') {
+      changeGalleryImage(1);
+    } else if (event.key === 'ArrowLeft') {
+      changeGalleryImage(-1);
+    }
+  });
+
+  document.querySelectorAll('[data-close-gallery-lightbox]').forEach((element) => {
+    element.addEventListener('click', closeGalleryLightbox);
+  });
 
   initializeDashboardCharts();
+  renderGalleryFilters();
+  renderGalleryItems();
   renderMemberList();
   switchTab('dashboard');
 });

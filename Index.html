@@ -44,6 +44,9 @@
         <button onclick="switchTab('ministerios-musica')" id="tab-btn-ministerios-musica" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
           <i data-lucide="music" class="h-4 w-4 text-violet-400"></i> Louvor
         </button>
+        <button onclick="switchTab('galeria-fotos')" id="tab-btn-galeria-fotos" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
+          <i data-lucide="images" class="h-4 w-4 text-amber-400"></i> Galeria
+        </button>
         <button onclick="switchTab('ebd-ensino')" id="tab-btn-ebd-ensino" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
           <i data-lucide="graduation-cap" class="h-4 w-4 text-sky-400"></i> Escola Bíblica
         </button>
@@ -250,6 +253,38 @@
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section id="tab-galeria-fotos" class="tab-content hidden space-y-6">
+        <div class="rounded-[2rem] border border-slate-800/80 bg-gradient-to-br from-amber-950/40 via-slate-900 to-slate-950 p-5 shadow-[0_20px_60px_-24px_rgba(2,6,23,0.95)]">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div class="max-w-2xl">
+              <p class="text-xs font-semibold uppercase tracking-[0.35em] text-amber-400">Galeria premium</p>
+              <h3 class="mt-2 text-2xl font-semibold text-slate-100">Fotos e eventos que contam a história da igreja com impacto visual.</h3>
+              <p class="mt-2 text-sm text-slate-400">Navegue por categorias com filtros interativos, cards elegantes e um lightbox sofisticado para cada álbum.</p>
+            </div>
+            <div class="flex flex-wrap gap-2 text-xs text-slate-300">
+              <span class="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1">Carregamento suave</span>
+              <span class="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1">Lightbox premium</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-[1.6rem] border border-slate-800/80 bg-slate-950/70 p-4 md:p-5">
+          <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Álbuns da igreja</p>
+              <h4 class="text-lg font-semibold text-slate-100">Explore os momentos mais marcantes</h4>
+            </div>
+            <div class="flex flex-wrap gap-2 text-xs text-slate-400">
+              <span class="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1">Filtre por categoria</span>
+              <span class="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1">Navegação por teclado</span>
+            </div>
+          </div>
+
+          <div id="galleryFilters" class="mt-4 flex flex-wrap gap-2"></div>
+          <div id="galleryGrid" class="gallery-grid mt-5" aria-live="polite"></div>
         </div>
       </section>
 
@@ -863,6 +898,51 @@
   <div id="toastNotification" class="fixed bottom-5 right-5 bg-indigo-600 text-white px-4 py-3 rounded-2xl shadow-2xl border border-indigo-400/30 text-xs font-semibold flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
     <i data-lucide="check-circle" class="w-5 h-5 text-emerald-300"></i>
     <span id="toastMsg">Ação realizada com sucesso!</span>
+  </div>
+
+  <div id="galleryLightbox" class="gallery-lightbox hidden" role="dialog" aria-modal="true" aria-label="Visualização da galeria">
+    <div class="gallery-lightbox__backdrop" data-close-gallery-lightbox></div>
+    <div class="gallery-lightbox__shell">
+      <button type="button" class="gallery-lightbox__close" onclick="closeGalleryLightbox()" aria-label="Fechar galeria">
+        <i data-lucide="x"></i>
+      </button>
+
+      <div class="gallery-lightbox__media" id="galleryLightboxMedia">
+        <img id="galleryLightboxImage" src="" alt="" />
+      </div>
+
+      <div class="gallery-lightbox__info">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p id="galleryLightboxCounter" class="text-[11px] uppercase tracking-[0.34em] text-slate-500"></p>
+            <h5 id="galleryLightboxTitle" class="mt-1 text-xl font-semibold text-slate-100"></h5>
+          </div>
+          <span id="galleryLightboxBadge" class="gallery-lightbox__badge"></span>
+        </div>
+
+        <p id="galleryLightboxDate" class="mt-4 text-sm text-amber-300"></p>
+        <p id="galleryLightboxDescription" class="mt-2 text-sm leading-6 text-slate-400"></p>
+
+        <div class="mt-6 flex flex-wrap gap-2">
+          <button type="button" id="galleryZoomButton" class="gallery-action-btn" onclick="toggleGalleryZoom()">
+            <i data-lucide="maximize-2" class="h-4 w-4"></i> Zoom
+          </button>
+          <button type="button" class="gallery-action-btn" onclick="downloadCurrentGalleryImage()">
+            <i data-lucide="download" class="h-4 w-4"></i> Download
+          </button>
+          <button type="button" class="gallery-action-btn" onclick="shareCurrentGalleryImage()">
+            <i data-lucide="share-2" class="h-4 w-4"></i> Compartilhar
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="gallery-lightbox__nav gallery-lightbox__nav--prev" onclick="changeGalleryImage(-1)" aria-label="Foto anterior">
+        <i data-lucide="chevron-left"></i>
+      </button>
+      <button type="button" class="gallery-lightbox__nav gallery-lightbox__nav--next" onclick="changeGalleryImage(1)" aria-label="Próxima foto">
+        <i data-lucide="chevron-right"></i>
+      </button>
+    </div>
   </div>
 
   <script src="script.js" defer></script>
