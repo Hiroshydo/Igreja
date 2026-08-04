@@ -41,37 +41,37 @@
       </div>
 
       <div id="mobileNavPanel" class="tab-nav-grid overflow-x-auto lg:overflow-y-auto custom-scrollbar pr-1">
-        <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 whitespace-nowrap">
+        <button type="button" data-tab-target="dashboard" id="tab-btn-dashboard" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 whitespace-nowrap">
           <i data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard
         </button>
-        <button onclick="switchTab('admin-dashboard')" id="tab-btn-admin-dashboard" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
+        <button type="button" data-tab-target="admin-dashboard" id="tab-btn-admin-dashboard" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
           <i data-lucide="shield-check" class="h-4 w-4 text-emerald-400"></i> Painel Admin
         </button>
-        <button onclick="switchTab('admin-membros')" id="tab-btn-admin-membros" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
+        <button type="button" data-tab-target="admin-membros" id="tab-btn-admin-membros" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
           <i data-lucide="users" class="h-4 w-4 text-amber-400"></i> Membros
         </button>
-        <button onclick="switchTab('ministerios-musica')" id="tab-btn-ministerios-musica" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
+        <button type="button" data-tab-target="ministerios-musica" id="tab-btn-ministerios-musica" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
           <i data-lucide="music" class="h-4 w-4 text-violet-400"></i> Louvor
         </button>
-        <button onclick="switchTab('galeria-fotos')" id="tab-btn-galeria-fotos" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
+        <button type="button" data-tab-target="galeria-fotos" id="tab-btn-galeria-fotos" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
           <i data-lucide="images" class="h-4 w-4 text-amber-400"></i> Galeria
         </button>
-        <button onclick="switchTab('ebd-ensino')" id="tab-btn-ebd-ensino" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
+        <button type="button" data-tab-target="ebd-ensino" id="tab-btn-ebd-ensino" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
           <i data-lucide="graduation-cap" class="h-4 w-4 text-sky-400"></i> Escola Bíblica
         </button>
-        <button onclick="switchTab('biblioteca-historia')" id="tab-btn-biblioteca-historia" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
+        <button type="button" data-tab-target="biblioteca-historia" id="tab-btn-biblioteca-historia" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
           <i data-lucide="book-marked" class="h-4 w-4 text-amber-400"></i> Biblioteca
         </button>
-        <button onclick="switchTab('centro-doutrinas')" id="tab-btn-centro-doutrinas" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
+        <button type="button" data-tab-target="centro-doutrinas" id="tab-btn-centro-doutrinas" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
           <i data-lucide="scroll" class="h-4 w-4 text-emerald-400"></i> Doutrinas
         </button>
-        <button onclick="switchTab('scorecard-saude')" id="tab-btn-scorecard-saude" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
+        <button type="button" data-tab-target="scorecard-saude" id="tab-btn-scorecard-saude" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
           <i data-lucide="activity" class="h-4 w-4 text-rose-400"></i> Saúde pastoral
         </button>
-        <button onclick="switchTab('liturgia-comunicacao')" id="tab-btn-liturgia-comunicacao" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
+        <button type="button" data-tab-target="liturgia-comunicacao" id="tab-btn-liturgia-comunicacao" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
           <i data-lucide="radio" class="h-4 w-4 text-indigo-400"></i> Culto & Mídia
         </button>
-        <button onclick="switchTab('mapa-discipulado')" id="tab-btn-mapa-discipulado" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
+        <button type="button" data-tab-target="mapa-discipulado" id="tab-btn-mapa-discipulado" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap">
           <i data-lucide="compass" class="h-4 w-4 text-teal-400"></i> Discipulado
         </button>
       </div>
@@ -196,7 +196,7 @@
         </div>
       </section>
 
-      <section id="tab-dashboard" class="tab-content space-y-6">
+      <section id="tab-dashboard" class="tab-content space-y-6 is-active" aria-hidden="false">
         <div class="rounded-[2rem] border border-slate-800/80 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-5 shadow-[0_20px_60px_-24px_rgba(2,6,23,0.95)]">
           <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div class="max-w-2xl">

@@ -7,16 +7,40 @@
   switchNavigationTab(tabId);
 }
 
-function initializeApp() {
-  if (window.lucide) {
-    window.lucide.createIcons();
+  function bindTouchFriendlyAction(element, callback) {
+    if (!element) return;
+
+    let suppressNextClick = false;
+
+    element.addEventListener('touchstart', (event) => {
+      suppressNextClick = true;
+      event.preventDefault();
+      event.stopPropagation();
+      callback(event);
+    }, { passive: false });
+
+    element.addEventListener('click', (event) => {
+      if (suppressNextClick) {
+        suppressNextClick = false;
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      callback(event);
+    });
   }
 
-  function initializeDashboardCharts() {
-    if (!window.Chart) return;
+  function initializeApp() {
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
 
-    dashboardCharts.forEach((chart) => chart?.destroy());
-    dashboardCharts = [];
+    function initializeDashboardCharts() {
+      if (!window.Chart) return;
+
+      dashboardCharts.forEach((chart) => chart?.destroy());
+      dashboardCharts = [];
 
     const chartsConfig = [
       {
@@ -1436,7 +1460,7 @@ function initializeApp() {
   });
 
   document.querySelectorAll('.quick-nav-pill').forEach((button) => {
-    button.addEventListener('click', () => {
+    bindTouchFriendlyAction(button, () => {
       document.querySelectorAll('.quick-nav-pill').forEach((pill) => pill.classList.remove('is-active'));
       button.classList.add('is-active');
       switchTab(button.dataset.quickNav);
@@ -1444,13 +1468,20 @@ function initializeApp() {
     });
   });
 
+  document.querySelectorAll('.tab-btn').forEach((button) => {
+    bindTouchFriendlyAction(button, () => {
+      const target = button.dataset.tabTarget || button.id.replace('tab-btn-', '');
+      switchTab(target);
+    });
+  });
+
   const mobileMenuToggle = document.getElementById('mobileMenuToggle');
   const mobileMenuOpenBtn = document.getElementById('mobileMenuOpenBtn');
   if (mobileMenuToggle) {
-    mobileMenuToggle.addEventListener('click', () => toggleMobileNav());
+    bindTouchFriendlyAction(mobileMenuToggle, () => toggleMobileNav());
   }
   if (mobileMenuOpenBtn) {
-    mobileMenuOpenBtn.addEventListener('click', () => toggleMobileNav());
+    bindTouchFriendlyAction(mobileMenuOpenBtn, () => toggleMobileNav());
   }
 
   document.getElementById('mobileNavBackdrop')?.addEventListener('click', () => toggleMobileNav(false));
