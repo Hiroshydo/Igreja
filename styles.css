@@ -484,16 +484,15 @@ body {
 
 @media (max-width: 1023px) {
   html {
-    height: auto;
-    overflow-y: auto;
+    height: 100dvh;
+    overflow: hidden;
   }
 
   body {
     padding: 0;
-    height: auto;
-    min-height: 100dvh;
-    overflow-x: hidden;
-    overflow-y: auto;
+    height: 100dvh;
+    overflow: hidden;
+    min-height: unset;
   }
 
   body.nav-open {
@@ -502,11 +501,16 @@ body {
 
   .app-shell {
     min-height: 100dvh;
+    height: 100dvh !important;
     border-radius: 0;
     max-width: none;
-    overflow-x: hidden;
-    overflow-y: visible; /* desfaz overflow-hidden do Tailwind para o scroll natural da página funcionar */
-    height: auto;
+    overflow: hidden !important;
+  }
+
+  /* flex wrapper direto dentro do app-shell precisa propagar a altura */
+  .app-shell > .flex-1 {
+    overflow: hidden;
+    min-height: 0;
   }
 
   #sidePanel {
@@ -532,12 +536,14 @@ body {
   }
 
   main {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;       /* truque flex: permite encolher abaixo do conteúdo */
+    overflow-y: auto !important;
+    overflow-x: hidden;
     padding: 0.9rem 0.9rem calc(1.5rem + env(safe-area-inset-bottom));
-    overscroll-behavior: auto;
+    overscroll-behavior: contain;
     touch-action: pan-y;
-    overflow-y: visible; /* página rola, não o main internamente */
-    flex: none;
-    height: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .quick-nav-shell {
