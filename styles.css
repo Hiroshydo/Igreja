@@ -72,60 +72,8 @@ body {
   color: #cbd5e1;
   transition: transform 140ms ease, background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
   position: relative;
-  z-index: 60;
+  z-index: 100;
   pointer-events: auto;
-  touch-action: manipulation;
-}
-
-.mobile-menu-btn {
-  width: 2.1rem;
-  height: 2.1rem;
-  box-shadow: 0 8px 24px -16px rgba(2, 6, 23, 0.95);
-}
-
-.header-icon-btn:hover,
-.header-icon-btn:focus-visible,
-.mobile-menu-btn:hover,
-.mobile-menu-btn:focus-visible {
-  transform: translateY(-1px);
-  background: rgba(30, 41, 59, 0.98);
-  border-color: rgba(245, 158, 11, 0.28);
-  box-shadow: 0 10px 26px -16px rgba(245, 158, 11, 0.28);
-  outline: none;
-}
-
-.dashboard-card {
-
-  position: relative;
-  overflow: hidden;
-
-  min-height: 116px;
-
-  touch-action: manipulation;
-
-  border: 1px solid var(--border-soft);
-
-  border-radius: 1.35rem;
-
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.9));
-
-  padding: 1rem 1.1rem;
-
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 12px 28px -22px rgba(2, 6, 23, 0.95);
-
-  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
-
-}
-
-.dashboard-card::before {
-  content: '';
-  position: absolute;
-  inset: auto -20px -20px auto;
-  width: 110px;
-  height: 110px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.16), transparent 70%);
-  pointer-events: none;
 }
 
 
@@ -635,7 +583,7 @@ body {
   header {
     position: sticky;
     top: 0;
-    z-index: 20;
+    z-index: 95;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -713,24 +661,6 @@ body {
     line-height: 1.35;
     margin: 0;
     max-width: 100%;
-  }
-
-  .mobile-menu-btn {
-    width: 2.55rem;
-    height: 2.55rem;
-    min-width: 2.55rem;
-    flex-shrink: 0;
-    border-radius: 1rem;
-    padding: 0;
-    box-shadow: 0 14px 34px -18px rgba(245, 158, 11, 0.45);
-    display: inline-flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-  }
-
-  .mobile-menu-btn span {
-    display: none;
   }
 
   .header-icon-btn {
