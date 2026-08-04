@@ -99,19 +99,21 @@
     <div class="flex-1 flex flex-col">
     <!-- Top Header -->
     <header class="px-3 sm:px-4 md:px-6 py-3 border-b border-slate-800/80 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between z-20 shadow-[0_10px_30px_-24px_rgba(2,6,23,0.95)]">
-      <div class="flex w-full items-start justify-between gap-3">
-        <button id="mobileMenuOpenBtn" class="mobile-menu-btn lg:hidden inline-flex items-center justify-center gap-1.5 rounded-2xl px-2.5 py-1.5 text-[11px] font-semibold text-slate-100" type="button">
-          <i data-lucide="menu" class="h-3.6 w-3.6"></i>
-          <span class="hidden xs:block">Menu</span>
-        </button>
-        <div class="min-w-0 flex-1">
-          <div class="flex flex-wrap items-center gap-2">
-            <p class="text-[10px] uppercase tracking-[0.3em] text-slate-500">Painel operacional</p>
-            <span class="inline-flex items-center rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.24em] text-amber-300 sm:hidden">Culto 19h</span>
+      <div class="header-top-row flex w-full items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <button id="mobileMenuOpenBtn" class="mobile-menu-btn lg:hidden inline-flex items-center justify-center gap-1.5 rounded-2xl px-2.5 py-1.5 text-[11px] font-semibold text-slate-100" type="button">
+            <i data-lucide="menu" class="h-3.6 w-3.6"></i>
+            <span class="hidden xs:block">Menu</span>
+          </button>
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2 min-w-0">
+              <p class="text-[10px] uppercase tracking-[0.3em] text-slate-500">Painel operacional</p>
+              <span class="inline-flex items-center rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.24em] text-amber-300 sm:hidden">Culto 19h</span>
+            </div>
+            <h2 class="text-sm sm:text-base font-semibold text-slate-100 leading-tight">Visão geral da igreja e dos ministérios</h2>
           </div>
-          <h2 class="text-sm sm:text-base font-semibold text-slate-100">Visão geral da igreja e dos ministérios</h2>
         </div>
-        <div class="flex shrink-0 items-center gap-1.5">
+        <div class="header-actions flex shrink-0 items-center gap-1.5">
           <button onclick="openNotificationToast('Roteiro do culto atualizado pelo Pr. Eduardo.')" aria-label="Notificações" title="Notificações" class="header-icon-btn relative">
             <i data-lucide="bell" class="h-3.5 w-3.5 text-amber-400"></i>
             <span class="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-rose-500"></span>
