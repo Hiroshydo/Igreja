@@ -28,7 +28,7 @@
             <p class="text-xs text-slate-400">Ecossistema pastoral</p>
           </div>
         </div>
-        <button id="mobileMenuToggle" class="mobile-menu-btn lg:hidden" aria-label="Abrir menu" type="button">
+        <button id="mobileMenuToggle" class="mobile-menu-btn lg:hidden" aria-label="Abrir menu" type="button" onclick="toggleMobileNav(); return false;">
           <i data-lucide="menu" class="h-4 w-4"></i>
         </button>
       </div>
@@ -87,8 +87,8 @@
 
     <div class="flex-1 flex flex-col">
     <!-- Top Header -->
-    <header class="px-3 sm:px-4 md:px-6 py-4 bg-slate-900/90 border-b border-slate-800 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between z-20 backdrop-blur-md shadow-[0_12px_30px_-24px_rgba(2,6,23,0.95)]">
-      <button id="mobileMenuOpenBtn" class="mobile-menu-btn lg:hidden inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-200" type="button">
+    <header class="px-3 sm:px-4 md:px-6 py-4 border-b border-slate-800/80 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between z-20 shadow-[0_10px_30px_-24px_rgba(2,6,23,0.95)]">
+      <button id="mobileMenuOpenBtn" class="mobile-menu-btn lg:hidden inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-200" type="button" onclick="toggleMobileNav(); return false;">
         <i data-lucide="panel-left" class="h-3.5 w-3.5"></i>
         Menu
       </button>
