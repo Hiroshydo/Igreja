@@ -684,21 +684,14 @@ body {
   }
 
   #mobileMenuOpenBtn.mobile-menu-btn {
-    position: fixed;
-    left: 0.85rem;
-    top: calc(env(safe-area-inset-top, 0px) + 0.8rem);
-    width: 2.85rem;
-    min-width: 2.85rem;
+    width: auto;
+    min-width: 2.9rem;
     height: 2.75rem;
-    padding: 0;
+    padding: 0 0.8rem;
     justify-content: center;
     border-radius: 1rem;
-    z-index: 210;
+    z-index: 130;
     box-shadow: 0 16px 32px -18px rgba(245, 158, 11, 0.5), 0 8px 20px -16px rgba(2, 6, 23, 0.9);
-  }
-
-  header {
-    padding-left: 4.8rem;
   }
 
   .mobile-menu-btn span {
