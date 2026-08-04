@@ -1290,10 +1290,12 @@
   function closeMobileNav() {
     const panel = document.getElementById('sidePanel');
     const backdrop = document.getElementById('mobileNavBackdrop');
+    const buttons = document.querySelectorAll('#mobileMenuToggle, #mobileMenuOpenBtn');
     if (!panel || !backdrop) return;
     panel.classList.remove('is-open');
     backdrop.classList.remove('is-open');
     document.body.classList.remove('nav-open');
+    buttons.forEach((button) => button.setAttribute('aria-expanded', 'false'));
   }
 
   function toggleMobileNav(force) {
@@ -1312,6 +1314,9 @@
     panel.classList.toggle('is-open', shouldOpen);
     backdrop.classList.toggle('is-open', shouldOpen);
     document.body.classList.toggle('nav-open', shouldOpen);
+    document.querySelectorAll('#mobileMenuToggle, #mobileMenuOpenBtn').forEach((button) => {
+      button.setAttribute('aria-expanded', String(shouldOpen));
+    });
   }
 
   function switchNavigationTab(tabId) {
