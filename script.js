@@ -1287,36 +1287,34 @@
     });
   }
 
-  function closeMobileNav() {
+  function setMobileNavState(isOpen) {
     const panel = document.getElementById('sidePanel');
     const backdrop = document.getElementById('mobileNavBackdrop');
-    const buttons = document.querySelectorAll('#mobileMenuToggle, #mobileMenuOpenBtn');
     if (!panel || !backdrop) return;
-    panel.classList.remove('is-open');
-    backdrop.classList.remove('is-open');
-    document.body.classList.remove('nav-open');
-    buttons.forEach((button) => button.setAttribute('aria-expanded', 'false'));
+
+    panel.classList.toggle('is-open', isOpen);
+    backdrop.classList.toggle('is-open', isOpen);
+    document.body.classList.toggle('nav-open', isOpen);
+    document.querySelectorAll('#mobileMenuToggle, #mobileMenuOpenBtn').forEach((button) => {
+      button.setAttribute('aria-expanded', String(isOpen));
+    });
+  }
+
+  function closeMobileNav() {
+    setMobileNavState(false);
   }
 
   function toggleMobileNav(force) {
     const panel = document.getElementById('sidePanel');
-    const backdrop = document.getElementById('mobileNavBackdrop');
-    if (!panel || !backdrop) return;
+    if (!panel) return;
 
     if (window.innerWidth >= 1024) {
-      panel.classList.remove('is-open');
-      backdrop.classList.remove('is-open');
-      document.body.classList.remove('nav-open');
+      setMobileNavState(false);
       return;
     }
 
     const shouldOpen = typeof force === 'boolean' ? force : !panel.classList.contains('is-open');
-    panel.classList.toggle('is-open', shouldOpen);
-    backdrop.classList.toggle('is-open', shouldOpen);
-    document.body.classList.toggle('nav-open', shouldOpen);
-    document.querySelectorAll('#mobileMenuToggle, #mobileMenuOpenBtn').forEach((button) => {
-      button.setAttribute('aria-expanded', String(shouldOpen));
-    });
+    setMobileNavState(shouldOpen);
   }
 
   function switchNavigationTab(tabId) {
@@ -1464,6 +1462,10 @@
   });
 
   document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && window.innerWidth < 1024) {
+      closeMobileNav();
+    }
+
     const modal = document.getElementById('galleryLightbox');
     if (!modal || modal.classList.contains('hidden')) return;
 
@@ -1512,9 +1514,7 @@
     sidebarSearchInput.addEventListener('input', (event) => filterSidebarNavigation(event.target.value));
     sidebarSearchInput.addEventListener('focus', () => {
       if (window.innerWidth < 1024) {
-        document.getElementById('sidePanel')?.classList.add('is-open');
-        document.getElementById('mobileNavBackdrop')?.classList.add('is-open');
-        document.body.classList.add('nav-open');
+        toggleMobileNav(true);
       }
     });
   }
