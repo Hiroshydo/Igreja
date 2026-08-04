@@ -36,7 +36,7 @@ body {
 
   font-family: 'Plus Jakarta Sans', sans-serif;
 
-  background: radial-gradient(circle at top left, rgba(245,158,11,0.08), transparent 28%), linear-gradient(135deg, #020617 0%, #050b16 70%, #111827 100%);
+  background: radial-gradient(circle at top left, rgba(245,158,11,0.05), transparent 22%), linear-gradient(135deg, #020617 0%, #050b16 72%, #111827 100%);
 
   min-height: 100vh;
 
@@ -46,9 +46,39 @@ body {
 
   padding-bottom: env(safe-area-inset-bottom);
 
+  will-change: auto;
+
 }
 
+.header-icon-btn,
+.mobile-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.82);
+  color: #cbd5e1;
+  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+}
 
+.mobile-menu-btn {
+  width: 2.1rem;
+  height: 2.1rem;
+}
+
+.header-icon-btn:hover,
+.header-icon-btn:focus-visible,
+.mobile-menu-btn:hover,
+.mobile-menu-btn:focus-visible {
+  transform: translateY(-1px);
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(245, 158, 11, 0.24);
+  outline: none;
+}
 
 .dashboard-card {
 
@@ -140,11 +170,11 @@ body {
 
   inset: 0;
 
-  background: rgba(2, 6, 23, 0.74);
+  background: rgba(2, 6, 23, 0.7);
 
-  -webkit-backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: none;
 
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
 
   opacity: 0;
 
@@ -440,11 +470,11 @@ body {
     position: sticky;
     top: 0;
     z-index: 8;
-    background: rgba(2, 6, 23, 0.82);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
+    background: rgba(2, 6, 23, 0.95);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     padding-top: 0.2rem;
-    padding-bottom: 0.4rem;
+    padding-bottom: 0.35rem;
     margin-bottom: 0.25rem;
   }
 
@@ -467,6 +497,9 @@ body {
     position: sticky;
     top: 0;
     z-index: 20;
+    background: rgba(2, 6, 23, 0.96);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   .quick-nav-pill {

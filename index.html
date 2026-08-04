@@ -28,8 +28,8 @@
             <p class="text-xs text-slate-400">Ecossistema pastoral</p>
           </div>
         </div>
-        <button id="mobileMenuToggle" class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700/70 bg-slate-900/80 text-slate-200" aria-label="Abrir menu" type="button">
-          <i data-lucide="menu" class="h-5 w-5"></i>
+        <button id="mobileMenuToggle" class="mobile-menu-btn lg:hidden" aria-label="Abrir menu" type="button">
+          <i data-lucide="menu" class="h-4 w-4"></i>
         </button>
       </div>
 
@@ -88,8 +88,8 @@
     <div class="flex-1 flex flex-col">
     <!-- Top Header -->
     <header class="px-3 sm:px-4 md:px-6 py-4 bg-slate-900/90 border-b border-slate-800 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between z-20 backdrop-blur-md shadow-[0_12px_30px_-24px_rgba(2,6,23,0.95)]">
-      <button id="mobileMenuOpenBtn" class="lg:hidden inline-flex items-center gap-2 rounded-2xl border border-slate-700/70 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" type="button">
-        <i data-lucide="panel-left" class="h-4 w-4"></i>
+      <button id="mobileMenuOpenBtn" class="mobile-menu-btn lg:hidden inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-200" type="button">
+        <i data-lucide="panel-left" class="h-3.5 w-3.5"></i>
         Menu
       </button>
       <div>
@@ -98,26 +98,28 @@
       </div>
 
       <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 w-full sm:w-auto">
-        <label class="flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-400 w-full sm:w-48">
-          <i data-lucide="search" class="h-4 w-4"></i>
-          <input type="text" placeholder="Buscar membros, eventos..." class="w-full bg-transparent outline-none placeholder:text-slate-500">
+        <label class="flex items-center gap-2 rounded-xl border border-slate-800/70 bg-slate-950/70 px-2.5 py-2 text-sm text-slate-400 w-full sm:w-44">
+          <i data-lucide="search" class="h-3.5 w-3.5"></i>
+          <input type="text" placeholder="Buscar..." class="w-full bg-transparent outline-none placeholder:text-slate-500 text-sm">
         </label>
-        <select id="userRoleSelect" onchange="changeRoleView()" aria-label="Selecionar visão de usuário" title="Selecionar visão de usuário" class="bg-slate-950 border border-slate-700/80 text-xs font-semibold rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer">
+        <select id="userRoleSelect" onchange="changeRoleView()" aria-label="Selecionar visão de usuário" title="Selecionar visão de usuário" class="bg-slate-950/70 border border-slate-700/70 text-xs font-semibold rounded-xl px-2.5 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/40 cursor-pointer">
           <option value="pastor">Visão: Liderança</option>
           <option value="louvor">Visão: Louvor</option>
           <option value="ebd">Visão: EBD</option>
           <option value="membro">Visão: Membro</option>
         </select>
-        <button onclick="openNotificationToast('Roteiro do culto atualizado pelo Pr. Eduardo.')" aria-label="Notificações" title="Notificações" class="relative rounded-2xl border border-slate-700/60 bg-slate-800/80 p-2.5 text-slate-300 transition-all hover:bg-slate-750">
-          <i data-lucide="bell" class="h-4 w-4 text-amber-400"></i>
-          <span class="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-rose-500"></span>
-        </button>
-        <button onclick="openNotificationToast('Mensagens recebidas do ministério de intercessão.')" aria-label="Mensagens" title="Mensagens" class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-2.5 text-slate-300 transition-all hover:bg-slate-750">
-          <i data-lucide="message-square" class="h-4 w-4 text-sky-400"></i>
-        </button>
-        <button id="themeToggleButton" onclick="toggleTheme()" aria-label="Alternar tema" title="Alternar tema" class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-2.5 text-slate-300 transition-all hover:bg-slate-750">
-          <i data-lucide="moon-star" class="h-4 w-4 text-violet-400"></i>
-        </button>
+        <div class="flex items-center gap-1.5">
+          <button onclick="openNotificationToast('Roteiro do culto atualizado pelo Pr. Eduardo.')" aria-label="Notificações" title="Notificações" class="header-icon-btn relative">
+            <i data-lucide="bell" class="h-3.5 w-3.5 text-amber-400"></i>
+            <span class="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-rose-500"></span>
+          </button>
+          <button onclick="openNotificationToast('Mensagens recebidas do ministério de intercessão.')" aria-label="Mensagens" title="Mensagens" class="header-icon-btn">
+            <i data-lucide="message-square" class="h-3.5 w-3.5 text-sky-400"></i>
+          </button>
+          <button id="themeToggleButton" onclick="toggleTheme()" aria-label="Alternar tema" title="Alternar tema" class="header-icon-btn">
+            <i data-lucide="moon-star" class="h-3.5 w-3.5 text-violet-400"></i>
+          </button>
+        </div>
       </div>
     </header>
 
