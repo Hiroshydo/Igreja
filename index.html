@@ -47,6 +47,11 @@
         </label>
       </div>
 
+      <div class="mb-2 flex items-center justify-between px-0.5">
+        <span class="text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-500">Navegação</span>
+        <span class="rounded-full border border-slate-800/70 px-2 py-0.5 text-[10px] text-slate-400">Acesso rápido</span>
+      </div>
+
       <div id="mobileNavPanel" class="tab-nav-grid overflow-x-auto lg:overflow-y-auto custom-scrollbar pr-1">
         <button type="button" data-tab-target="dashboard" id="tab-btn-dashboard" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 whitespace-nowrap">
           <i data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard
@@ -95,12 +100,15 @@
     <div class="flex-1 flex flex-col">
     <!-- Top Header -->
     <header class="px-3 sm:px-4 md:px-6 py-3 border-b border-slate-800/80 flex items-center justify-between z-20 shadow-[0_10px_30px_-24px_rgba(2,6,23,0.95)]">
-      <button id="mobileMenuOpenBtn" class="mobile-menu-btn lg:hidden inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px] font-medium text-slate-200" type="button" onclick="toggleMobileNav(); return false;">
-        <i data-lucide="panel-left" class="h-3.5 w-3.5"></i>
-        Menu
+      <button id="mobileMenuOpenBtn" class="mobile-menu-btn lg:hidden inline-flex items-center justify-center gap-1.5 rounded-2xl px-2.5 py-1.5 text-[11px] font-semibold text-slate-100" type="button" onclick="toggleMobileNav(); return false;">
+        <i data-lucide="menu" class="h-3.6 w-3.6"></i>
+        <span class="hidden xs:block">Menu</span>
       </button>
-      <div class="min-w-0 flex-1">
-        <p class="text-[10px] uppercase tracking-[0.3em] text-slate-500">Painel operacional</p>
+      <div class="min-w-0 flex-1 pl-2">
+        <div class="flex items-center gap-2">
+          <p class="text-[10px] uppercase tracking-[0.3em] text-slate-500">Painel operacional</p>
+          <span class="inline-flex items-center rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.24em] text-amber-300 sm:hidden">Culto 19h</span>
+        </div>
         <h2 class="text-sm sm:text-base font-semibold text-slate-100 truncate">Visão geral da igreja e dos ministérios</h2>
       </div>
 
@@ -194,7 +202,7 @@
       </section>
 
       <section id="tab-dashboard" class="tab-content space-y-6 is-active" aria-hidden="false">
-        <div class="rounded-[2rem] border border-slate-800/80 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-5 shadow-[0_20px_60px_-24px_rgba(2,6,23,0.95)]">
+        <div class="mobile-hero-card rounded-[2rem] border border-slate-800/80 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-5 shadow-[0_20px_60px_-24px_rgba(2,6,23,0.95)]">
           <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div class="max-w-2xl">
               <p class="text-xs font-semibold uppercase tracking-[0.35em] text-amber-400">Dashboard executivo</p>
