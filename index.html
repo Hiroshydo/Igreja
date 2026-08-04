@@ -13,10 +13,11 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="h-full flex flex-col justify-center items-center bg-slate-950 p-0 sm:p-2 md:p-4 custom-scrollbar selection:bg-amber-500/30 selection:text-amber-200">
+  <div id="mobileNavBackdrop" class="mobile-nav-backdrop" aria-hidden="true"></div>
 
   <!-- Application Main Shell -->
-  <div class="w-full max-w-7xl min-h-screen lg:min-h-[96vh] bg-slate-900 md:rounded-[2rem] border border-slate-800/80 shadow-[0_35px_120px_-30px_rgba(15,23,42,0.85)] overflow-hidden flex flex-col lg:flex-row relative">
-    <aside id="sidePanel" class="w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-slate-950/85 p-3 sm:p-4 lg:p-5 flex flex-col gap-3 sm:gap-4 shadow-[0_20px_50px_-28px_rgba(2,6,23,0.95)]">
+  <div class="app-shell w-full max-w-7xl min-h-screen lg:min-h-[96vh] bg-slate-900 md:rounded-[2rem] border border-slate-800/80 shadow-[0_35px_120px_-30px_rgba(15,23,42,0.85)] overflow-hidden flex flex-col lg:flex-row relative">
+    <aside id="sidePanel" class="w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-slate-950/95 p-3 sm:p-4 lg:p-5 flex flex-col gap-3 sm:gap-4 shadow-[0_20px_50px_-28px_rgba(2,6,23,0.95)]">
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 via-indigo-600 to-violet-600 shadow-lg shadow-indigo-500/20">
@@ -122,6 +123,12 @@
 
     <!-- Main Content Panel Area -->
     <main class="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 bg-slate-900/50">
+      <div class="quick-nav-shell">
+        <button type="button" class="quick-nav-pill is-active" data-quick-nav="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
+        <button type="button" class="quick-nav-pill" data-quick-nav="galeria-fotos"><i data-lucide="images"></i><span>Galeria</span></button>
+        <button type="button" class="quick-nav-pill" data-quick-nav="admin-membros"><i data-lucide="users"></i><span>Membros</span></button>
+        <button type="button" class="quick-nav-pill" data-quick-nav="admin-dashboard"><i data-lucide="shield-check"></i><span>Admin</span></button>
+      </div>
       <section id="tab-admin-dashboard" class="tab-content hidden">
         <div id="adminLoginView" class="admin-auth-shell">
           <div class="admin-auth-card">
@@ -252,7 +259,7 @@
               </div>
               <span class="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300">+18%</span>
             </div>
-            <canvas id="growthChart" class="chart-canvas"></canvas>
+            <div class="chart-shell"><canvas id="growthChart" class="chart-canvas"></canvas></div>
           </div>
           <div class="space-y-4">
             <div class="rounded-[1.6rem] border border-slate-800/80 bg-slate-950/70 p-4">
@@ -262,7 +269,7 @@
                   <h4 class="text-lg font-semibold text-slate-100">Presença por ministério</h4>
                 </div>
               </div>
-              <canvas id="frequencyChart" class="chart-canvas"></canvas>
+              <div class="chart-shell"><canvas id="frequencyChart" class="chart-canvas"></canvas></div>
             </div>
             <div class="rounded-[1.6rem] border border-slate-800/80 bg-slate-950/70 p-4">
               <div class="mb-4 flex items-center justify-between">
@@ -272,7 +279,7 @@
                 </div>
                 <span class="rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1 text-xs text-violet-300">38</span>
               </div>
-              <canvas id="socialChart" class="chart-canvas"></canvas>
+              <div class="chart-shell"><canvas id="socialChart" class="chart-canvas"></canvas></div>
             </div>
           </div>
         </div>

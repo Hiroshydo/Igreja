@@ -15,7 +15,7 @@ function initializeApp() {
   function initializeDashboardCharts() {
     if (!window.Chart) return;
 
-    dashboardCharts.forEach((chart) => chart.destroy());
+    dashboardCharts.forEach((chart) => chart?.destroy());
     dashboardCharts = [];
 
     const chartsConfig = [
@@ -50,7 +50,9 @@ function initializeApp() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1' } } },
+          animation: { duration: 900, easing: 'easeOutQuart' },
+          responsiveAnimationDuration: 320,
+          plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1', boxWidth: 10, padding: 14 } } },
           cutout: '68%'
         }
       },
@@ -83,7 +85,9 @@ function initializeApp() {
   }
 
   function resizeDashboardCharts() {
-    dashboardCharts.forEach((chart) => chart?.resize());
+    window.requestAnimationFrame(() => {
+      dashboardCharts.forEach((chart) => chart?.resize());
+    });
   }
 
   const galleryCategories = ['Todos', 'Batismo', 'Reuniões', 'Louvorzão', 'Acompanhamento da Construção', 'Culto de Ensino', 'Culto de Ação de Graças', 'Congressos', 'Santa Ceia', 'Eventos Especiais'];
@@ -1226,13 +1230,14 @@ function initializeApp() {
   }
 
   function toggleMobileNav(force) {
-    const panel = document.getElementById('mobileNavPanel');
-    const shell = document.getElementById('sidePanel');
-    if (!panel || !shell) return;
+    const panel = document.getElementById('sidePanel');
+    const backdrop = document.getElementById('mobileNavBackdrop');
+    if (!panel || !backdrop) return;
 
-    const shouldOpen = typeof force === 'boolean' ? force : !shell.classList.contains('is-open');
-    shell.classList.toggle('is-open', shouldOpen);
+    const shouldOpen = typeof force === 'boolean' ? force : !panel.classList.contains('is-open');
     panel.classList.toggle('is-open', shouldOpen);
+    backdrop.classList.toggle('is-open', shouldOpen);
+    document.body.classList.toggle('nav-open', shouldOpen && window.innerWidth < 1024);
   }
 
   function switchNavigationTab(tabId) {
@@ -1372,6 +1377,7 @@ function initializeApp() {
     resizeDashboardCharts();
     if (window.innerWidth >= 1024) {
       toggleMobileNav(true);
+      document.body.classList.remove('nav-open');
     }
   });
 
@@ -1392,6 +1398,14 @@ function initializeApp() {
     element.addEventListener('click', closeGalleryLightbox);
   });
 
+  document.querySelectorAll('.quick-nav-pill').forEach((button) => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.quick-nav-pill').forEach((pill) => pill.classList.remove('is-active'));
+      button.classList.add('is-active');
+      switchTab(button.dataset.quickNav);
+    });
+  });
+
   const mobileMenuToggle = document.getElementById('mobileMenuToggle');
   const mobileMenuOpenBtn = document.getElementById('mobileMenuOpenBtn');
   if (mobileMenuToggle) {
@@ -1400,6 +1414,8 @@ function initializeApp() {
   if (mobileMenuOpenBtn) {
     mobileMenuOpenBtn.addEventListener('click', () => toggleMobileNav());
   }
+
+  document.getElementById('mobileNavBackdrop')?.addEventListener('click', () => toggleMobileNav(false));
 
   loadAdminData();
   bindAdminEvents();
