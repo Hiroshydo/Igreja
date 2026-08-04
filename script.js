@@ -12,9 +12,12 @@ function initializeApp() {
   function initializeDashboardCharts() {
     if (!window.Chart) return;
 
-    const growthCtx = document.getElementById('growthChart');
-    if (growthCtx) {
-      new window.Chart(growthCtx, {
+    dashboardCharts.forEach((chart) => chart.destroy());
+    dashboardCharts = [];
+
+    const chartsConfig = [
+      {
+        id: 'growthChart',
         type: 'line',
         data: {
           labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
@@ -28,41 +31,56 @@ function initializeApp() {
           }]
         },
         options: {
+          responsive: true,
+          maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: { y: { grid: { color: 'rgba(148,163,184,0.12)' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } }
         }
-      });
-    }
-
-    const frequencyCtx = document.getElementById('frequencyChart');
-    if (frequencyCtx) {
-      new window.Chart(frequencyCtx, {
+      },
+      {
+        id: 'frequencyChart',
         type: 'doughnut',
         data: {
           labels: ['Culto', 'EBD', 'PG', 'Ação Social'],
           datasets: [{ data: [38, 24, 19, 19], backgroundColor: ['#f59e0b', '#38bdf8', '#8b5cf6', '#10b981'] }]
         },
         options: {
+          responsive: true,
+          maintainAspectRatio: false,
           plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1' } } },
           cutout: '68%'
         }
-      });
-    }
-
-    const socialCtx = document.getElementById('socialChart');
-    if (socialCtx) {
-      new window.Chart(socialCtx, {
+      },
+      {
+        id: 'socialChart',
         type: 'bar',
         data: {
           labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
           datasets: [{ label: 'Famílias assistidas', data: [22, 24, 27, 30, 33, 38], backgroundColor: ['#8b5cf6', '#8b5cf6', '#8b5cf6', '#8b5cf6', '#8b5cf6', '#8b5cf6'] }]
         },
         options: {
+          responsive: true,
+          maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: { y: { grid: { color: 'rgba(148,163,184,0.12)' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } }
         }
-      });
-    }
+      }
+    ];
+
+    chartsConfig.forEach((config) => {
+      const ctx = document.getElementById(config.id);
+      if (ctx) {
+        dashboardCharts.push(new window.Chart(ctx, {
+          type: config.type,
+          data: config.data,
+          options: config.options
+        }));
+      }
+    });
+  }
+
+  function resizeDashboardCharts() {
+    dashboardCharts.forEach((chart) => chart?.resize());
   }
 
   const galleryCategories = ['Todos', 'Batismo', 'Reuniões', 'Louvorzão', 'Acompanhamento da Construção', 'Culto de Ensino', 'Culto de Ação de Graças', 'Congressos', 'Santa Ceia', 'Eventos Especiais'];
@@ -190,6 +208,7 @@ function initializeApp() {
   let selectedMember = memberDatabase[0];
   let activeGalleryFilter = 'Todos';
   let adminAuthenticated = false;
+  let dashboardCharts = [];
   let adminActiveModule = 'gallery';
   let adminEditing = { gallery: null, events: null, members: null, books: null };
   let adminFilters = { members: { query: '', ministry: 'Todos' } };
@@ -1020,7 +1039,7 @@ function initializeApp() {
       if (window.lucide) {
         window.lucide.createIcons();
       }
-    }, 650);
+    }, 260);
   }
 
   function renderMemberList() {
@@ -1232,7 +1251,7 @@ function initializeApp() {
     clearTimeout(openNotificationToast.timeoutId);
     openNotificationToast.timeoutId = setTimeout(() => {
       toast.classList.add('translate-y-20', 'opacity-0');
-    }, 3500);
+    }, 2600);
   }
 
   function openCertificateModal() {
@@ -1311,6 +1330,8 @@ function initializeApp() {
   window.toggleGalleryZoom = toggleGalleryZoom;
   window.downloadCurrentGalleryImage = downloadCurrentGalleryImage;
   window.shareCurrentGalleryImage = shareCurrentGalleryImage;
+
+  window.addEventListener('resize', resizeDashboardCharts);
 
   document.addEventListener('keydown', (event) => {
     const modal = document.getElementById('galleryLightbox');
