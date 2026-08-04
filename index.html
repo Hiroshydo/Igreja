@@ -16,15 +16,20 @@
 
   <!-- Application Main Shell -->
   <div class="w-full max-w-7xl min-h-screen lg:min-h-[96vh] bg-slate-900 md:rounded-[2rem] border border-slate-800/80 shadow-[0_35px_120px_-30px_rgba(15,23,42,0.85)] overflow-hidden flex flex-col lg:flex-row relative">
-    <aside class="w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-slate-950/80 p-3 sm:p-4 lg:p-5 flex flex-col gap-3 sm:gap-4">
-      <div class="flex items-center gap-3">
-        <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 via-indigo-600 to-violet-600 shadow-lg shadow-indigo-500/20">
-          <i data-lucide="church" class="h-5 w-5 text-slate-950"></i>
+    <aside id="sidePanel" class="w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-slate-950/80 p-3 sm:p-4 lg:p-5 flex flex-col gap-3 sm:gap-4">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 via-indigo-600 to-violet-600 shadow-lg shadow-indigo-500/20">
+            <i data-lucide="church" class="h-5 w-5 text-slate-950"></i>
+          </div>
+          <div>
+            <h1 class="text-base font-semibold text-slate-100">Comunidade Viva</h1>
+            <p class="text-xs text-slate-400">Ecossistema pastoral</p>
+          </div>
         </div>
-        <div>
-          <h1 class="text-base font-semibold text-slate-100">Comunidade Viva</h1>
-          <p class="text-xs text-slate-400">Ecossistema pastoral</p>
-        </div>
+        <button id="mobileMenuToggle" class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700/70 bg-slate-900/80 text-slate-200" aria-label="Abrir menu" type="button">
+          <i data-lucide="menu" class="h-5 w-5"></i>
+        </button>
       </div>
 
       <div class="rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent px-3 py-2 text-xs text-amber-200">
@@ -34,7 +39,7 @@
         </div>
       </div>
 
-      <div class="tab-nav-grid overflow-x-auto lg:overflow-y-auto custom-scrollbar pr-1">
+      <div id="mobileNavPanel" class="tab-nav-grid overflow-x-auto lg:overflow-y-auto custom-scrollbar pr-1">
         <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 whitespace-nowrap">
           <i data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard
         </button>
@@ -82,6 +87,10 @@
     <div class="flex-1 flex flex-col">
     <!-- Top Header -->
     <header class="px-3 sm:px-4 md:px-6 py-4 bg-slate-900/90 border-b border-slate-800 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between z-20 backdrop-blur-md">
+      <button id="mobileMenuOpenBtn" class="lg:hidden inline-flex items-center gap-2 rounded-2xl border border-slate-700/70 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" type="button">
+        <i data-lucide="panel-left" class="h-4 w-4"></i>
+        Menu
+      </button>
       <div>
         <p class="text-[11px] uppercase tracking-[0.3em] text-slate-500">Painel operacional</p>
         <h2 class="text-base sm:text-lg font-semibold text-slate-100">Visão geral da igreja e dos ministérios</h2>

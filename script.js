@@ -1225,6 +1225,16 @@ function initializeApp() {
     }
   }
 
+  function toggleMobileNav(force) {
+    const panel = document.getElementById('mobileNavPanel');
+    const shell = document.getElementById('sidePanel');
+    if (!panel || !shell) return;
+
+    const shouldOpen = typeof force === 'boolean' ? force : !shell.classList.contains('is-open');
+    shell.classList.toggle('is-open', shouldOpen);
+    panel.classList.toggle('is-open', shouldOpen);
+  }
+
   function switchNavigationTab(tabId) {
     if (!tabId || typeof tabId !== 'string') return;
 
@@ -1259,6 +1269,10 @@ function initializeApp() {
       activeBtn.classList.add('is-active');
       activeBtn.setAttribute('aria-pressed', 'true');
       activeBtn.className = 'tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 whitespace-nowrap';
+    }
+
+    if (window.innerWidth < 1024) {
+      toggleMobileNav(false);
     }
   }
 
@@ -1354,7 +1368,12 @@ function initializeApp() {
   window.downloadCurrentGalleryImage = downloadCurrentGalleryImage;
   window.shareCurrentGalleryImage = shareCurrentGalleryImage;
 
-  window.addEventListener('resize', resizeDashboardCharts);
+  window.addEventListener('resize', () => {
+    resizeDashboardCharts();
+    if (window.innerWidth >= 1024) {
+      toggleMobileNav(true);
+    }
+  });
 
   document.addEventListener('keydown', (event) => {
     const modal = document.getElementById('galleryLightbox');
@@ -1372,6 +1391,15 @@ function initializeApp() {
   document.querySelectorAll('[data-close-gallery-lightbox]').forEach((element) => {
     element.addEventListener('click', closeGalleryLightbox);
   });
+
+  const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+  const mobileMenuOpenBtn = document.getElementById('mobileMenuOpenBtn');
+  if (mobileMenuToggle) {
+    mobileMenuToggle.addEventListener('click', () => toggleMobileNav());
+  }
+  if (mobileMenuOpenBtn) {
+    mobileMenuOpenBtn.addEventListener('click', () => toggleMobileNav());
+  }
 
   loadAdminData();
   bindAdminEvents();

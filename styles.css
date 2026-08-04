@@ -90,6 +90,40 @@ body {
 
 
 
+#sidePanel {
+
+  transition: transform 220ms ease, box-shadow 220ms ease, background 220ms ease;
+
+}
+
+
+
+#sidePanel.is-open {
+
+  transform: translateY(0);
+
+}
+
+
+
+#mobileNavPanel {
+
+  transition: max-height 220ms ease, opacity 220ms ease;
+
+}
+
+
+
+#mobileNavPanel.is-open {
+
+  max-height: 1000px;
+
+  opacity: 1;
+
+}
+
+
+
 .tab-content {
 
   display: none;
@@ -736,6 +770,44 @@ body {
 
 
 
+@media (max-width: 1023px) {
+
+  #sidePanel {
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 30;
+
+  }
+
+
+
+  #mobileNavPanel {
+
+    max-height: 0;
+
+    opacity: 0;
+
+    overflow: hidden;
+
+    padding-right: 0;
+
+  }
+
+
+
+  #sidePanel.is-open {
+
+    box-shadow: 0 20px 60px -24px rgba(2, 6, 23, 0.95);
+
+  }
+
+}
+
+
+
 @media (max-width: 900px) {
 
   .chart-canvas {
@@ -805,6 +877,15 @@ body {
   .tab-btn {
 
     justify-content: center;
+
+  }
+
+
+
+  #mobileMenuToggle,
+  #mobileMenuOpenBtn {
+
+    display: inline-flex;
 
   }
 
