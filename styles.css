@@ -90,6 +90,42 @@ body {
 
 
 
+.tab-content {
+
+  display: none;
+
+}
+
+
+
+.tab-content.is-active {
+
+  display: block;
+
+  animation: tabFadeIn 220ms ease both;
+
+}
+
+
+
+.tab-btn {
+
+  position: relative;
+
+  overflow: hidden;
+
+}
+
+
+
+.tab-btn.is-active {
+
+  box-shadow: 0 16px 36px -20px rgba(245, 158, 11, 0.45);
+
+}
+
+
+
 .glass-panel {
 
   background: rgba(15, 23, 42, 0.85);
@@ -766,6 +802,14 @@ body {
 
 
 
+  .tab-btn {
+
+    justify-content: center;
+
+  }
+
+
+
   .tab-nav-grid .tab-btn {
 
     justify-content: center;
@@ -1087,6 +1131,28 @@ body {
   background-size: 200% 100%;
 
   animation: galleryShimmer 1.2s infinite linear;
+
+}
+
+
+
+@keyframes tabFadeIn {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateY(8px);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform: translateY(0);
+
+  }
 
 }
 

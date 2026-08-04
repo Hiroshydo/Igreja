@@ -1,7 +1,10 @@
 ﻿function switchTab(tabId) {
   if (typeof window.__appSwitchTab === 'function') {
     window.__appSwitchTab(tabId);
+    return;
   }
+
+  switchNavigationTab(tabId);
 }
 
 function initializeApp() {
@@ -1223,18 +1226,38 @@ function initializeApp() {
   }
 
   function switchNavigationTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach((el) => el.classList.add('hidden'));
-    const content = document.getElementById(`tab-${tabId}`);
+    if (!tabId || typeof tabId !== 'string') return;
+
+    const normalizedTabId = tabId.replace(/^tab-/, '');
+    const contentId = `tab-${normalizedTabId}`;
+    const buttonId = `tab-btn-${normalizedTabId}`;
+
+    document.querySelectorAll('.tab-content').forEach((el) => {
+      el.classList.add('hidden');
+      el.classList.remove('is-active');
+      el.setAttribute('aria-hidden', 'true');
+    });
+
+    const content = document.getElementById(contentId) || document.getElementById(tabId);
     if (content) {
       content.classList.remove('hidden');
+      content.classList.add('is-active');
+      content.setAttribute('aria-hidden', 'false');
+      window.requestAnimationFrame(() => {
+        content.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     }
 
     document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.classList.remove('is-active');
+      btn.setAttribute('aria-pressed', 'false');
       btn.className = 'tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap';
     });
 
-    const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+    const activeBtn = document.getElementById(buttonId) || document.querySelector(`[onclick*="switchTab('${tabId}')"]`);
     if (activeBtn) {
+      activeBtn.classList.add('is-active');
+      activeBtn.setAttribute('aria-pressed', 'true');
       activeBtn.className = 'tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 whitespace-nowrap';
     }
   }
