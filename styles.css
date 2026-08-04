@@ -637,38 +637,41 @@ body {
     top: 0;
     z-index: 20;
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
     gap: 0.75rem;
     background: linear-gradient(180deg, rgba(2, 6, 23, 0.98), rgba(2, 6, 23, 0.92));
     border-bottom: 1px solid rgba(148, 163, 184, 0.14);
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
-    padding: 0.75rem 0.9rem;
+    padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 0.9rem 0.9rem;
     box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.45);
   }
 
   header > .flex-1 {
     min-width: 0;
-    flex: 1 1 auto;
+    flex: 1 1 100%;
+    width: 100%;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
-    overflow: hidden;
+    overflow: visible;
   }
 
-  header .flex.items-center.gap-2,
-  header .flex.items-center.gap-1.5 {
+  header > .flex.items-center.gap-2,
+  header > .flex.items-center.gap-1.5 {
     min-width: 0;
-    flex-wrap: wrap;
+    width: 100%;
+    justify-content: space-between;
     gap: 0.5rem;
+    flex-wrap: wrap;
   }
 
   header h2 {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    display: block;
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
+    font-size: 1rem;
+    line-height: 1.35;
+    margin: 0;
   }
 
   .mobile-menu-btn {
