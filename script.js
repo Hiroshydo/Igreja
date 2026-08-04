@@ -1253,6 +1253,17 @@
     }
   }
 
+  function filterSidebarNavigation(query) {
+    const normalizedQuery = (query || '').trim().toLowerCase();
+    const navButtons = Array.from(document.querySelectorAll('.tab-btn'));
+
+    navButtons.forEach((button) => {
+      const text = (button.textContent || '').toLowerCase();
+      const matches = !normalizedQuery || text.includes(normalizedQuery);
+      button.style.display = matches ? '' : 'none';
+    });
+  }
+
   function syncNavigationState(tabId) {
     const normalizedTabId = (tabId || '').replace(/^tab-/, '');
     const buttonId = `tab-btn-${normalizedTabId}`;
@@ -1322,7 +1333,10 @@
       content.classList.add('is-active');
       content.setAttribute('aria-hidden', 'false');
       window.requestAnimationFrame(() => {
-        content.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const mainContent = document.querySelector('main');
+        if (mainContent) {
+          mainContent.scrollTo({ top: 0, behavior: window.innerWidth < 1024 ? 'auto' : 'smooth' });
+        }
         resizeDashboardCharts();
       });
       window.setTimeout(() => {
@@ -1485,6 +1499,18 @@
   }
 
   document.getElementById('mobileNavBackdrop')?.addEventListener('click', () => toggleMobileNav(false));
+
+  const sidebarSearchInput = document.getElementById('sidebarSearchInput');
+  if (sidebarSearchInput) {
+    sidebarSearchInput.addEventListener('input', (event) => filterSidebarNavigation(event.target.value));
+    sidebarSearchInput.addEventListener('focus', () => {
+      if (window.innerWidth < 1024) {
+        document.getElementById('sidePanel')?.classList.add('is-open');
+        document.getElementById('mobileNavBackdrop')?.classList.add('is-open');
+        document.body.classList.add('nav-open');
+      }
+    });
+  }
 
   loadAdminData();
   bindAdminEvents();
