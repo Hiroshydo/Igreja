@@ -632,11 +632,37 @@ body {
     position: sticky;
     top: 0;
     z-index: 20;
-    background: linear-gradient(180deg, rgba(2, 6, 23, 0.98), rgba(2, 6, 23, 0.94));
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    padding-left: 0.8rem;
-    padding-right: 0.8rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    background: linear-gradient(180deg, rgba(2, 6, 23, 0.98), rgba(2, 6, 23, 0.92));
+    border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    padding: 0.75rem 0.9rem;
+    box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.45);
+  }
+
+  header > .flex-1 {
+    min-width: 0;
+    flex: 1 1 auto;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    overflow: hidden;
+  }
+
+  header .flex.items-center.gap-2,
+  header .flex.items-center.gap-1.5 {
+    min-width: 0;
+    gap: 0.5rem;
+  }
+
+  header h2 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .mobile-menu-btn {
@@ -654,6 +680,16 @@ body {
   .header-icon-btn {
     width: 2.2rem;
     height: 2.2rem;
+    border-color: rgba(148, 163, 184, 0.18);
+    background: rgba(15, 23, 42, 0.85);
+  }
+
+  .header-icon-btn:hover,
+  .header-icon-btn:focus-visible {
+    transform: translateY(-1px);
+    background: rgba(30, 41, 59, 0.96);
+    border-color: rgba(245, 158, 11, 0.3);
+    box-shadow: 0 10px 20px -18px rgba(245, 158, 11, 0.35);
   }
 
   .tab-nav-grid {
