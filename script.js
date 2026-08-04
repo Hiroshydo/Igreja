@@ -1438,6 +1438,8 @@
   window.openTheologianDetail = openTheologianDetail;
   window.changeRoleView = changeRoleView;
   window.toggleTheme = toggleTheme;
+  window.toggleMobileNav = toggleMobileNav;
+  window.closeMobileNav = closeMobileNav;
   window.openGalleryLightbox = openGalleryLightbox;
   window.closeGalleryLightbox = closeGalleryLightbox;
   window.changeGalleryImage = changeGalleryImage;
