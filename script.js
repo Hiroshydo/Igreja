@@ -1229,6 +1229,29 @@ function initializeApp() {
     }
   }
 
+  function syncNavigationState(tabId) {
+    const normalizedTabId = (tabId || '').replace(/^tab-/, '');
+    const buttonId = `tab-btn-${normalizedTabId}`;
+    const quickNavSelector = `.quick-nav-pill[data-quick-nav="${normalizedTabId}"]`;
+
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.classList.remove('is-active');
+      btn.setAttribute('aria-pressed', 'false');
+      btn.className = 'tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap';
+    });
+
+    const activeBtn = document.getElementById(buttonId) || document.querySelector(`[onclick*="switchTab('${tabId}')"]`);
+    if (activeBtn) {
+      activeBtn.classList.add('is-active');
+      activeBtn.setAttribute('aria-pressed', 'true');
+      activeBtn.className = 'tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 whitespace-nowrap';
+    }
+
+    document.querySelectorAll('.quick-nav-pill').forEach((pill) => {
+      pill.classList.toggle('is-active', pill.matches(quickNavSelector));
+    });
+  }
+
   function toggleMobileNav(force) {
     const panel = document.getElementById('sidePanel');
     const backdrop = document.getElementById('mobileNavBackdrop');
@@ -1260,21 +1283,14 @@ function initializeApp() {
       content.setAttribute('aria-hidden', 'false');
       window.requestAnimationFrame(() => {
         content.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        resizeDashboardCharts();
       });
+      window.setTimeout(() => {
+        resizeDashboardCharts();
+      }, 220);
     }
 
-    document.querySelectorAll('.tab-btn').forEach((btn) => {
-      btn.classList.remove('is-active');
-      btn.setAttribute('aria-pressed', 'false');
-      btn.className = 'tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-slate-100 whitespace-nowrap';
-    });
-
-    const activeBtn = document.getElementById(buttonId) || document.querySelector(`[onclick*="switchTab('${tabId}')"]`);
-    if (activeBtn) {
-      activeBtn.classList.add('is-active');
-      activeBtn.setAttribute('aria-pressed', 'true');
-      activeBtn.className = 'tab-btn w-full justify-start px-3 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 whitespace-nowrap';
-    }
+    syncNavigationState(normalizedTabId);
 
     if (window.innerWidth < 1024) {
       toggleMobileNav(false);
@@ -1339,6 +1355,8 @@ function initializeApp() {
       switchTab('ebd-ensino');
     } else if (role === 'membro') {
       switchTab('biblioteca-historia');
+    } else if (role === 'pastor') {
+      switchTab('dashboard');
     } else {
       switchTab('admin-membros');
     }
@@ -1348,7 +1366,7 @@ function initializeApp() {
 
   function toggleTheme() {
     document.body.classList.toggle('theme-light');
-    const icon = document.querySelector('[onclick="toggleTheme()"] i');
+    const icon = document.getElementById('themeToggleButton')?.querySelector('i');
     if (icon) {
       icon.setAttribute('data-lucide', document.body.classList.contains('theme-light') ? 'sun' : 'moon-star');
       if (window.lucide) {
@@ -1379,6 +1397,10 @@ function initializeApp() {
       toggleMobileNav(true);
       document.body.classList.remove('nav-open');
     }
+  });
+
+  window.addEventListener('orientationchange', () => {
+    window.setTimeout(() => resizeDashboardCharts(), 180);
   });
 
   document.addEventListener('keydown', (event) => {
