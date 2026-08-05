@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { FormEvent, useMemo, useState } from "react";
+import Image from "next/image";
 import {
   Bar,
   BarChart,
@@ -549,7 +550,13 @@ export function PremiumDashboard() {
             <div className="grid gap-3 sm:grid-cols-2">
               {filteredGallery.map((item) => (
                 <article key={item.id} className="overflow-hidden rounded-xl border border-white/12 bg-white/5">
-                  <img src={item.image} alt={item.title} className="h-36 w-full object-cover" />
+                  <Image
+                    src={item.image}
+                    alt={item.title}
+                    width={900}
+                    height={560}
+                    className="h-36 w-full object-cover"
+                  />
                   <div className="p-3">
                     <p className="font-semibold text-slate-100">{item.title}</p>
                     <p className="text-xs text-slate-400">{item.category}</p>
