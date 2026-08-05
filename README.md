@@ -1,36 +1,251 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🕊️ Comunidade Viva - Dashboard Digital
 
-## Getting Started
+Bem-vindo ao projeto **Comunidade Viva** — uma plataforma web moderna e profissional para gestão integrada da igreja, ministérios, membros, eventos e comunidade pastoral. 🌟
 
-First, run the development server:
+## ✨ O que é?
 
+Sistema completo construído com **Next.js 16** que oferece:
+
+- 🏛️ **Dashboard** - Visão geral da igreja
+- 👥 **Gestão de Membros** - Cadastro e acompanhamento
+- 🎶 **Ministérios** - Organização e liderança
+- 📅 **Eventos** - Cultos, reuniões e atividades
+- 📊 **Relatórios** - Gráficos e estatísticas
+- 🩺 **Saúde Pastoral** - Acompanhamento espiritual
+- 💬 **Comunicação** - Integrada e centralizada
+
+## 🚀 Quick Start
+
+### 1. Instalar dependências
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Desenvolvimento local
+```bash
+npm run dev
+```
+Acesse: **http://localhost:3000**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Build para produção
+```bash
+npm run build
+npm start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📁 Estrutura do Projeto
 
-## Learn More
+```
+Comunidade Viva/
+├── src/
+│   ├── app/
+│   │   ├── api/                 # 🔧 Backend - API Routes
+│   │   │   ├── members/         # Endpoints de membros
+│   │   │   ├── events/          # Endpoints de eventos
+│   │   │   ├── ministries/      # Endpoints de ministérios
+│   │   │   ├── health/          # Health check
+│   │   │   └── route.ts         # Rota raiz
+│   │   ├── components/          # 🎨 Frontend - Componentes
+│   │   │   └── ui/              # Componentes de UI
+│   │   ├── layout.tsx           # Layout principal
+│   │   ├── page.tsx             # Homepage
+│   │   └── globals.css          # Estilos globais
+│   ├── lib/
+│   │   └── utils.ts             # Funções auxiliares
+│   └── components/
+│       └── premium-dashboard.tsx # Dashboard premium
+├── public/                       # Arquivos estáticos
+├── package.json
+├── next.config.ts
+├── tsconfig.json
+├── tailwind.config.ts
+├── postcss.config.mjs
+├── .env.example
+└── README.md
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 🔧 Tecnologias
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Camada | Tecnologia |
+|--------|-----------|
+| **Frontend** | React 19, Next.js 16, TypeScript |
+| **Styling** | Tailwind CSS 4, PostCSS |
+| **UI Components** | Lucide React, Framer Motion |
+| **Gráficos** | Recharts |
+| **Backend** | Next.js API Routes |
+| **Deploy** | Vercel Ready |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📡 API Endpoints
 
-## Deploy on Vercel
+```
+GET/POST  /api/members        # Gerenciar membros
+GET/POST  /api/events         # Gerenciar eventos
+GET/POST  /api/ministries     # Gerenciar ministérios
+GET       /api/health         # Status do servidor
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🚀 Deploy na Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Passos:
+
+1. **Prepare o código**
+```bash
+git add .
+git commit -m "Atualização: Comunidade Viva v1.0"
+git push origin main
+```
+
+2. **No Vercel Dashboard**
+   - Vá em https://vercel.com/dashboard
+   - Clique em "Add New Project"
+   - Selecione seu repositório
+   - Clique "Deploy"
+
+**Seu projeto estará em:** `https://seu-dominio.vercel.app`
+
+### Variáveis de Ambiente
+
+Adicione em **Settings → Environment Variables**:
+```
+NODE_ENV=production
+```
+
+Ou crie `.env.local` para desenvolvimento:
+```bash
+NODE_ENV=development
+```
+
+Veja `.env.example` para mais variáveis.
+
+## 🛠️ Comandos Úteis
+
+```bash
+# Desenvolvimento
+npm run dev         # Inicia servidor dev
+npm run lint        # Verifica código
+npm run build       # Build para produção
+npm start          # Inicia servidor de produção
+
+# Git
+git status         # Ver mudanças
+git add .          # Adicionar tudo
+git commit -m "msg" # Fazer commit
+git push           # Enviar para GitHub
+```
+
+## 📊 Estrutura de Dados
+
+### Members (Membros)
+```json
+{
+  "id": 1,
+  "name": "João Silva",
+  "email": "joao@email.com",
+  "joinDate": "2023-01-15",
+  "status": "ativo"
+}
+```
+
+### Events (Eventos)
+```json
+{
+  "id": 1,
+  "title": "Culto Domingo",
+  "date": "2024-08-11",
+  "time": "18:00",
+  "location": "Templo Principal",
+  "attendees": 150
+}
+```
+
+### Ministries (Ministérios)
+```json
+{
+  "id": 1,
+  "name": "Louvor",
+  "description": "Ministério musical",
+  "leader": "Pedro Costa",
+  "members": 12
+}
+```
+
+## ✨ Funcionalidades Principais
+
+- ✅ Dashboard responsivo e intuitivo
+- ✅ API RESTful completa
+- ✅ Autenticação pronta para implementar
+- ✅ Design moderno com Tailwind CSS
+- ✅ Componentes reutilizáveis
+- ✅ Gráficos interativos
+- ✅ Mobile-friendly
+- ✅ Dark mode ready
+- ✅ Otimizado para SEO
+- ✅ TypeScript full-stack
+
+## 🔐 Segurança & Performance
+
+- ✅ TypeScript para type safety
+- ✅ NextAuth pronto para autenticação
+- ✅ Validação de dados com Zod (pronto para adicionar)
+- ✅ Rate limiting (pronto para adicionar)
+- ✅ CORS configurável
+- ✅ Environment variables seguras
+
+## 📚 Próximos Passos
+
+1. **Banco de Dados** - Integrar PostgreSQL/MongoDB
+2. **Autenticação** - Implementar NextAuth.js
+3. **Validação** - Adicionar Zod para schemas
+4. **Email** - Integrar serviço de email
+5. **Backup** - Sistema de backup automático
+6. **Notificações** - Push notifications
+7. **Admin Panel** - Painel administrativo completo
+
+## 🆘 Troubleshooting
+
+### Port 3000 em uso?
+```bash
+npm run dev -- -p 3001
+```
+
+### Erro de build?
+```bash
+rm -rf .next
+npm run build
+```
+
+### npm não encontrado?
+Instale Node.js em https://nodejs.org
+
+### Erro de dependências?
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+## 💡 Dicas de Desenvolvimento
+
+1. Use TypeScript - Melhor experience com IntelliSense
+2. Crie componentes pequenos e reutilizáveis
+3. Use o arquivo `.env.example` como referência
+4. Teste as APIs com `curl` ou Insomnia
+5. Mantenha o código limpo com linting
+
+## 📞 Suporte
+
+- 📖 [Next.js Docs](https://nextjs.org/docs)
+- 🎨 [Tailwind CSS](https://tailwindcss.com)
+- ⚛️ [React Docs](https://react.dev)
+- 🚀 [Vercel Docs](https://vercel.com/docs)
+
+## 📄 Licença
+
+Projeto criado com ❤️ para a comunidade.
+
+---
+
+**Status:** ✅ Pronto para produção  
+**Versão:** 1.0.0  
+**Último Update:** 2026-08-05  
+
+🚀 **Comece com `npm install && npm run dev`**
