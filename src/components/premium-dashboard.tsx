@@ -20,7 +20,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { FormEvent, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import {
   Bar,
@@ -39,6 +39,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import {
   Card,
   CardContent,
@@ -46,6 +47,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { dashboardPermissionByTab, hasPermission } from "@/lib/auth/permissions";
+import type { AuthenticatedAppUser } from "@/types";
 
 type TabKey =
   | "dashboard"
@@ -64,7 +67,7 @@ type AdminModule = "gallery" | "events" | "members" | "books";
 
 const navItems = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { key: "admin-dashboard", label: "Painel Admin", icon: ShieldCheck },
+  { key: "admin-dashboard", label: "Painel DEV", icon: ShieldCheck },
   { key: "admin-membros", label: "Membros", icon: Users },
   { key: "ministerios-musica", label: "Louvor", icon: Music },
   { key: "galeria-fotos", label: "Galeria", icon: Images },
@@ -214,23 +217,35 @@ const discipleshipFlow = [
   { stage: "Lideranca", count: 8 },
 ];
 
-export function PremiumDashboard() {
+interface PremiumDashboardProps {
+  access: AuthenticatedAppUser;
+}
+
+export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const [galleryFilter, setGalleryFilter] = useState<string>("Todos");
   const [memberSearch, setMemberSearch] = useState("");
   const [librarySearch, setLibrarySearch] = useState("");
   const [doctrineOpen, setDoctrineOpen] = useState<string | null>("sola-scriptura");
-  const [adminEmail, setAdminEmail] = useState("admin@igrejaviva.com");
-  const [adminPassword, setAdminPassword] = useState("admin123");
-  const [adminLogged, setAdminLogged] = useState(false);
   const [adminModule, setAdminModule] = useState<AdminModule>("gallery");
-  const [toast, setToast] = useState("");
 
   const filteredGallery = useMemo(() => {
     if (galleryFilter === "Todos") return galleryItems;
     return galleryItems.filter((item) => item.category === galleryFilter);
   }, [galleryFilter]);
+
+  const visibleNavItems = useMemo(
+    () =>
+      navItems.filter((item) =>
+        hasPermission(access.permissions, access.roleCodes, dashboardPermissionByTab[item.key])
+      ),
+    [access.permissions, access.roleCodes]
+  );
+
+  const resolvedActiveTab = visibleNavItems.some((item) => item.key === activeTab)
+    ? activeTab
+    : visibleNavItems[0]?.key ?? "dashboard";
 
   const filteredMembers = useMemo(() => {
     const q = memberSearch.toLowerCase();
@@ -255,19 +270,6 @@ export function PremiumDashboard() {
   const handleTabChange = (tab: TabKey) => {
     setActiveTab(tab);
     setIsMenuOpen(false);
-  };
-
-  const handleAdminLogin = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (adminEmail === "admin@igrejaviva.com" && adminPassword === "admin123") {
-      setAdminLogged(true);
-      setToast("Login administrativo realizado com sucesso.");
-      window.setTimeout(() => setToast(""), 2200);
-      return;
-    }
-
-    setToast("Credenciais invalidas. Use admin@igrejaviva.com / admin123");
-    window.setTimeout(() => setToast(""), 2600);
   };
 
   const renderAdminModule = () => {
@@ -320,7 +322,7 @@ export function PremiumDashboard() {
   };
 
   const renderActiveTab = () => {
-    if (activeTab === "dashboard") {
+    if (resolvedActiveTab === "dashboard") {
       return (
         <>
           <motion.section
@@ -405,68 +407,40 @@ export function PremiumDashboard() {
       );
     }
 
-    if (activeTab === "admin-dashboard") {
+    if (resolvedActiveTab === "admin-dashboard") {
       return (
         <Card>
-          {!adminLogged ? (
-            <>
-              <CardHeader>
-                <CardTitle>Acesso administrativo</CardTitle>
-                <CardDescription>Use as credenciais demo para liberar os modulos de gestao.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form className="space-y-3" onSubmit={handleAdminLogin}>
-                  <input
-                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
-                    value={adminEmail}
-                    onChange={(event) => setAdminEmail(event.target.value)}
-                    placeholder="E-mail"
-                    type="email"
-                  />
-                  <input
-                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
-                    value={adminPassword}
-                    onChange={(event) => setAdminPassword(event.target.value)}
-                    placeholder="Senha"
-                    type="password"
-                  />
-                  <Button type="submit">Entrar no painel</Button>
-                </form>
-              </CardContent>
-            </>
-          ) : (
-            <>
-              <CardHeader>
-                <CardTitle>Painel da igreja</CardTitle>
-                <CardDescription>Gestao de galeria, eventos, membros e biblioteca.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-3 flex flex-wrap gap-2">
-                  {[
-                    ["gallery", "Galeria"],
-                    ["events", "Eventos"],
-                    ["members", "Membros"],
-                    ["books", "Biblioteca"],
-                  ].map(([key, label]) => (
-                    <Button
-                      key={key}
-                      size="sm"
-                      variant={adminModule === key ? "default" : "subtle"}
-                      onClick={() => setAdminModule(key as AdminModule)}
-                    >
-                      {label}
-                    </Button>
-                  ))}
-                </div>
-                {renderAdminModule()}
-              </CardContent>
-            </>
-          )}
+          <>
+            <CardHeader>
+              <CardTitle>Painel DEV</CardTitle>
+              <CardDescription>Área exclusiva para operação avançada, auditoria e gestão central do sistema.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-3 flex flex-wrap gap-2">
+                {[
+                  ["gallery", "Galeria"],
+                  ["events", "Eventos"],
+                  ["members", "Membros"],
+                  ["books", "Biblioteca"],
+                ].map(([key, label]) => (
+                  <Button
+                    key={key}
+                    size="sm"
+                    variant={adminModule === key ? "default" : "subtle"}
+                    onClick={() => setAdminModule(key as AdminModule)}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+              {renderAdminModule()}
+            </CardContent>
+          </>
         </Card>
       );
     }
 
-    if (activeTab === "admin-membros") {
+    if (resolvedActiveTab === "admin-membros") {
       return (
         <section className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
           <Card>
@@ -510,7 +484,7 @@ export function PremiumDashboard() {
       );
     }
 
-    if (activeTab === "ministerios-musica") {
+    if (resolvedActiveTab === "ministerios-musica") {
       return (
         <Card>
           <CardHeader>
@@ -527,7 +501,7 @@ export function PremiumDashboard() {
       );
     }
 
-    if (activeTab === "galeria-fotos") {
+    if (resolvedActiveTab === "galeria-fotos") {
       return (
         <Card>
           <CardHeader>
@@ -569,7 +543,7 @@ export function PremiumDashboard() {
       );
     }
 
-    if (activeTab === "ebd-ensino") {
+    if (resolvedActiveTab === "ebd-ensino") {
       return (
         <Card>
           <CardHeader>
@@ -586,7 +560,7 @@ export function PremiumDashboard() {
       );
     }
 
-    if (activeTab === "biblioteca-historia") {
+    if (resolvedActiveTab === "biblioteca-historia") {
       return (
         <Card>
           <CardHeader>
@@ -613,7 +587,7 @@ export function PremiumDashboard() {
       );
     }
 
-    if (activeTab === "centro-doutrinas") {
+    if (resolvedActiveTab === "centro-doutrinas") {
       return (
         <div className="space-y-3">
           {doctrineCards.map((item) => (
@@ -640,7 +614,7 @@ export function PremiumDashboard() {
       );
     }
 
-    if (activeTab === "scorecard-saude") {
+    if (resolvedActiveTab === "scorecard-saude") {
       return (
         <section className="grid gap-4 lg:grid-cols-2">
           <Card>
@@ -689,7 +663,7 @@ export function PremiumDashboard() {
       );
     }
 
-    if (activeTab === "liturgia-comunicacao") {
+    if (resolvedActiveTab === "liturgia-comunicacao") {
       return (
         <Card>
           <CardHeader>
@@ -765,6 +739,13 @@ export function PremiumDashboard() {
             <Button variant="ghost" size="icon" aria-label="Tema">
               <MoonStar className="h-4 w-4" />
             </Button>
+            <div className="hidden items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-1.5 md:flex">
+              <div className="text-right">
+                <p className="text-xs text-slate-400">{access.roleCodes[0] ?? "AUTENTICADO"}</p>
+                <p className="text-sm font-medium text-slate-50">{access.fullName}</p>
+              </div>
+              <SignOutButton />
+            </div>
           </div>
         </div>
       </header>
@@ -772,7 +753,7 @@ export function PremiumDashboard() {
       <div className="relative mx-auto grid w-full max-w-7xl gap-4 px-4 pb-10 pt-4 sm:px-6 md:grid-cols-[270px_minmax(0,1fr)]">
         <aside className="hidden rounded-3xl border border-white/12 bg-slate-900/65 p-4 shadow-[0_30px_70px_-35px_rgba(15,23,42,0.95)] backdrop-blur-xl md:block">
           <div className="space-y-2">
-            {navItems.map((item, index) => (
+            {visibleNavItems.map((item, index) => (
               <motion.button
                 key={item.label}
                 initial={{ opacity: 0, x: -16 }}
@@ -780,7 +761,7 @@ export function PremiumDashboard() {
                 transition={{ delay: index * 0.05 + 0.08 }}
                 onClick={() => handleTabChange(item.key)}
                 className={`group flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left text-sm transition hover:-translate-y-0.5 ${
-                  activeTab === item.key
+                  resolvedActiveTab === item.key
                     ? "border-amber-300/40 bg-amber-300/15 text-amber-100"
                     : "border-white/10 bg-white/4 text-slate-200 hover:border-amber-300/35 hover:bg-white/10"
                 }`}
@@ -795,7 +776,7 @@ export function PremiumDashboard() {
         <main className="space-y-4">
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeTab}
+              key={resolvedActiveTab}
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
@@ -833,11 +814,11 @@ export function PremiumDashboard() {
                 </Button>
               </div>
               <div className="space-y-2">
-                {navItems.map((item) => (
+                {visibleNavItems.map((item) => (
                   <button
                     key={item.label}
                     className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm ${
-                      activeTab === item.key
+                      resolvedActiveTab === item.key
                         ? "border-amber-300/40 bg-amber-300/15 text-amber-100"
                         : "border-white/10 bg-white/5 text-slate-100"
                     }`}
@@ -850,19 +831,6 @@ export function PremiumDashboard() {
               </div>
             </motion.aside>
           </>
-        ) : null}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {toast ? (
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-5 right-5 z-[60] rounded-xl border border-white/15 bg-slate-900/95 px-4 py-2 text-sm text-slate-100 shadow-2xl"
-          >
-            {toast}
-          </motion.div>
         ) : null}
       </AnimatePresence>
     </div>

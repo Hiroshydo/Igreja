@@ -5,23 +5,35 @@
 import { useState, useEffect } from 'react';
 import { ApiResponse } from '@/types';
 
+type FormValueMap = Record<string, unknown>;
+
 /**
  * Hook para fazer requisições à API com carregamento e tratamento de erros
  */
 export function useApi<T>(
-  fetchFn: () => Promise<ApiResponse<T>>,
-  dependencies: any[] = []
+  fetchFn: () => Promise<ApiResponse<T>>
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
+    let cancelled = false;
 
-    fetchFn()
+    Promise.resolve()
+      .then(() => {
+        if (!cancelled) {
+          setLoading(true);
+          setError(null);
+        }
+
+        return fetchFn();
+      })
       .then((response) => {
+        if (cancelled) {
+          return;
+        }
+
         if (response.success && response.data) {
           setData(response.data);
         } else {
@@ -29,13 +41,23 @@ export function useApi<T>(
         }
       })
       .catch((err) => {
+        if (cancelled) {
+          return;
+        }
+
         setError('Erro de conexão');
         console.error('useApi error:', err);
       })
       .finally(() => {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       });
-  }, dependencies);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchFn]);
 
   return { data, loading, error };
 }
@@ -43,7 +65,7 @@ export function useApi<T>(
 /**
  * Hook para gerenciar estados de formulário
  */
-export function useForm<T extends Record<string, any>>(initialValues: T) {
+export function useForm<T extends FormValueMap>(initialValues: T) {
   const [values, setValues] = useState<T>(initialValues);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -97,18 +119,21 @@ export function useForm<T extends Record<string, any>>(initialValues: T) {
  * Hook para detecção de tamanho de tela (responsive)
  */
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false);
+  const [matches, setMatches] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    return window.matchMedia(query).matches;
+  });
 
   useEffect(() => {
     const media = window.matchMedia(query);
-    if (media.matches !== matches) {
-      setMatches(media.matches);
-    }
 
     const listener = () => setMatches(media.matches);
     media.addEventListener('change', listener);
     return () => media.removeEventListener('change', listener);
-  }, [matches, query]);
+  }, [query]);
 
   return matches;
 }
@@ -117,14 +142,16 @@ export function useMediaQuery(query: string): boolean {
  * Hook para modo escuro
  */
 export function useDarkMode() {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
 
-  useEffect(() => {
-    const isDarkMode =
+    return (
       localStorage.getItem('darkMode') === 'true' ||
-      window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDark(isDarkMode);
-  }, []);
+      window.matchMedia('(prefers-color-scheme: dark)').matches
+    );
+  });
 
   const toggle = () => {
     setIsDark((prev) => {

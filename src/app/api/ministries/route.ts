@@ -1,4 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from "next/server";
+
+import { requireRouteAccess } from "@/lib/auth/session";
+import { jsonError, jsonSuccess } from "@/lib/http";
+import { ministryCreateSchema } from "@/lib/validation";
+import { writeAuditLog } from "@/services/audit.service";
+import { ministriesService } from "@/services/ministries.service";
 
 /**
  * GET /api/ministries
@@ -6,37 +12,16 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Conectar com banco de dados
-    const ministries = [
-      {
-        id: 1,
-        name: 'Ministério de Louvor',
-        description: 'Responsável pela música durante os cultos',
-        leader: 'Pedro Costa',
-        members: 12,
-      },
-      {
-        id: 2,
-        name: 'Ministério de Crianças',
-        description: 'Acompanhamento e educação de crianças',
-        leader: 'Ana Silva',
-        members: 8,
-      },
-      {
-        id: 3,
-        name: 'Ministério de Visitação',
-        description: 'Visitas a membros e necessitados',
-        leader: 'Carlos Santos',
-        members: 15,
-      },
-    ];
+    const access = await requireRouteAccess({ request, resource: "ministries", action: "read" });
+    if (access.response) {
+      return access.response;
+    }
 
-    return NextResponse.json({ success: true, data: ministries });
+    const ministries = await ministriesService.list(access.context.congregationId);
+
+    return jsonSuccess(ministries);
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Erro ao buscar ministérios' },
-      { status: 500 }
-    );
+    return jsonError(error, "Erro ao buscar ministérios");
   }
 }
 
@@ -46,23 +31,25 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    
-    // TODO: Validar e salvar no banco de dados
-    const newMinistry = {
-      id: Date.now(),
-      ...body,
-      createdAt: new Date().toISOString(),
-    };
+    const access = await requireRouteAccess({ request, resource: "ministries", action: "create" });
+    if (access.response) {
+      return access.response;
+    }
 
-    return NextResponse.json(
-      { success: true, data: newMinistry, message: 'Ministério criado com sucesso' },
-      { status: 201 }
-    );
+    const body = ministryCreateSchema.parse(await request.json());
+    const newMinistry = await ministriesService.create(body, access.context);
+
+    await writeAuditLog({
+      request,
+      context: access.context,
+      action: "create",
+      entityName: "ministries",
+      entityId: String(newMinistry.id),
+      afterData: newMinistry,
+    });
+
+    return jsonSuccess(newMinistry, { message: "Ministério criado com sucesso", status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Erro ao criar ministério' },
-      { status: 400 }
-    );
+    return jsonError(error, "Erro ao criar ministério");
   }
 }

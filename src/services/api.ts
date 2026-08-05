@@ -2,7 +2,7 @@
  * Serviços de API para comunicação com o backend
  */
 
-import { ApiResponse, Member, Event, Ministry, DashboardStats } from '@/types';
+import { ApiResponse, Member, Event, Ministry, DashboardStats, HealthStatus } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -155,7 +155,7 @@ export const dashboardService = {
     return apiCall<DashboardStats>('/api/dashboard/stats');
   },
 
-  async getHealthStatus(): Promise<ApiResponse<any>> {
-    return apiCall('/api/health');
+  async getHealthStatus(): Promise<ApiResponse<HealthStatus>> {
+    return apiCall<HealthStatus>('/api/health');
   },
 };

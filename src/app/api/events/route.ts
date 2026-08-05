@@ -1,4 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from "next/server";
+
+import { requireRouteAccess } from "@/lib/auth/session";
+import { jsonError, jsonSuccess } from "@/lib/http";
+import { eventCreateSchema } from "@/lib/validation";
+import { writeAuditLog } from "@/services/audit.service";
+import { eventsService } from "@/services/events.service";
 
 /**
  * GET /api/events
@@ -6,30 +12,16 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Conectar com banco de dados
-    const events = [
-      {
-        id: 1,
-        title: 'Culto Domingo',
-        date: '2024-08-11',
-        time: '18:00',
-        location: 'Templo Principal',
-      },
-      {
-        id: 2,
-        title: 'Estudo Bíblico',
-        date: '2024-08-14',
-        time: '19:30',
-        location: 'Sala de Reuniões',
-      },
-    ];
+    const access = await requireRouteAccess({ request, resource: "events", action: "read" });
+    if (access.response) {
+      return access.response;
+    }
 
-    return NextResponse.json({ success: true, data: events });
+    const events = await eventsService.list(access.context.congregationId);
+
+    return jsonSuccess(events);
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Erro ao buscar eventos' },
-      { status: 500 }
-    );
+    return jsonError(error, "Erro ao buscar eventos");
   }
 }
 
@@ -39,23 +31,25 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    
-    // TODO: Validar e salvar no banco de dados
-    const newEvent = {
-      id: Date.now(),
-      ...body,
-      createdAt: new Date().toISOString(),
-    };
+    const access = await requireRouteAccess({ request, resource: "events", action: "create" });
+    if (access.response) {
+      return access.response;
+    }
 
-    return NextResponse.json(
-      { success: true, data: newEvent, message: 'Evento criado com sucesso' },
-      { status: 201 }
-    );
+    const body = eventCreateSchema.parse(await request.json());
+    const newEvent = await eventsService.create(body, access.context);
+
+    await writeAuditLog({
+      request,
+      context: access.context,
+      action: "create",
+      entityName: "events",
+      entityId: String(newEvent.id),
+      afterData: newEvent,
+    });
+
+    return jsonSuccess(newEvent, { message: "Evento criado com sucesso", status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Erro ao criar evento' },
-      { status: 400 }
-    );
+    return jsonError(error, "Erro ao criar evento");
   }
 }

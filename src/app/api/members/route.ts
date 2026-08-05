@@ -1,4 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from "next/server";
+
+import { requireRouteAccess } from "@/lib/auth/session";
+import { jsonError, jsonSuccess } from "@/lib/http";
+import { memberCreateSchema } from "@/lib/validation";
+import { writeAuditLog } from "@/services/audit.service";
+import { membersService } from "@/services/members.service";
 
 /**
  * GET /api/members
@@ -6,18 +12,16 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Conectar com banco de dados
-    const members = [
-      { id: 1, name: 'João Silva', email: 'joao@email.com', joinDate: '2023-01-15' },
-      { id: 2, name: 'Maria Santos', email: 'maria@email.com', joinDate: '2023-03-20' },
-    ];
+    const access = await requireRouteAccess({ request, resource: "members", action: "read" });
+    if (access.response) {
+      return access.response;
+    }
 
-    return NextResponse.json({ success: true, data: members });
+    const members = await membersService.list(access.context.congregationId);
+
+    return jsonSuccess(members);
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Erro ao buscar membros' },
-      { status: 500 }
-    );
+    return jsonError(error, "Erro ao buscar membros");
   }
 }
 
@@ -27,23 +31,25 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    
-    // TODO: Validar e salvar no banco de dados
-    const newMember = {
-      id: Date.now(),
-      ...body,
-      joinDate: new Date().toISOString().split('T')[0],
-    };
+    const access = await requireRouteAccess({ request, resource: "members", action: "create" });
+    if (access.response) {
+      return access.response;
+    }
 
-    return NextResponse.json(
-      { success: true, data: newMember, message: 'Membro criado com sucesso' },
-      { status: 201 }
-    );
+    const body = memberCreateSchema.parse(await request.json());
+    const newMember = await membersService.create(body, access.context);
+
+    await writeAuditLog({
+      request,
+      context: access.context,
+      action: "create",
+      entityName: "members",
+      entityId: String(newMember.id),
+      afterData: newMember,
+    });
+
+    return jsonSuccess(newMember, { message: "Membro criado com sucesso", status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Erro ao criar membro' },
-      { status: 400 }
-    );
+    return jsonError(error, "Erro ao criar membro");
   }
 }
