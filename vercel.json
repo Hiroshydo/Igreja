@@ -1,15 +1,15 @@
 {
   "version": 2,
-  "buildCommand": "cd igreja-premium && npm run build",
-  "outputDirectory": "igreja-premium/.next",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
   "env": {
     "NODE_ENV": "production"
   },
   "redirects": [
     {
-      "source": "/:path*",
-      "destination": "/api/:path*",
-      "statusCode": 307
+      "source": "/index.html",
+      "destination": "/",
+      "statusCode": 301
     }
   ]
 }
