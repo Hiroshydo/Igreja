@@ -133,12 +133,12 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [capsLockOn, setCapsLockOn] = useState(false);
   const [activeField, setActiveField] = useState<"email" | "password" | null>(null);
-  const [visualMode, setVisualMode] = useState<"luxe" | "viva">(() => {
+  const [visualMode, setVisualMode] = useState<"sereno" | "viva">(() => {
     if (typeof window === "undefined") {
-      return "luxe";
+      return "sereno";
     }
 
-    return window.localStorage.getItem(visualModeStorageKey) === "viva" ? "viva" : "luxe";
+    return window.localStorage.getItem(visualModeStorageKey) === "viva" ? "viva" : "sereno";
   });
   const [selectedRole, setSelectedRole] = useState<string>(() => {
     if (typeof window === "undefined") {
@@ -305,7 +305,7 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
     setInfo("Suporte pronto para ajudar: use o e-mail ministerial e informe sua congregacao.");
   };
 
-  const handleVisualModeChange = (mode: "luxe" | "viva") => {
+  const handleVisualModeChange = (mode: "sereno" | "viva") => {
     setVisualMode(mode);
     window.localStorage.setItem(visualModeStorageKey, mode);
     setThemeTransitionToken((prev) => prev + 1);
@@ -525,7 +525,7 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
             <div className="flex flex-wrap gap-2 pt-1">
               <button
                 type="button"
-                onClick={() => handleVisualModeChange("luxe")}
+                onClick={() => handleVisualModeChange("sereno")}
                 className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
                   !isViva
                     ? "border-amber-300/45 bg-amber-300/16 text-amber-100"
@@ -534,7 +534,7 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
                 aria-pressed={!isViva}
               >
                 <Gem className="h-3 w-3" />
-                Luxo
+                Sereno
               </button>
               <button
                 type="button"
