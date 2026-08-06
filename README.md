@@ -108,12 +108,20 @@ git push origin main
 Adicione em **Settings → Environment Variables**:
 ```
 NODE_ENV=production
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+SUPABASE_SECRET_KEY=sb_secret_...
 ```
 
 Ou crie `.env.local` para desenvolvimento:
 ```bash
 NODE_ENV=development
 ```
+
+Observações:
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` pode ficar no cliente (navegador).
+- `SUPABASE_SECRET_KEY` deve ficar apenas no servidor.
+- As variáveis legadas `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` ainda funcionam como fallback durante migração.
 
 Veja `.env.example` para mais variáveis.
 

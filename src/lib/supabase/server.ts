@@ -8,7 +8,10 @@ export async function createServerSupabaseClient() {
   const env = getPublicEnv();
   const cookieStore = await cookies();
 
-  return createServerClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+  return createServerClient<Database>(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -23,5 +26,6 @@ export async function createServerSupabaseClient() {
         }
       },
     },
-  });
+    },
+  );
 }
