@@ -19,6 +19,14 @@ function normalizePermission(resource: string, action: string): PermissionKey {
   return `${resource}.${action}` as PermissionKey;
 }
 
+function isSchemaCacheMissingTable(error: { code?: string; message?: string } | null | undefined) {
+  if (!error) {
+    return false;
+  }
+
+  return error.code === "PGRST205" || Boolean(error.message?.includes("Could not find the table"));
+}
+
 async function loadRoleAccess(profileId: string) {
   if (!hasServerEnv()) {
     return {
@@ -34,6 +42,13 @@ async function loadRoleAccess(profileId: string) {
     .eq("profile_id", profileId);
 
   if (roleError) {
+    if (isSchemaCacheMissingTable(roleError)) {
+      return {
+        roles: [] as string[],
+        permissions: ["dashboard.read"] as string[],
+      };
+    }
+
     throw new AppError("Não foi possível carregar os papéis do usuário", 500, "roles_fetch_failed");
   }
 
@@ -56,6 +71,13 @@ async function loadRoleAccess(profileId: string) {
     .in("role_id", roleIds);
 
   if (permissionError) {
+    if (isSchemaCacheMissingTable(permissionError)) {
+      return {
+        roles: typedRoles.flatMap((item) => (item.role?.code ? [item.role.code] : [])),
+        permissions: ["dashboard.read"] as string[],
+      };
+    }
+
     throw new AppError("Não foi possível carregar as permissões do usuário", 500, "permissions_fetch_failed");
   }
 
@@ -97,7 +119,11 @@ export async function getAuthContext(): Promise<AccessContext | null> {
       .maybeSingle();
 
     if (profileError) {
+      if (isSchemaCacheMissingTable(profileError)) {
+        // Fallback para ambientes com Auth pronto, mas sem schema de aplicacao provisionado.
+      } else {
       throw new AppError("Não foi possível carregar o perfil do usuário", 500, "profile_fetch_failed");
+      }
     }
 
     const typedProfile = profile as Database["public"]["Tables"]["profiles"]["Row"] | null;
