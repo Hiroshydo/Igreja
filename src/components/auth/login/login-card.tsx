@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Church, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Church, Eye, EyeOff, Loader2, ShieldCheck, Wrench } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
 
@@ -185,7 +185,7 @@ export function LoginCard({ isConfigured }: LoginCardProps) {
                 type="checkbox"
                 checked={rememberAccess}
                 onChange={(event) => setRememberAccess(event.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 bg-white/10 text-[#c7a04a] focus:ring-[#c7a04a]/35"
+                className="h-4 w-4 rounded border-slate-500/80 bg-slate-900/55 text-[#c7a04a] focus:ring-[#c7a04a]/35"
               />
               Lembrar acesso
             </label>
@@ -211,20 +211,33 @@ export function LoginCard({ isConfigured }: LoginCardProps) {
             <Button
               type="submit"
               disabled={isPending}
-              className="group relative h-12 w-full overflow-hidden rounded-xl border border-[#c7a04a]/45 bg-gradient-to-r from-[#173e67] via-[#2a5f95] to-[#c7a04a] text-white shadow-[0_26px_56px_-34px_rgba(9,20,40,0.95)] transition hover:from-[#1c4a7a] hover:via-[#2f6da8] hover:to-[#d6b364]"
+              className="group relative h-12 w-full overflow-hidden rounded-xl border border-slate-500/75 bg-[linear-gradient(135deg,#111827,#1f2937,#334155)] text-white shadow-[0_26px_56px_-34px_rgba(9,20,40,0.95)] transition hover:border-[#c7a04a]/58 hover:bg-[linear-gradient(135deg,#0f172a,#1e293b,#334155)]"
             >
-              <span className="pointer-events-none absolute inset-0 translate-x-[-110%] bg-gradient-to-r from-transparent via-white/26 to-transparent transition duration-700 group-hover:translate-x-[110%]" />
+              <span className="pointer-events-none absolute inset-0 translate-x-[-110%] bg-gradient-to-r from-transparent via-[#e6d3a3]/24 to-transparent transition duration-700 group-hover:translate-x-[110%]" />
               {isPending ? (
                 <span className="relative inline-flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Entrando...
                 </span>
               ) : (
-                <span className="relative">Entrar</span>
+                <span className="relative inline-flex items-center gap-2">
+                  Entrar
+                  <ShieldCheck className="h-4 w-4 text-[#e6d3a3]" />
+                </span>
               )}
             </Button>
           </motion.div>
         </form>
+
+        <div className="mt-5 rounded-2xl border border-white/15 bg-slate-900/45 px-4 py-3">
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-300">{loginTheme.statusLabel}</p>
+          <p className="mt-1 text-sm text-slate-100">{loginTheme.statusValue}</p>
+          <div className="mt-2 flex items-center gap-2 text-xs text-slate-300">
+            <Wrench className="h-3.5 w-3.5 text-[#c7a04a]" />
+            <span>{loginTheme.maintenanceWindow}</span>
+          </div>
+          <p className="mt-1 text-xs text-slate-400">{loginTheme.releaseInfo}</p>
+        </div>
 
         <div className="mt-7 rounded-2xl border border-white/18 bg-white/8 px-4 py-3">
           <p className="text-sm italic leading-relaxed text-slate-200">&quot;{verse.text}&quot;</p>

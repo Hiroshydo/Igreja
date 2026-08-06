@@ -1,11 +1,19 @@
 import { z } from "zod";
 
 function resolveSupabasePublishableKey() {
-  return process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return (
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
 }
 
 function resolveSupabaseSecretKey() {
   return process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+}
+
+function resolveSupabaseUrl() {
+  return process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
 }
 
 const publicEnvSchema = z.object({
@@ -22,7 +30,7 @@ let publicEnvCache: z.infer<typeof publicEnvSchema> | null = null;
 let serverEnvCache: z.infer<typeof serverEnvSchema> | null = null;
 
 export function hasPublicEnv(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && resolveSupabasePublishableKey());
+  return Boolean(resolveSupabaseUrl() && resolveSupabasePublishableKey());
 }
 
 export function hasServerEnv(): boolean {
@@ -36,7 +44,7 @@ export function getPublicEnv() {
 
   publicEnvCache = publicEnvSchema.parse({
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_URL: resolveSupabaseUrl(),
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: resolveSupabasePublishableKey(),
   });
 
@@ -50,7 +58,7 @@ export function getServerEnv() {
 
   serverEnvCache = serverEnvSchema.parse({
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_URL: resolveSupabaseUrl(),
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: resolveSupabasePublishableKey(),
     SUPABASE_SECRET_KEY: resolveSupabaseSecretKey(),
   });
