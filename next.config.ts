@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
 
   /* Variáveis de Ambiente */
   env: {
-    NEXT_PUBLIC_APP_NAME: "Comunidade Viva",
+    NEXT_PUBLIC_APP_NAME: "Ecclesia One",
   },
 };
 

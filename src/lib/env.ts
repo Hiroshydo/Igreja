@@ -9,7 +9,7 @@ function resolveSupabaseSecretKey() {
 }
 
 const publicEnvSchema = z.object({
-  NEXT_PUBLIC_APP_NAME: z.string().min(1).default("Comunidade Viva"),
+  NEXT_PUBLIC_APP_NAME: z.string().min(1).default("Ecclesia One"),
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
 });

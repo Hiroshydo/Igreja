@@ -221,6 +221,89 @@ interface PremiumDashboardProps {
   access: AuthenticatedAppUser;
 }
 
+interface RoleWelcomeContent {
+  roleCode: string;
+  headline: string;
+  items: string[];
+}
+
+const roleWelcomePriority = [
+  "DEV",
+  "PASTOR",
+  "CORPO_ECLESIASTICO",
+  "MUSICOS",
+  "MIDIA",
+  "TESOURARIA",
+  "MEMBROS",
+  "VISITANTES",
+] as const;
+
+const roleWelcomeMap: Record<string, RoleWelcomeContent> = {
+  DEV: {
+    roleCode: "DEV",
+    headline: "Painel completo do sistema com visao tecnica e operacao avancada.",
+    items: ["Resumo geral", "Alertas tecnicos", "Usuarios ativos", "Logs"],
+  },
+  PASTOR: {
+    roleCode: "PASTOR",
+    headline: "Visao pastoral para cuidado de pessoas e direcionamento ministerial.",
+    items: ["Pedidos de oracao", "Novos visitantes", "Aniversariantes", "Agenda pastoral"],
+  },
+  CORPO_ECLESIASTICO: {
+    roleCode: "CORPO_ECLESIASTICO",
+    headline: "Acompanhamento de crescimento e integracao da comunidade.",
+    items: ["Novos membros", "Batismos", "Discipulados", "Classes"],
+  },
+  MUSICOS: {
+    roleCode: "MUSICOS",
+    headline: "Organizacao de louvor e preparacao das escalas ministeriais.",
+    items: ["Proxima escala", "Repertorio", "Ensaios", "Arquivos"],
+  },
+  MIDIA: {
+    roleCode: "MIDIA",
+    headline: "Coordenacao de comunicacao e entregas para a congregacao.",
+    items: ["Transmissoes", "Eventos", "Escalas", "Publicacoes"],
+  },
+  TESOURARIA: {
+    roleCode: "TESOURARIA",
+    headline: "Controle financeiro com rastreabilidade e acompanhamento continuo.",
+    items: ["Entradas", "Despesas", "Saldo", "Pendencias"],
+  },
+  MEMBROS: {
+    roleCode: "MEMBROS",
+    headline: "Espaco pessoal para participar, acompanhar avisos e manter conexao.",
+    items: ["Agenda", "Avisos", "Pedidos de oracao", "Eventos"],
+  },
+  VISITANTES: {
+    roleCode: "VISITANTES",
+    headline: "Recepcao inicial com informacoes para conhecer a igreja.",
+    items: ["Mensagem de boas-vindas", "Proximos cultos", "Como conhecer a igreja"],
+  },
+};
+
+function resolveWelcomeRole(roleCodes: string[]) {
+  for (const code of roleWelcomePriority) {
+    if (roleCodes.includes(code)) {
+      return roleWelcomeMap[code];
+    }
+  }
+
+  return {
+    roleCode: "AUTENTICADO",
+    headline: "Sua visao inicial esta pronta para acompanhar a vida da igreja.",
+    items: ["Dashboard", "Agenda", "Comunicacao"],
+  } satisfies RoleWelcomeContent;
+}
+
+function getGreetingName(access: AuthenticatedAppUser, resolvedRole: string) {
+  if (resolvedRole === "PASTOR") {
+    return "Pastor";
+  }
+
+  const firstName = access.fullName?.trim().split(" ")[0];
+  return firstName && firstName.length > 0 ? firstName : "Usuario";
+}
+
 export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
@@ -246,6 +329,12 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const resolvedActiveTab = visibleNavItems.some((item) => item.key === activeTab)
     ? activeTab
     : visibleNavItems[0]?.key ?? "dashboard";
+
+  const roleWelcome = useMemo(() => resolveWelcomeRole(access.roleCodes), [access.roleCodes]);
+  const greetingName = useMemo(
+    () => getGreetingName(access, roleWelcome.roleCode),
+    [access, roleWelcome.roleCode]
+  );
 
   const filteredMembers = useMemo(() => {
     const q = memberSearch.toLowerCase();
@@ -721,10 +810,10 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">
-                Comunidade Viva
+                Ecclesia One
               </p>
               <h1 className="truncate text-sm font-semibold text-slate-50 sm:text-base">
-                Ecossistema Pastoral Premium
+                Plataforma Ministerial Premium
               </h1>
             </div>
           </div>
@@ -774,6 +863,33 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
         </aside>
 
         <main className="space-y-4">
+          <motion.section
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="relative overflow-hidden rounded-3xl border border-white/12 bg-slate-900/62 p-[1px]"
+          >
+            <div className="absolute inset-0 bg-[linear-gradient(130deg,rgba(16,53,89,0.42),rgba(184,142,56,0.18),rgba(6,78,59,0.18))]" />
+            <div className="relative rounded-[calc(1.5rem-1px)] bg-slate-950/88 p-5 backdrop-blur-xl sm:p-6">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="info">Recepcao personalizada</Badge>
+                <Badge variant="default">{roleWelcome.roleCode}</Badge>
+              </div>
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-50">
+                Bem-vindo, {greetingName}.
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm text-slate-300 sm:text-base">{roleWelcome.headline}</p>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {roleWelcome.items.map((item) => (
+                  <div key={item} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.section>
+
           <AnimatePresence mode="wait">
             <motion.div
               key={resolvedActiveTab}
