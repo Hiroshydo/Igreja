@@ -1,10 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
+  AlertTriangle,
   ArrowRight,
   BarChart3,
   CalendarDays,
+  CheckCircle2,
   Church,
   Eye,
   EyeOff,
@@ -27,7 +29,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { startTransition, useState } from "react";
+import { startTransition, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -78,7 +80,41 @@ const verses = [
 const brandName = "Ecclesia One";
 const rememberedEmailStorageKey = "ecclesia_one_remembered_email";
 const verseRotationStorageKey = "ecclesia_one_verse_rotation";
+const visualModeStorageKey = "ecclesia_one_visual_mode";
+const selectedRoleStorageKey = "ecclesia_one_selected_role";
+const motionPreferenceStorageKey = "ecclesia_one_motion_enabled";
+const lastRoleUsedStorageKey = "ecclesia_one_last_role_used";
 const quickTags = ["Acesso seguro", "Experiencia premium", "Suporte pastoral"];
+const onboardingSteps = [
+  "1/3: Comece no Dashboard para ver a saude geral da igreja.",
+  "2/3: Em Membros, acompanhe visitantes, aniversariantes e integracao.",
+  "3/3: Finalize em Agenda e Comunicacao para alinhar a semana ministerial.",
+];
+
+const roleQuickAccess = [
+  { code: "DEV", label: "Desenvolvedor", hint: "monitoramento, logs e operacao global" },
+  { code: "PASTOR", label: "Pastor", hint: "cuidado pastoral, agenda e oracao" },
+  { code: "CORPO", label: "Corpo Eclesiastico", hint: "integracao, discipulado e classes" },
+  { code: "MIDIA", label: "Midia", hint: "transmissoes, escala e publicacoes" },
+  { code: "MUSICOS", label: "Musicos", hint: "repertorio, ensaios e escalas" },
+  { code: "TESOURARIA", label: "Tesouraria", hint: "entradas, despesas e pendencias" },
+] as const;
+
+function resolvePasswordStrength(passwordValue: string) {
+  if (passwordValue.length === 0) {
+    return { label: "Digite sua senha", tone: "text-slate-400", progress: "0%" };
+  }
+
+  if (passwordValue.length < 6) {
+    return { label: "Senha curta", tone: "text-rose-200", progress: "35%" };
+  }
+
+  if (passwordValue.length < 10) {
+    return { label: "Senha media", tone: "text-amber-200", progress: "65%" };
+  }
+
+  return { label: "Senha forte", tone: "text-emerald-200", progress: "100%" };
+}
 
 export function LoginForm({ isConfigured }: LoginFormProps) {
   const router = useRouter();
@@ -95,8 +131,38 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
   const [isPending, setIsPending] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
   const [activeField, setActiveField] = useState<"email" | "password" | null>(null);
-  const [visualMode, setVisualMode] = useState<"luxe" | "viva">("luxe");
+  const [visualMode, setVisualMode] = useState<"luxe" | "viva">(() => {
+    if (typeof window === "undefined") {
+      return "luxe";
+    }
+
+    return window.localStorage.getItem(visualModeStorageKey) === "viva" ? "viva" : "luxe";
+  });
+  const [selectedRole, setSelectedRole] = useState<string>(() => {
+    if (typeof window === "undefined") {
+      return "PASTOR";
+    }
+
+    return window.localStorage.getItem(selectedRoleStorageKey) ?? "PASTOR";
+  });
+  const [lastRoleUsed] = useState<string>(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+
+    return window.localStorage.getItem(lastRoleUsedStorageKey) ?? "";
+  });
+  const [motionEnabled, setMotionEnabled] = useState<boolean>(() => {
+    if (typeof window === "undefined") {
+      return true;
+    }
+
+    return window.localStorage.getItem(motionPreferenceStorageKey) !== "off";
+  });
+  const [tourStep, setTourStep] = useState(0);
+  const [themeTransitionToken, setThemeTransitionToken] = useState(0);
   const [rememberAccess, setRememberAccess] = useState(() => {
     if (typeof window === "undefined") {
       return true;
@@ -120,6 +186,10 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
   const verse = verses[verseIndex] ?? verses[0];
 
   const handleParallax = (event: React.MouseEvent<HTMLElement>) => {
+    if (!motionEnabled) {
+      return;
+    }
+
     const rect = event.currentTarget.getBoundingClientRect();
     const normalizedX = (event.clientX - rect.left) / rect.width - 0.5;
     const normalizedY = (event.clientY - rect.top) / rect.height - 0.5;
@@ -149,6 +219,8 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
     } else {
       window.localStorage.removeItem(rememberedEmailStorageKey);
     }
+
+    window.localStorage.setItem(lastRoleUsedStorageKey, selectedRole);
 
     setIsPending(true);
 
@@ -210,15 +282,53 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
   const environment = process.env.NODE_ENV ?? "development";
   const currentYear = new Date().getFullYear();
   const isViva = visualMode === "viva";
+  const passwordStrength = useMemo(() => resolvePasswordStrength(password), [password]);
+  const selectedRoleMeta = useMemo(
+    () => roleQuickAccess.find((role) => role.code === selectedRole) ?? roleQuickAccess[1],
+    [selectedRole]
+  );
+  const contextualGreeting = useMemo(() => {
+    const hour = new Date().getHours();
+    const period = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+    return `${period}, contexto ${selectedRoleMeta.label} ativo.`;
+  }, [selectedRoleMeta.label]);
 
   const handleQuickTour = () => {
     setError(null);
-    setInfo("Tour premium: comece pelo Dashboard, depois visite Membros, Ministerios e Agenda.");
+    const nextStep = (tourStep + 1) % onboardingSteps.length;
+    setInfo(onboardingSteps[tourStep] ?? onboardingSteps[0]);
+    setTourStep(nextStep);
   };
 
   const handleSupport = () => {
     setError(null);
     setInfo("Suporte pronto para ajudar: use o e-mail ministerial e informe sua congregacao.");
+  };
+
+  const handleVisualModeChange = (mode: "luxe" | "viva") => {
+    setVisualMode(mode);
+    window.localStorage.setItem(visualModeStorageKey, mode);
+    setThemeTransitionToken((prev) => prev + 1);
+  };
+
+  const handleRoleSelect = (roleCode: string, roleLabel: string, roleHint: string) => {
+    setSelectedRole(roleCode);
+    window.localStorage.setItem(selectedRoleStorageKey, roleCode);
+    setInfo(`Contexto ${roleLabel} selecionado: ${roleHint}.`);
+  };
+
+  const handleMotionToggle = () => {
+    const nextValue = !motionEnabled;
+    setMotionEnabled(nextValue);
+    window.localStorage.setItem(motionPreferenceStorageKey, nextValue ? "on" : "off");
+
+    if (!nextValue) {
+      setParallaxOffset({ x: 0, y: 0 });
+    }
+  };
+
+  const handlePasswordKeyEvent = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    setCapsLockOn(event.getModifierState("CapsLock"));
   };
 
   return (
@@ -230,8 +340,8 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
       >
         <motion.div
           className="absolute inset-0"
-          animate={{ scale: [1, 1.08, 1] }}
-          transition={{ duration: 28, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+          animate={motionEnabled ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+          transition={motionEnabled ? { duration: 28, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : { duration: 0 }}
           style={{ x: parallaxOffset.x, y: parallaxOffset.y }}
         >
           <Image
@@ -334,20 +444,44 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
       </section>
 
       <section className="relative flex items-center justify-center overflow-hidden px-5 py-10 sm:px-8 lg:min-h-screen lg:px-10">
-        <div
-          className={`absolute inset-0 ${
-            isViva
-              ? "bg-[linear-gradient(180deg,#111827_0%,#172554_48%,#0f172a_100%)]"
-              : "bg-[linear-gradient(180deg,#0a1429_0%,#101e3e_54%,#0f2342_100%)]"
-          }`}
-        />
-        <div
-          className={`pointer-events-none absolute inset-0 ${
-            isViva
-              ? "bg-[radial-gradient(circle_at_16%_15%,rgba(217,119,6,0.2),transparent_35%),radial-gradient(circle_at_82%_86%,rgba(59,130,246,0.2),transparent_35%)]"
-              : "bg-[radial-gradient(circle_at_20%_18%,rgba(250,204,21,0.14),transparent_35%),radial-gradient(circle_at_82%_86%,rgba(56,189,248,0.18),transparent_35%)]"
-          }`}
-        />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`bg-${visualMode}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: motionEnabled ? 0.5 : 0 }}
+            className={`absolute inset-0 ${
+              isViva
+                ? "bg-[linear-gradient(180deg,#111827_0%,#172554_48%,#0f172a_100%)]"
+                : "bg-[linear-gradient(180deg,#0a1429_0%,#101e3e_54%,#0f2342_100%)]"
+            }`}
+          />
+        </AnimatePresence>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`overlay-${visualMode}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: motionEnabled ? 0.5 : 0 }}
+            className={`pointer-events-none absolute inset-0 ${
+              isViva
+                ? "bg-[radial-gradient(circle_at_16%_15%,rgba(217,119,6,0.2),transparent_35%),radial-gradient(circle_at_82%_86%,rgba(59,130,246,0.2),transparent_35%)]"
+                : "bg-[radial-gradient(circle_at_20%_18%,rgba(250,204,21,0.14),transparent_35%),radial-gradient(circle_at_82%_86%,rgba(56,189,248,0.18),transparent_35%)]"
+            }`}
+          />
+        </AnimatePresence>
+        <AnimatePresence>
+          <motion.div
+            key={`flash-${themeTransitionToken}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: motionEnabled ? 0.18 : 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: motionEnabled ? 0.35 : 0 }}
+            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/20 via-amber-200/10 to-sky-200/10"
+          />
+        </AnimatePresence>
         <motion.div
           initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}
@@ -367,13 +501,13 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
           />
 
           <motion.div
-            animate={{ y: [0, -6, 0], opacity: [0.35, 0.5, 0.35] }}
-            transition={{ duration: 7, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+            animate={motionEnabled ? { y: [0, -6, 0], opacity: [0.35, 0.5, 0.35] } : { y: 0, opacity: 0.32 }}
+            transition={motionEnabled ? { duration: 7, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : { duration: 0 }}
             className="pointer-events-none absolute -right-10 top-16 h-32 w-32 rounded-full bg-amber-300/16 blur-2xl"
           />
           <motion.div
-            animate={{ y: [0, 8, 0], opacity: [0.3, 0.46, 0.3] }}
-            transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: 0.5 }}
+            animate={motionEnabled ? { y: [0, 8, 0], opacity: [0.3, 0.46, 0.3] } : { y: 0, opacity: 0.28 }}
+            transition={motionEnabled ? { duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: 0.5 } : { duration: 0 }}
             className="pointer-events-none absolute -left-10 bottom-24 h-28 w-28 rounded-full bg-sky-300/16 blur-2xl"
           />
 
@@ -384,10 +518,14 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">{brandName}</p>
             <h2 className="text-2xl font-semibold tracking-tight text-slate-50">Portal Ministerial</h2>
             <p className="text-sm text-slate-300">Sua central de gestao ministerial.</p>
+            <p className="text-xs text-slate-400">{contextualGreeting}</p>
+            {lastRoleUsed ? (
+              <p className="text-[11px] text-slate-500">Ultimo contexto usado: {lastRoleUsed}</p>
+            ) : null}
             <div className="flex flex-wrap gap-2 pt-1">
               <button
                 type="button"
-                onClick={() => setVisualMode("luxe")}
+                onClick={() => handleVisualModeChange("luxe")}
                 className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
                   !isViva
                     ? "border-amber-300/45 bg-amber-300/16 text-amber-100"
@@ -400,7 +538,7 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
               </button>
               <button
                 type="button"
-                onClick={() => setVisualMode("viva")}
+                onClick={() => handleVisualModeChange("viva")}
                 className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
                   isViva
                     ? "border-sky-300/45 bg-sky-300/16 text-sky-100"
@@ -410,6 +548,15 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
               >
                 <Palette className="h-3 w-3" />
                 Viva
+              </button>
+              <button
+                type="button"
+                onClick={handleMotionToggle}
+                className="inline-flex items-center gap-1 rounded-full border border-white/25 bg-white/8 px-2.5 py-1 text-[11px] font-medium text-slate-200 transition hover:bg-white/12"
+                aria-pressed={motionEnabled}
+              >
+                <Sparkles className="h-3 w-3" />
+                {motionEnabled ? "Animacao on" : "Animacao off"}
               </button>
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
@@ -483,7 +630,12 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   onFocus={() => setActiveField("password")}
-                  onBlur={() => setActiveField((prev) => (prev === "password" ? null : prev))}
+                  onBlur={() => {
+                    setActiveField((prev) => (prev === "password" ? null : prev));
+                    setCapsLockOn(false);
+                  }}
+                  onKeyDown={handlePasswordKeyEvent}
+                  onKeyUp={handlePasswordKeyEvent}
                   className="w-full rounded-xl border border-white/22 bg-white/8 px-9 py-2.5 pr-11 text-sm text-slate-100 outline-none transition placeholder:text-slate-400 focus:border-amber-300/65 focus:ring-2 focus:ring-amber-300/22"
                   placeholder="Sua senha"
                   autoComplete="current-password"
@@ -499,6 +651,29 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
                 </button>
               </motion.div>
               <p className="text-xs text-slate-400">Clique no icone para mostrar ou ocultar sua senha.</p>
+              <div className="space-y-1">
+                <div className="h-1.5 rounded-full bg-white/10">
+                  <div
+                    className={`h-1.5 rounded-full transition-all ${
+                      passwordStrength.progress === "100%"
+                        ? "bg-emerald-300"
+                        : passwordStrength.progress === "65%"
+                          ? "bg-amber-300"
+                          : passwordStrength.progress === "35%"
+                            ? "bg-rose-300"
+                            : "bg-white/0"
+                    }`}
+                    style={{ width: passwordStrength.progress }}
+                  />
+                </div>
+                <p className={`text-xs ${passwordStrength.tone}`}>{passwordStrength.label}</p>
+              </div>
+              {capsLockOn ? (
+                <p className="inline-flex items-center gap-1 rounded-lg border border-amber-300/40 bg-amber-300/12 px-2 py-1 text-xs text-amber-100">
+                  <AlertTriangle className="h-3 w-3" />
+                  Caps Lock ativado
+                </p>
+              ) : null}
             </div>
 
             <div className="flex items-center justify-between gap-3 text-sm">
@@ -571,6 +746,31 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
                 <Headset className="h-3.5 w-3.5 text-sky-200" />
                 Falar com suporte
               </button>
+            </div>
+
+            <div className="rounded-xl border border-white/14 bg-white/6 p-3">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400">
+                Acesso rapido por perfil
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {roleQuickAccess.map((role) => (
+                  <button
+                    key={role.code}
+                    type="button"
+                    onClick={() => handleRoleSelect(role.code, role.label, role.hint)}
+                    className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] transition ${
+                      selectedRole === role.code
+                        ? "border-emerald-300/45 bg-emerald-300/16 text-emerald-100"
+                        : "border-white/16 bg-white/8 text-slate-200 hover:bg-white/14"
+                    }`}
+                    aria-pressed={selectedRole === role.code}
+                  >
+                    <CheckCircle2 className="h-3 w-3 text-emerald-300" />
+                    {role.code}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-[11px] text-slate-400">Foco ativo: {selectedRoleMeta.label}</p>
             </div>
 
             <p className="text-center text-xs text-slate-400">
