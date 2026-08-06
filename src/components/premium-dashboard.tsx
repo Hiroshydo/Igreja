@@ -7,20 +7,26 @@ import {
   Bell,
   Church,
   Compass,
+  Download,
+  Edit3,
   GraduationCap,
   Images,
   LayoutDashboard,
+  Loader2,
   Menu,
   MessageSquare,
   MoonStar,
   Music,
+  Save,
   Radio,
   ScrollText,
   ShieldCheck,
+  Trash2,
+  Upload,
   Users,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   Bar,
@@ -48,7 +54,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { dashboardPermissionByTab, hasPermission } from "@/lib/auth/permissions";
-import type { AuthenticatedAppUser } from "@/types";
+import { memberService } from "@/services/api";
+import type { AuthenticatedAppUser, Member, PermissionKey } from "@/types";
 
 type TabKey =
   | "dashboard"
@@ -141,27 +148,33 @@ const galleryItems = [
   },
 ];
 
-const members = [
+const seedMembers: Member[] = [
   {
-    id: 1,
+    id: "seed-1",
     name: "Ana Maria Fernandes",
-    status: "Membro Ativo",
-    lastVisit: "8 dias",
-    ministry: "Louvor",
+    email: "ana@igreja.org",
+    phone: "(11) 98888-1111",
+    joinDate: "2023-02-15",
+    status: "ativo",
+    role: "Louvor",
   },
   {
-    id: 2,
+    id: "seed-2",
     name: "Ricardo Alves",
-    status: "Em Alerta",
-    lastVisit: "45 dias",
-    ministry: "Intercessao",
+    email: "ricardo@igreja.org",
+    phone: "(11) 97777-2222",
+    joinDate: "2022-11-09",
+    status: "pendente",
+    role: "Intercessao",
   },
   {
-    id: 3,
+    id: "seed-3",
     name: "Sara Oliveira",
-    status: "Novo Convertido",
-    lastVisit: "2 dias",
-    ministry: "EBD",
+    email: "sara@igreja.org",
+    phone: "(11) 96666-3333",
+    joinDate: "2024-01-20",
+    status: "ativo",
+    role: "EBD",
   },
 ];
 
@@ -226,6 +239,26 @@ interface RoleWelcomeContent {
   headline: string;
   items: string[];
 }
+
+interface MemberFormState {
+  name: string;
+  email: string;
+  phone: string;
+  status: Member["status"];
+  role: string;
+  joinDate: string;
+  avatar: string;
+}
+
+const emptyMemberForm: MemberFormState = {
+  name: "",
+  email: "",
+  phone: "",
+  status: "ativo",
+  role: "",
+  joinDate: new Date().toISOString().slice(0, 10),
+  avatar: "",
+};
 
 const roleWelcomePriority = [
   "DEV",
@@ -312,6 +345,13 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [librarySearch, setLibrarySearch] = useState("");
   const [doctrineOpen, setDoctrineOpen] = useState<string | null>("sola-scriptura");
   const [adminModule, setAdminModule] = useState<AdminModule>("gallery");
+  const [membersData, setMembersData] = useState<Member[]>(seedMembers);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [membersError, setMembersError] = useState<string | null>(null);
+  const [memberForm, setMemberForm] = useState<MemberFormState>(emptyMemberForm);
+  const [editingMemberId, setEditingMemberId] = useState<string | number | null>(null);
+  const [isSavingMember, setIsSavingMember] = useState(false);
+  const [isDeletingMemberId, setIsDeletingMemberId] = useState<string | number | null>(null);
 
   const filteredGallery = useMemo(() => {
     if (galleryFilter === "Todos") return galleryItems;
@@ -330,21 +370,163 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
     ? activeTab
     : visibleNavItems[0]?.key ?? "dashboard";
 
+  const canCreateMember = hasPermission(access.permissions, access.roleCodes, "members.create" as PermissionKey);
+  const canUpdateMember = hasPermission(access.permissions, access.roleCodes, "members.update" as PermissionKey);
+  const canDeleteMember = hasPermission(access.permissions, access.roleCodes, "members.delete" as PermissionKey);
+
   const roleWelcome = useMemo(() => resolveWelcomeRole(access.roleCodes), [access.roleCodes]);
   const greetingName = useMemo(
     () => getGreetingName(access, roleWelcome.roleCode),
     [access, roleWelcome.roleCode]
   );
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadMembers() {
+      if (!hasPermission(access.permissions, access.roleCodes, "members.read" as PermissionKey)) {
+        return;
+      }
+
+      setMembersLoading(true);
+      setMembersError(null);
+      const result = await memberService.getAll();
+
+      if (!mounted) {
+        return;
+      }
+
+      if (!result.success || !result.data) {
+        setMembersError(result.error ?? "Nao foi possivel carregar membros.");
+        setMembersLoading(false);
+        return;
+      }
+
+      setMembersData(result.data);
+      setMembersLoading(false);
+    }
+
+    loadMembers();
+    return () => {
+      mounted = false;
+    };
+  }, [access.permissions, access.roleCodes]);
+
+  const startMemberCreate = () => {
+    setEditingMemberId(null);
+    setMemberForm(emptyMemberForm);
+  };
+
+  const startMemberEdit = (member: Member) => {
+    setEditingMemberId(member.id);
+    setMemberForm({
+      name: member.name,
+      email: member.email,
+      phone: member.phone ?? "",
+      status: member.status,
+      role: member.role ?? "",
+      joinDate: member.joinDate,
+      avatar: member.avatar ?? "",
+    });
+  };
+
+  const handleMemberPhotoUpload = (file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setMemberForm((prev) => ({ ...prev, avatar: reader.result as string }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleMemberSave = async () => {
+    if (!canCreateMember && !canUpdateMember) {
+      return;
+    }
+
+    setIsSavingMember(true);
+    setMembersError(null);
+
+    const payload = {
+      name: memberForm.name,
+      email: memberForm.email,
+      phone: memberForm.phone,
+      status: memberForm.status,
+      role: memberForm.role,
+      joinDate: memberForm.joinDate,
+      avatar: memberForm.avatar,
+    };
+
+    const response = editingMemberId
+      ? await memberService.update(editingMemberId, payload)
+      : await memberService.create(payload);
+
+    if (!response.success || !response.data) {
+      setMembersError(response.error ?? "Nao foi possivel salvar membro.");
+      setIsSavingMember(false);
+      return;
+    }
+
+    setMembersData((prev) => {
+      if (!editingMemberId) {
+        return [response.data as Member, ...prev];
+      }
+
+      return prev.map((item) => (item.id === editingMemberId ? (response.data as Member) : item));
+    });
+
+    setMemberForm(emptyMemberForm);
+    setEditingMemberId(null);
+    setIsSavingMember(false);
+  };
+
+  const handleMemberDelete = async (memberId: string | number) => {
+    if (!canDeleteMember) {
+      return;
+    }
+
+    if (!window.confirm("Confirma a exclusao deste membro?")) {
+      return;
+    }
+
+    setIsDeletingMemberId(memberId);
+    setMembersError(null);
+
+    const response = await memberService.delete(memberId);
+    if (!response.success) {
+      setMembersError(response.error ?? "Nao foi possivel excluir membro.");
+      setIsDeletingMemberId(null);
+      return;
+    }
+
+    setMembersData((prev) => prev.filter((item) => item.id !== memberId));
+    setIsDeletingMemberId(null);
+  };
+
+  const handleMembersDownload = () => {
+    const blob = new Blob([JSON.stringify(membersData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `membros-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const filteredMembers = useMemo(() => {
     const q = memberSearch.toLowerCase();
-    return members.filter(
+    return membersData.filter(
       (item) =>
         item.name.toLowerCase().includes(q) ||
         item.status.toLowerCase().includes(q) ||
-        item.ministry.toLowerCase().includes(q)
+        (item.role ?? "").toLowerCase().includes(q)
     );
-  }, [memberSearch]);
+  }, [memberSearch, membersData]);
 
   const filteredBooks = useMemo(() => {
     const q = librarySearch.toLowerCase();

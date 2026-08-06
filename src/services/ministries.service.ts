@@ -1,7 +1,7 @@
 import { AppError } from "@/lib/http";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { AccessContext, Ministry } from "@/types";
-import type { MinistryCreateInput } from "@/lib/validation";
+import type { MinistryCreateInput, MinistryUpdateInput } from "@/lib/validation";
 
 interface MinistryRow {
   id: string;
@@ -86,5 +86,93 @@ export const ministriesService = {
     }
 
     return mapMinistry(data as MinistryRow);
+  },
+
+  async getById(id: string, congregationId: string | null): Promise<Ministry> {
+    if (!congregationId) {
+      throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
+    }
+
+    const admin = createAdminSupabaseClient();
+    const { data, error } = await admin
+      .from("ministries")
+      .select("*")
+      .eq("id", id)
+      .eq("congregation_id", congregationId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error) {
+      throw new AppError("Não foi possível buscar ministério", 500, "ministry_fetch_failed");
+    }
+
+    if (!data) {
+      throw new AppError("Ministério não encontrado", 404, "ministry_not_found");
+    }
+
+    return mapMinistry(data as MinistryRow);
+  },
+
+  async update(id: string, input: MinistryUpdateInput, context: AccessContext): Promise<Ministry> {
+    if (!context.congregationId) {
+      throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
+    }
+
+    const payload: Record<string, unknown> = {
+      updated_by: context.userId,
+    };
+
+    if (typeof input.name === "string") payload.name = input.name;
+    if (typeof input.description === "string") payload.description = input.description;
+    if (typeof input.leader === "string") payload.leader_name = input.leader || null;
+    if (typeof input.leaderEmail === "string") payload.leader_email = input.leaderEmail || null;
+    if (typeof input.leaderPhone === "string") payload.leader_phone = input.leaderPhone || null;
+    if (typeof input.members === "number") payload.member_count = input.members;
+    if (typeof input.category === "string") payload.category = input.category;
+    if (typeof input.image === "string") payload.image_url = input.image || null;
+    if (typeof input.meetingDay === "string") payload.meeting_day = input.meetingDay || null;
+    if (typeof input.meetingTime === "string") payload.meeting_time = input.meetingTime || null;
+
+    const admin = createAdminSupabaseClient();
+    const { data, error } = await admin
+      .from("ministries")
+      .update(payload)
+      .eq("id", id)
+      .eq("congregation_id", context.congregationId)
+      .is("deleted_at", null)
+      .select("*")
+      .maybeSingle();
+
+    if (error) {
+      throw new AppError("Não foi possível atualizar ministério", 500, "ministry_update_failed");
+    }
+
+    if (!data) {
+      throw new AppError("Ministério não encontrado", 404, "ministry_not_found");
+    }
+
+    return mapMinistry(data as MinistryRow);
+  },
+
+  async remove(id: string, context: AccessContext): Promise<void> {
+    if (!context.congregationId) {
+      throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
+    }
+
+    const admin = createAdminSupabaseClient();
+    const { error } = await admin
+      .from("ministries")
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: context.userId,
+        updated_by: context.userId,
+      })
+      .eq("id", id)
+      .eq("congregation_id", context.congregationId)
+      .is("deleted_at", null);
+
+    if (error) {
+      throw new AppError("Não foi possível excluir ministério", 500, "ministry_delete_failed");
+    }
   },
 };

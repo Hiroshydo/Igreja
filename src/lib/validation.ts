@@ -11,6 +11,8 @@ export const memberCreateSchema = z.object({
   avatar: z.string().url().optional().or(z.literal("")),
 });
 
+export const memberUpdateSchema = memberCreateSchema.partial();
+
 export const eventCreateSchema = z.object({
   title: z.string().min(3),
   description: z.string().optional().or(z.literal("")),
@@ -23,6 +25,8 @@ export const eventCreateSchema = z.object({
   organizer: z.string().optional().or(z.literal("")),
   image: z.string().url().optional().or(z.literal("")),
 });
+
+export const eventUpdateSchema = eventCreateSchema.partial();
 
 export const ministryCreateSchema = z.object({
   name: z.string().min(3),
@@ -37,6 +41,11 @@ export const ministryCreateSchema = z.object({
   meetingTime: z.string().optional().or(z.literal("")),
 });
 
+export const ministryUpdateSchema = ministryCreateSchema.partial();
+
 export type MemberCreateInput = z.infer<typeof memberCreateSchema>;
+export type MemberUpdateInput = z.infer<typeof memberUpdateSchema>;
 export type EventCreateInput = z.infer<typeof eventCreateSchema>;
+export type EventUpdateInput = z.infer<typeof eventUpdateSchema>;
 export type MinistryCreateInput = z.infer<typeof ministryCreateSchema>;
+export type MinistryUpdateInput = z.infer<typeof ministryUpdateSchema>;

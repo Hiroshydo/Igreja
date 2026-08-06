@@ -2,7 +2,7 @@ import { AppError } from "@/lib/http";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { Member } from "@/types";
 import type { AccessContext } from "@/types";
-import type { MemberCreateInput } from "@/lib/validation";
+import type { MemberCreateInput, MemberUpdateInput } from "@/lib/validation";
 
 interface MemberRow {
   id: string;
@@ -80,5 +80,91 @@ export const membersService = {
     }
 
     return mapMember(data as MemberRow);
+  },
+
+  async getById(id: string, congregationId: string | null): Promise<Member> {
+    if (!congregationId) {
+      throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
+    }
+
+    const admin = createAdminSupabaseClient();
+    const { data, error } = await admin
+      .from("members")
+      .select("*")
+      .eq("id", id)
+      .eq("congregation_id", congregationId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error) {
+      throw new AppError("Não foi possível buscar membro", 500, "member_fetch_failed");
+    }
+
+    if (!data) {
+      throw new AppError("Membro não encontrado", 404, "member_not_found");
+    }
+
+    return mapMember(data as MemberRow);
+  },
+
+  async update(id: string, input: MemberUpdateInput, context: AccessContext): Promise<Member> {
+    if (!context.congregationId) {
+      throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
+    }
+
+    const payload: Record<string, unknown> = {
+      updated_by: context.userId,
+    };
+
+    if (typeof input.name === "string") payload.full_name = input.name;
+    if (typeof input.email === "string") payload.email = input.email || null;
+    if (typeof input.phone === "string") payload.phone = input.phone || null;
+    if (typeof input.birthDate === "string") payload.birth_date = input.birthDate || null;
+    if (typeof input.joinDate === "string") payload.join_date = input.joinDate || null;
+    if (typeof input.status === "string") payload.status = input.status;
+    if (typeof input.role === "string") payload.role_label = input.role || null;
+    if (typeof input.avatar === "string") payload.avatar_url = input.avatar || null;
+
+    const admin = createAdminSupabaseClient();
+    const { data, error } = await admin
+      .from("members")
+      .update(payload)
+      .eq("id", id)
+      .eq("congregation_id", context.congregationId)
+      .is("deleted_at", null)
+      .select("*")
+      .maybeSingle();
+
+    if (error) {
+      throw new AppError("Não foi possível atualizar membro", 500, "member_update_failed");
+    }
+
+    if (!data) {
+      throw new AppError("Membro não encontrado", 404, "member_not_found");
+    }
+
+    return mapMember(data as MemberRow);
+  },
+
+  async remove(id: string, context: AccessContext): Promise<void> {
+    if (!context.congregationId) {
+      throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
+    }
+
+    const admin = createAdminSupabaseClient();
+    const { error } = await admin
+      .from("members")
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: context.userId,
+        updated_by: context.userId,
+      })
+      .eq("id", id)
+      .eq("congregation_id", context.congregationId)
+      .is("deleted_at", null);
+
+    if (error) {
+      throw new AppError("Não foi possível excluir membro", 500, "member_delete_failed");
+    }
   },
 };
