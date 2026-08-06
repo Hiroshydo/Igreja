@@ -115,7 +115,12 @@ export async function getAuthContext(): Promise<AccessContext | null> {
     email: user.email ?? null,
     fullName,
     congregationId,
-    roleCodes: access.roles,
+    roleCodes:
+      access.roles.length > 0
+        ? access.roles
+        : typeof user.user_metadata.role_code === "string"
+          ? [user.user_metadata.role_code.toUpperCase()]
+          : [],
     permissions: access.permissions,
   };
 }
