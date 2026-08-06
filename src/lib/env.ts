@@ -24,6 +24,7 @@ const publicEnvSchema = z.object({
 
 const serverEnvSchema = publicEnvSchema.extend({
   SUPABASE_SECRET_KEY: z.string().min(1),
+  SUPABASE_JWKS_URL: z.string().url().optional(),
 });
 
 let publicEnvCache: z.infer<typeof publicEnvSchema> | null = null;
@@ -61,6 +62,7 @@ export function getServerEnv() {
     NEXT_PUBLIC_SUPABASE_URL: resolveSupabaseUrl(),
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: resolveSupabasePublishableKey(),
     SUPABASE_SECRET_KEY: resolveSupabaseSecretKey(),
+    SUPABASE_JWKS_URL: process.env.SUPABASE_JWKS_URL,
   });
 
   return serverEnvCache;

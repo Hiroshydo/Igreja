@@ -11,6 +11,7 @@
     "deploy:setup": "powershell -ExecutionPolicy Bypass -File ./scripts/setup-supabase-vercel.ps1"
   },
   "dependencies": {
+    "@supabase/server": "^1.4.1",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.57.4",
     "class-variance-authority": "^0.7.1",
