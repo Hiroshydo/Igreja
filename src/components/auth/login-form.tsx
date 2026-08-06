@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import {
+  ArrowRight,
   BarChart3,
   CalendarDays,
   Church,
@@ -9,7 +10,9 @@ import {
   EyeOff,
   FolderKanban,
   HandHeart,
+  Lock,
   Loader2,
+  Mail,
   Megaphone,
   Music2,
   ShieldCheck,
@@ -309,56 +312,63 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
         </div>
       </section>
 
-      <section className="relative flex items-center justify-center px-5 py-10 sm:px-8 lg:min-h-screen lg:px-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(15,23,42,0.08),transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]" />
+      <section className="relative flex items-center justify-center overflow-hidden px-5 py-10 sm:px-8 lg:min-h-screen lg:px-10">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#0a1429_0%,#101e3e_54%,#0f2342_100%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(250,204,21,0.14),transparent_35%),radial-gradient(circle_at_82%_86%,rgba(56,189,248,0.18),transparent_35%)]" />
         <motion.div
           initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.55, ease: "easeOut" }}
-          className="relative w-full max-w-md rounded-[30px] border border-slate-200/75 bg-white/88 p-6 text-slate-800 shadow-[0_40px_100px_-54px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:p-8"
+          className="relative w-full max-w-md overflow-hidden rounded-[30px] border border-white/18 bg-[linear-gradient(160deg,rgba(17,31,59,0.95),rgba(14,42,75,0.9))] p-6 text-slate-100 shadow-[0_45px_110px_-56px_rgba(8,12,28,1)] backdrop-blur-2xl sm:p-8"
         >
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(250,204,21,0.14),transparent_32%),radial-gradient(circle_at_100%_100%,rgba(14,165,233,0.16),transparent_28%)]" />
+
           <div className="mb-7 space-y-3">
-            <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0f2748] via-[#113b66] to-[#c49c41] text-white">
+            <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#173e67] via-[#21588f] to-[#cba44e] text-white shadow-[0_18px_36px_-18px_rgba(203,164,78,0.72)]">
               <Church className="h-5 w-5" />
             </div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">{brandName}</p>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Portal Ministerial</h2>
-            <p className="text-sm text-slate-600">Sua central de gestao ministerial.</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">{brandName}</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-50">Portal Ministerial</h2>
+            <p className="text-sm text-slate-300">Sua central de gestao ministerial.</p>
             {!isConfigured ? (
-              <p className="rounded-xl border border-amber-300/70 bg-amber-100 px-3 py-2 text-xs text-amber-800">
+              <p className="rounded-xl border border-amber-300/45 bg-amber-200/15 px-3 py-2 text-xs text-amber-100">
                 Configure .env.local com as chaves Supabase para liberar o acesso.
               </p>
             ) : null}
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="relative space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700" htmlFor="email">
+              <label className="text-sm font-medium text-slate-200" htmlFor="email">
                 Email
               </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-[#21486f] focus:ring-2 focus:ring-[#21486f]/20"
-                placeholder="voce@igreja.org"
-                autoComplete="email"
-                required
-              />
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  className="w-full rounded-xl border border-white/22 bg-white/8 px-9 py-2.5 text-sm text-slate-100 outline-none transition placeholder:text-slate-400 focus:border-amber-300/65 focus:ring-2 focus:ring-amber-300/22"
+                  placeholder="voce@igreja.org"
+                  autoComplete="email"
+                  required
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700" htmlFor="password">
+              <label className="text-sm font-medium text-slate-200" htmlFor="password">
                 Senha
               </label>
               <div className="relative">
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 pr-11 text-sm text-slate-900 outline-none transition focus:border-[#21486f] focus:ring-2 focus:ring-[#21486f]/20"
+                  className="w-full rounded-xl border border-white/22 bg-white/8 px-9 py-2.5 pr-11 text-sm text-slate-100 outline-none transition placeholder:text-slate-400 focus:border-amber-300/65 focus:ring-2 focus:ring-amber-300/22"
                   placeholder="Sua senha"
                   autoComplete="current-password"
                   required
@@ -366,7 +376,7 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-300 transition hover:bg-white/12 hover:text-white"
                   aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -375,12 +385,12 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
             </div>
 
             <div className="flex items-center justify-between gap-3 text-sm">
-              <label className="inline-flex items-center gap-2 text-slate-600">
+              <label className="inline-flex items-center gap-2 text-slate-300">
                 <input
                   type="checkbox"
                   checked={rememberAccess}
                   onChange={(event) => setRememberAccess(event.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-[#21486f] focus:ring-[#21486f]/30"
+                  className="h-4 w-4 rounded border-slate-300 bg-white/10 text-amber-300 focus:ring-amber-300/35"
                 />
                 Lembrar acesso
               </label>
@@ -389,43 +399,53 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
                 type="button"
                 onClick={handleForgotPassword}
                 disabled={isSendingReset}
-                className="font-medium text-[#1f4f80] transition hover:text-[#16395d] disabled:cursor-not-allowed disabled:opacity-60"
+                className="font-medium text-amber-200 transition hover:text-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSendingReset ? "Enviando..." : "Esqueci minha senha"}
               </button>
             </div>
 
             {error ? (
-              <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+              <p className="rounded-xl border border-rose-300/45 bg-rose-400/14 px-3 py-2 text-sm text-rose-100">{error}</p>
             ) : null}
             {info ? (
-              <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{info}</p>
+              <p className="rounded-xl border border-emerald-300/45 bg-emerald-300/14 px-3 py-2 text-sm text-emerald-100">{info}</p>
             ) : null}
 
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="h-11 w-full bg-gradient-to-r from-[#0f2f53] via-[#1a4f7f] to-[#b88e38] text-white shadow-[0_20px_42px_-28px_rgba(21,51,85,0.85)] hover:from-[#103761] hover:via-[#1f588a] hover:to-[#c49c41]"
-            >
-              {isPending ? (
-                <span className="inline-flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Entrando...
-                </span>
-              ) : (
-                "Entrar"
-              )}
-            </Button>
+            <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.995 }}>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="group relative h-11 w-full overflow-hidden rounded-xl border border-[#e7c26b]/45 bg-gradient-to-r from-[#183f6a] via-[#26649e] to-[#c49c41] text-white shadow-[0_24px_48px_-30px_rgba(15,35,64,0.9)] transition hover:from-[#1a4a7c] hover:via-[#2c71b0] hover:to-[#d2ac55]"
+              >
+                <span className="pointer-events-none absolute inset-0 translate-x-[-110%] bg-gradient-to-r from-transparent via-white/24 to-transparent transition duration-700 group-hover:translate-x-[110%]" />
+                {isPending ? (
+                  <span className="relative inline-flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Entrando...
+                  </span>
+                ) : (
+                  <span className="relative inline-flex items-center gap-2">
+                    Entrar no painel
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                )}
+              </Button>
+            </motion.div>
+
+            <p className="text-center text-xs text-slate-400">
+              Dica: use seu email ministerial para acesso rapido e recuperacao segura.
+            </p>
           </form>
 
-          <div className="mt-7 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <p className="text-sm italic leading-relaxed text-slate-700">&quot;{verse.text}&quot;</p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <div className="mt-7 rounded-2xl border border-white/18 bg-white/8 px-4 py-3">
+            <p className="text-sm italic leading-relaxed text-slate-200">&quot;{verse.text}&quot;</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
               {verse.reference}
             </p>
           </div>
 
-          <div className="mt-6 space-y-1 text-xs text-slate-500">
+          <div className="mt-6 space-y-1 text-xs text-slate-400">
             <p>Versao: {systemVersion}</p>
             <p>Ambiente: {environment}</p>
             <p>Copyright {currentYear} {brandName}</p>
