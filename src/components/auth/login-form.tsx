@@ -9,12 +9,14 @@ import {
   Eye,
   EyeOff,
   FolderKanban,
+  Gem,
   HandHeart,
   Headset,
   Lock,
   Loader2,
   Mail,
   Megaphone,
+  Palette,
   Music2,
   PlayCircle,
   ShieldCheck,
@@ -93,6 +95,8 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
   const [isPending, setIsPending] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [activeField, setActiveField] = useState<"email" | "password" | null>(null);
+  const [visualMode, setVisualMode] = useState<"luxe" | "viva">("luxe");
   const [rememberAccess, setRememberAccess] = useState(() => {
     if (typeof window === "undefined") {
       return true;
@@ -205,6 +209,17 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
   const systemVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? "v0.1.0";
   const environment = process.env.NODE_ENV ?? "development";
   const currentYear = new Date().getFullYear();
+  const isViva = visualMode === "viva";
+
+  const handleQuickTour = () => {
+    setError(null);
+    setInfo("Tour premium: comece pelo Dashboard, depois visite Membros, Ministerios e Agenda.");
+  };
+
+  const handleSupport = () => {
+    setError(null);
+    setInfo("Suporte pronto para ajudar: use o e-mail ministerial e informe sua congregacao.");
+  };
 
   return (
     <main className="min-h-screen bg-[#f1f5f9] text-slate-100 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(340px,2fr)]">
@@ -319,15 +334,48 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
       </section>
 
       <section className="relative flex items-center justify-center overflow-hidden px-5 py-10 sm:px-8 lg:min-h-screen lg:px-10">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,#0a1429_0%,#101e3e_54%,#0f2342_100%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(250,204,21,0.14),transparent_35%),radial-gradient(circle_at_82%_86%,rgba(56,189,248,0.18),transparent_35%)]" />
+        <div
+          className={`absolute inset-0 ${
+            isViva
+              ? "bg-[linear-gradient(180deg,#111827_0%,#172554_48%,#0f172a_100%)]"
+              : "bg-[linear-gradient(180deg,#0a1429_0%,#101e3e_54%,#0f2342_100%)]"
+          }`}
+        />
+        <div
+          className={`pointer-events-none absolute inset-0 ${
+            isViva
+              ? "bg-[radial-gradient(circle_at_16%_15%,rgba(217,119,6,0.2),transparent_35%),radial-gradient(circle_at_82%_86%,rgba(59,130,246,0.2),transparent_35%)]"
+              : "bg-[radial-gradient(circle_at_20%_18%,rgba(250,204,21,0.14),transparent_35%),radial-gradient(circle_at_82%_86%,rgba(56,189,248,0.18),transparent_35%)]"
+          }`}
+        />
         <motion.div
           initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.55, ease: "easeOut" }}
-          className="relative w-full max-w-md overflow-hidden rounded-[30px] border border-white/18 bg-[linear-gradient(160deg,rgba(17,31,59,0.95),rgba(14,42,75,0.9))] p-6 text-slate-100 shadow-[0_45px_110px_-56px_rgba(8,12,28,1)] backdrop-blur-2xl sm:p-8"
+          className={`relative w-full max-w-md overflow-hidden rounded-[30px] border p-6 text-slate-100 shadow-[0_45px_110px_-56px_rgba(8,12,28,1)] backdrop-blur-2xl sm:p-8 ${
+            isViva
+              ? "border-blue-200/20 bg-[linear-gradient(155deg,rgba(20,34,68,0.95),rgba(23,37,84,0.92))]"
+              : "border-white/18 bg-[linear-gradient(160deg,rgba(17,31,59,0.95),rgba(14,42,75,0.9))]"
+          }`}
         >
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(250,204,21,0.14),transparent_32%),radial-gradient(circle_at_100%_100%,rgba(14,165,233,0.16),transparent_28%)]" />
+          <div
+            className={`pointer-events-none absolute inset-0 ${
+              isViva
+                ? "bg-[radial-gradient(circle_at_5%_0%,rgba(245,158,11,0.2),transparent_34%),radial-gradient(circle_at_100%_100%,rgba(96,165,250,0.2),transparent_28%)]"
+                : "bg-[radial-gradient(circle_at_10%_0%,rgba(250,204,21,0.14),transparent_32%),radial-gradient(circle_at_100%_100%,rgba(14,165,233,0.16),transparent_28%)]"
+            }`}
+          />
+
+          <motion.div
+            animate={{ y: [0, -6, 0], opacity: [0.35, 0.5, 0.35] }}
+            transition={{ duration: 7, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+            className="pointer-events-none absolute -right-10 top-16 h-32 w-32 rounded-full bg-amber-300/16 blur-2xl"
+          />
+          <motion.div
+            animate={{ y: [0, 8, 0], opacity: [0.3, 0.46, 0.3] }}
+            transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: 0.5 }}
+            className="pointer-events-none absolute -left-10 bottom-24 h-28 w-28 rounded-full bg-sky-300/16 blur-2xl"
+          />
 
           <div className="mb-7 space-y-3">
             <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#173e67] via-[#21588f] to-[#cba44e] text-white shadow-[0_18px_36px_-18px_rgba(203,164,78,0.72)]">
@@ -336,6 +384,34 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">{brandName}</p>
             <h2 className="text-2xl font-semibold tracking-tight text-slate-50">Portal Ministerial</h2>
             <p className="text-sm text-slate-300">Sua central de gestao ministerial.</p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setVisualMode("luxe")}
+                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                  !isViva
+                    ? "border-amber-300/45 bg-amber-300/16 text-amber-100"
+                    : "border-white/25 bg-white/8 text-slate-200 hover:bg-white/12"
+                }`}
+                aria-pressed={!isViva}
+              >
+                <Gem className="h-3 w-3" />
+                Luxo
+              </button>
+              <button
+                type="button"
+                onClick={() => setVisualMode("viva")}
+                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                  isViva
+                    ? "border-sky-300/45 bg-sky-300/16 text-sky-100"
+                    : "border-white/25 bg-white/8 text-slate-200 hover:bg-white/12"
+                }`}
+                aria-pressed={isViva}
+              >
+                <Palette className="h-3 w-3" />
+                Viva
+              </button>
+            </div>
             <div className="flex flex-wrap gap-2 pt-1">
               {quickTags.map((tag, index) => (
                 <span
@@ -365,32 +441,49 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
               <label className="text-sm font-medium text-slate-200" htmlFor="email">
                 Email
               </label>
-              <div className="relative">
+              <motion.div
+                animate={activeField === "email" ? { scale: 1.01 } : { scale: 1 }}
+                transition={{ duration: 0.15 }}
+                className={`relative rounded-xl ${
+                  activeField === "email" ? "ring-2 ring-amber-300/38" : "ring-0"
+                }`}
+              >
                 <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
+                  onFocus={() => setActiveField("email")}
+                  onBlur={() => setActiveField((prev) => (prev === "email" ? null : prev))}
                   className="w-full rounded-xl border border-white/22 bg-white/8 px-9 py-2.5 text-sm text-slate-100 outline-none transition placeholder:text-slate-400 focus:border-amber-300/65 focus:ring-2 focus:ring-amber-300/22"
                   placeholder="voce@igreja.org"
                   autoComplete="email"
                   required
                 />
-              </div>
+              </motion.div>
+              <p className="text-xs text-slate-400">Use o e-mail principal da sua conta ministerial.</p>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-200" htmlFor="password">
                 Senha
               </label>
-              <div className="relative">
+              <motion.div
+                animate={activeField === "password" ? { scale: 1.01 } : { scale: 1 }}
+                transition={{ duration: 0.15 }}
+                className={`relative rounded-xl ${
+                  activeField === "password" ? "ring-2 ring-amber-300/38" : "ring-0"
+                }`}
+              >
                 <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
+                  onFocus={() => setActiveField("password")}
+                  onBlur={() => setActiveField((prev) => (prev === "password" ? null : prev))}
                   className="w-full rounded-xl border border-white/22 bg-white/8 px-9 py-2.5 pr-11 text-sm text-slate-100 outline-none transition placeholder:text-slate-400 focus:border-amber-300/65 focus:ring-2 focus:ring-amber-300/22"
                   placeholder="Sua senha"
                   autoComplete="current-password"
@@ -404,7 +497,8 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
-              </div>
+              </motion.div>
+              <p className="text-xs text-slate-400">Clique no icone para mostrar ou ocultar sua senha.</p>
             </div>
 
             <div className="flex items-center justify-between gap-3 text-sm">
@@ -439,7 +533,11 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
               <Button
                 type="submit"
                 disabled={isPending}
-                className="group relative h-11 w-full overflow-hidden rounded-xl border border-[#e7c26b]/45 bg-gradient-to-r from-[#183f6a] via-[#26649e] to-[#c49c41] text-white shadow-[0_24px_48px_-30px_rgba(15,35,64,0.9)] transition hover:from-[#1a4a7c] hover:via-[#2c71b0] hover:to-[#d2ac55] hover:shadow-[0_26px_50px_-26px_rgba(196,156,65,0.78)]"
+                className={`group relative h-11 w-full overflow-hidden rounded-xl border text-white shadow-[0_24px_48px_-30px_rgba(15,35,64,0.9)] transition ${
+                  isViva
+                    ? "border-sky-200/40 bg-gradient-to-r from-[#1b3566] via-[#345fe0] to-[#d49a2f] hover:from-[#23427d] hover:via-[#3c67eb] hover:to-[#e0ab42]"
+                    : "border-[#e7c26b]/45 bg-gradient-to-r from-[#183f6a] via-[#26649e] to-[#c49c41] hover:from-[#1a4a7c] hover:via-[#2c71b0] hover:to-[#d2ac55]"
+                } hover:shadow-[0_26px_50px_-26px_rgba(196,156,65,0.78)]`}
               >
                 <span className="pointer-events-none absolute inset-0 translate-x-[-110%] bg-gradient-to-r from-transparent via-white/24 to-transparent transition duration-700 group-hover:translate-x-[110%]" />
                 {isPending ? (
@@ -459,6 +557,7 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <button
                 type="button"
+                onClick={handleQuickTour}
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/8 px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/14 hover:text-white"
               >
                 <PlayCircle className="h-3.5 w-3.5 text-amber-200" />
@@ -466,6 +565,7 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
               </button>
               <button
                 type="button"
+                onClick={handleSupport}
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/8 px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/14 hover:text-white"
               >
                 <Headset className="h-3.5 w-3.5 text-sky-200" />
