@@ -10,12 +10,15 @@ import {
   EyeOff,
   FolderKanban,
   HandHeart,
+  Headset,
   Lock,
   Loader2,
   Mail,
   Megaphone,
   Music2,
+  PlayCircle,
   ShieldCheck,
+  Sparkles,
   UserPlus,
   Wallet,
   Waves,
@@ -73,6 +76,7 @@ const verses = [
 const brandName = "Ecclesia One";
 const rememberedEmailStorageKey = "ecclesia_one_remembered_email";
 const verseRotationStorageKey = "ecclesia_one_verse_rotation";
+const quickTags = ["Acesso seguro", "Experiencia premium", "Suporte pastoral"];
 
 export function LoginForm({ isConfigured }: LoginFormProps) {
   const router = useRouter();
@@ -276,11 +280,13 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.45, delay: 0.14 + index * 0.03 }}
-                  whileHover={{ y: -2, scale: 1.01 }}
-                  className="rounded-2xl border border-white/22 bg-white/9 p-3 backdrop-blur-xl"
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  className="group rounded-2xl border border-white/22 bg-[linear-gradient(145deg,rgba(255,255,255,0.12),rgba(255,255,255,0.04))] p-3 backdrop-blur-xl transition hover:border-amber-200/45"
                 >
                   <div className="flex items-center gap-2 text-amber-100">
-                    <item.icon className="h-4 w-4" />
+                    <div className="rounded-lg border border-amber-200/30 bg-amber-200/15 p-1.5 text-amber-100 transition group-hover:scale-105 group-hover:bg-amber-200/22">
+                      <item.icon className="h-3.5 w-3.5" />
+                    </div>
                     <p className="text-xs leading-snug text-slate-50">{item.label}</p>
                   </div>
                 </motion.div>
@@ -330,6 +336,23 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">{brandName}</p>
             <h2 className="text-2xl font-semibold tracking-tight text-slate-50">Portal Ministerial</h2>
             <p className="text-sm text-slate-300">Sua central de gestao ministerial.</p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {quickTags.map((tag, index) => (
+                <span
+                  key={tag}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${
+                    index === 0
+                      ? "border-emerald-300/35 bg-emerald-300/15 text-emerald-100"
+                      : index === 1
+                        ? "border-amber-300/35 bg-amber-300/15 text-amber-100"
+                        : "border-sky-300/35 bg-sky-300/15 text-sky-100"
+                  }`}
+                >
+                  <Sparkles className="h-3 w-3" />
+                  {tag}
+                </span>
+              ))}
+            </div>
             {!isConfigured ? (
               <p className="rounded-xl border border-amber-300/45 bg-amber-200/15 px-3 py-2 text-xs text-amber-100">
                 Configure .env.local com as chaves Supabase para liberar o acesso.
@@ -416,7 +439,7 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
               <Button
                 type="submit"
                 disabled={isPending}
-                className="group relative h-11 w-full overflow-hidden rounded-xl border border-[#e7c26b]/45 bg-gradient-to-r from-[#183f6a] via-[#26649e] to-[#c49c41] text-white shadow-[0_24px_48px_-30px_rgba(15,35,64,0.9)] transition hover:from-[#1a4a7c] hover:via-[#2c71b0] hover:to-[#d2ac55]"
+                className="group relative h-11 w-full overflow-hidden rounded-xl border border-[#e7c26b]/45 bg-gradient-to-r from-[#183f6a] via-[#26649e] to-[#c49c41] text-white shadow-[0_24px_48px_-30px_rgba(15,35,64,0.9)] transition hover:from-[#1a4a7c] hover:via-[#2c71b0] hover:to-[#d2ac55] hover:shadow-[0_26px_50px_-26px_rgba(196,156,65,0.78)]"
               >
                 <span className="pointer-events-none absolute inset-0 translate-x-[-110%] bg-gradient-to-r from-transparent via-white/24 to-transparent transition duration-700 group-hover:translate-x-[110%]" />
                 {isPending ? (
@@ -432,6 +455,23 @@ export function LoginForm({ isConfigured }: LoginFormProps) {
                 )}
               </Button>
             </motion.div>
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/8 px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/14 hover:text-white"
+              >
+                <PlayCircle className="h-3.5 w-3.5 text-amber-200" />
+                Tour rapido
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/8 px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/14 hover:text-white"
+              >
+                <Headset className="h-3.5 w-3.5 text-sky-200" />
+                Falar com suporte
+              </button>
+            </div>
 
             <p className="text-center text-xs text-slate-400">
               Dica: use seu email ministerial para acesso rapido e recuperacao segura.
