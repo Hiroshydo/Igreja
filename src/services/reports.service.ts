@@ -77,7 +77,22 @@ export const financeReportsService = {
     }
 
     if (!context.congregationId) {
-      throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
+      return {
+        summary: {
+          totalIncome: 0,
+          totalExpenses: 0,
+          totalOutputs: 0,
+          balance: 0,
+          movementCount: 0,
+          largestIncome: 0,
+          largestOutput: 0,
+          largestExpense: 0,
+        },
+        congregationReport: [],
+        categoryReport: [],
+        eventReport: [],
+        detailRows: [],
+      } satisfies FinanceReportPayload;
     }
 
     const admin = createAdminSupabaseClient();

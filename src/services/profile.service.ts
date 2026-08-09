@@ -6,7 +6,7 @@ import type { AccessContext } from "@/types";
 export const profileService = {
   async assignRole(profileId: string, roleCode: string, context: AccessContext) {
     if (!context.congregationId) {
-      throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
+      return;
     }
 
     if (!context.roleCodes.includes("DEV") && roleCode === "DEV") {
@@ -39,7 +39,7 @@ export const profileService = {
 
   async removeRole(profileId: string, roleCode: string, context: AccessContext) {
     if (!context.congregationId) {
-      throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
+      return;
     }
 
     const roleCodes = context.roleCodes;

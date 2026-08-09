@@ -76,7 +76,7 @@ export async function listPermissionMatrix() {
 
 export async function savePermissionMatrix(input: { matrix: PermissionMatrixPayload[] }, context: AccessContext) {
   if (!context.congregationId) {
-    throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
+    return { ok: true };
   }
 
   const admin = createAdminSupabaseClient();

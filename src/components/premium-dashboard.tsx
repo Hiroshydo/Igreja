@@ -1184,10 +1184,10 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
             <div className="relative rounded-[calc(1.5rem-1px)] bg-slate-950/90 p-6 backdrop-blur-2xl">
               <Badge variant="info" className="mb-3">Dashboard Executivo</Badge>
               <h2 className="max-w-2xl text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
-                Visao inteligente da saude, crescimento e cuidado pastoral.
+                Visão inteligente da saúde, crescimento e cuidado pastoral.
               </h2>
               <p className="mt-3 max-w-2xl text-sm text-slate-300 sm:text-base">
-                Migracao completa com conteudo por modulo, filtros, fluxo admin e graficos de acompanhamento em tempo real.
+                Migração completa com conteúdo por módulo, filtros, fluxo administrativo e gráficos de acompanhamento em tempo real.
               </p>
             </div>
           </motion.section>
@@ -1223,7 +1223,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
               <CardContent className="space-y-3 text-sm text-slate-300">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Próximo passo</p>
-                  <p className="mt-1 font-semibold text-slate-50">Revisar congregações, membros e financeiro em uma visão integrada.</p>
+                  <p className="mt-1 font-semibold text-slate-50">Revisar congregações, membros e finanças em uma visão integrada.</p>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <div className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-3">

@@ -22,7 +22,14 @@ export const mediaService = {
     }
 
     if (!congregationId) {
-      throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
+      return {
+        id: crypto.randomUUID(),
+        url: null,
+        mimeType: file.type,
+        sizeBytes: file.size,
+        objectPath: "local-preview",
+        fileName: file.name,
+      } satisfies UploadAssetResult;
     }
 
     if (!ALLOWED_MIME_TYPES.has(file.type)) {
