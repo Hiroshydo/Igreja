@@ -1191,8 +1191,8 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                     <p className="mt-1 text-xl font-semibold text-white">{membersData.filter((item) => item.status === "ativo").length}</p>
                   </div>
                   <div className="rounded-2xl border border-amber-300/20 bg-amber-500/10 p-3">
-                    <p className="text-xs uppercase tracking-[0.2em] text-amber-200">Congregações</p>
-                    <p className="mt-1 text-xl font-semibold text-white">{congregationsList.length}</p>
+                    <div className="text-xs uppercase tracking-[0.2em] text-amber-200">Congregações</div>
+                    <div className="mt-1 text-xl font-semibold text-white">{congregationsList.length}</div>
                   </div>
                 </div>
               </CardContent>

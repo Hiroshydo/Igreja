@@ -22,6 +22,19 @@ interface CongregationOption {
   name: string;
 }
 
+interface CashClosureRecord {
+  id: string;
+  kind: "fechamento" | "planilha";
+  occurredAt: string;
+  openingBalance: number;
+  closingBalance: number;
+  receipts: number;
+  expenses: number;
+  movements: number;
+  notes: string;
+  workbookName?: string;
+}
+
 interface FinanceReportPayload {
   summary: {
     totalIncome: number;
@@ -85,6 +98,8 @@ export function FinanceReportClient() {
   const [draftPreview, setDraftPreview] = useState<{ label: string; value: number }[]>([]);
   const [closingPassword, setClosingPassword] = useState("");
   const [closingMessage, setClosingMessage] = useState<string | null>(null);
+  const [openingBalance, setOpeningBalance] = useState("0");
+  const [cashHistory, setCashHistory] = useState<CashClosureRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -165,6 +180,30 @@ export function FinanceReportClient() {
   useEffect(() => {
     void loadReport();
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const storedHistory = window.localStorage.getItem("ecclesia-finance-cash-history");
+    if (storedHistory) {
+      try {
+        const parsed = JSON.parse(storedHistory) as CashClosureRecord[];
+        setCashHistory(parsed);
+      } catch {
+        window.localStorage.removeItem("ecclesia-finance-cash-history");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem("ecclesia-finance-cash-history", JSON.stringify(cashHistory));
+  }, [cashHistory]);
 
   function handleAttachmentUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -292,6 +331,98 @@ export function FinanceReportClient() {
   const csvHref = useMemo(() => {
     return "/api/reports/finance/export";
   }, []);
+
+  const financeSummary = useMemo(() => {
+    const income = movements.filter((item) => item.type === "receita").reduce((sum, item) => sum + Number(item.amount ?? 0), 0);
+    const expenses = movements.filter((item) => item.type === "despesa").reduce((sum, item) => sum + Number(item.amount ?? 0), 0);
+    const balance = income - expenses;
+    const average = movements.length > 0 ? balance / movements.length : 0;
+
+    return {
+      income,
+      expenses,
+      balance,
+      average,
+      movements: movements.length,
+    };
+  }, [movements]);
+
+  const projectedClosing = useMemo(() => {
+    const openingValue = Number(String(openingBalance).replace(/[^0-9,.-]/g, "")) || 0;
+    return openingValue + financeSummary.balance;
+  }, [financeSummary.balance, openingBalance]);
+
+  function buildWorkbookCsv() {
+    const rows = movements.length > 0 ? movements : report?.detailRows ?? [];
+    const header = ["Data", "Congregação", "Tipo", "Categoria", "Descrição", "Valor", "Origem", "Referência"];
+    const body = rows.map((row) => [
+      row.occurredAt ? new Date(row.occurredAt).toLocaleDateString("pt-BR") : "",
+      row.congregationName ?? "",
+      row.type ?? "",
+      row.category ?? "",
+      row.description ?? "",
+      Number(row.amount ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
+      row.origin ?? "",
+      row.reference ?? "",
+    ]);
+
+    const csvContent = [header, ...body]
+      .map((line) => line.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    return csvContent;
+  }
+
+  function handleGenerateWorkbook() {
+    const workbookName = `planilha-financeira-${new Date().toISOString().slice(0, 10)}.csv`;
+    const csvContent = buildWorkbookCsv();
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = workbookName;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    const newRecord: CashClosureRecord = {
+      id: `planilha-${Date.now()}`,
+      kind: "planilha",
+      occurredAt: new Date().toISOString(),
+      openingBalance: Number(String(openingBalance).replace(/[^0-9,.-]/g, "")) || 0,
+      closingBalance: projectedClosing,
+      receipts: financeSummary.income,
+      expenses: financeSummary.expenses,
+      movements: financeSummary.movements,
+      notes: "Planilha aberta e exportada para análise do caixa.",
+      workbookName,
+    };
+
+    setCashHistory((prev) => [newRecord, ...prev].slice(0, 8));
+    setClosingMessage("Planilha aberta com sucesso. O arquivo foi preparado para download.");
+  }
+
+  function handleCloseCash() {
+    if (closingPassword.trim() !== "pastor2026") {
+      setClosingMessage("Senha incorreta. Solicite o acesso correto ao pastor.");
+      return;
+    }
+
+    const newRecord: CashClosureRecord = {
+      id: `fechamento-${Date.now()}`,
+      kind: "fechamento",
+      occurredAt: new Date().toISOString(),
+      openingBalance: Number(String(openingBalance).replace(/[^0-9,.-]/g, "")) || 0,
+      closingBalance: projectedClosing,
+      receipts: financeSummary.income,
+      expenses: financeSummary.expenses,
+      movements: financeSummary.movements,
+      notes: "Fechamento de caixa aprovado pelo pastor com saldo consolidado.",
+    };
+
+    setCashHistory((prev) => [newRecord, ...prev].slice(0, 8));
+    setClosingPassword("");
+    setClosingMessage("Caixa fechado com sucesso. O histórico foi atualizado.");
+  }
 
   useEffect(() => {
     if (!form.amount) {
@@ -428,14 +559,7 @@ export function FinanceReportClient() {
             <p className="text-sm font-semibold text-amber-100">{closingMessage}</p>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <input type="password" value={closingPassword} onChange={(event) => setClosingPassword(event.target.value)} className="w-full max-w-sm rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Senha do pastor" />
-              <button type="button" onClick={() => {
-                if (closingPassword.trim() === "pastor2026") {
-                  setClosingMessage("Caixa fechado com sucesso. O fluxo foi aprovado pelo pastor.");
-                  setClosingPassword("");
-                } else {
-                  setClosingMessage("Senha incorreta. Solicite o acesso correto ao pastor.");
-                }
-              }} className="rounded-xl bg-emerald-300 px-4 py-2 text-sm font-semibold text-slate-950">
+              <button type="button" onClick={handleCloseCash} className="rounded-xl bg-emerald-300 px-4 py-2 text-sm font-semibold text-slate-950">
                 Confirmar fechamento
               </button>
             </div>
@@ -450,6 +574,9 @@ export function FinanceReportClient() {
             setClosingMessage("Informe a senha do pastor para fechar o caixa.");
           }} className="rounded-xl border border-amber-300/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-100">
             Fechar caixa
+          </button>
+          <button type="button" onClick={() => handleGenerateWorkbook()} className="rounded-xl border border-cyan-300/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-100">
+            Abrir planilha
           </button>
           <button type="button" onClick={() => {
             setEditingId(null);
@@ -476,7 +603,7 @@ export function FinanceReportClient() {
 
       {report ? (
         <>
-          <section className="grid gap-4 md:grid-cols-4">
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <article className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-4">
               <div className="text-xs uppercase tracking-[0.2em] text-emerald-200">Receitas</div>
               <div className="mt-2 text-2xl font-semibold text-white">R$ {report.summary.totalIncome.toLocaleString("pt-BR")}</div>
@@ -493,6 +620,51 @@ export function FinanceReportClient() {
               <div className="text-xs uppercase tracking-[0.2em] text-cyan-200">Saldo</div>
               <div className="mt-2 text-2xl font-semibold text-white">R$ {report.summary.balance.toLocaleString("pt-BR")}</div>
             </article>
+          </section>
+
+          <section className="rounded-2xl border border-white/10 bg-slate-950/50 p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Operações de caixa</h3>
+                <p className="mt-1 text-sm text-slate-400">Saldo inicial, projeção de fechamento e planilha operacional em um único painel.</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300">
+                <span className="text-slate-500">Saldo projetado:</span> <span className="ml-2 font-semibold text-white">R$ {projectedClosing.toLocaleString("pt-BR")}</span>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-emerald-300/20 bg-emerald-500/10 p-3">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-emerald-200">Saldo inicial</p>
+                    <p className="mt-1 text-lg font-semibold text-white">R$ {Number(String(openingBalance).replace(/[^0-9,.-]/g, "") || 0).toLocaleString("pt-BR")}</p>
+                  </div>
+                  <div className="rounded-xl border border-amber-300/20 bg-amber-500/10 p-3">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-amber-200">Soma líquida</p>
+                    <p className="mt-1 text-lg font-semibold text-white">R$ {financeSummary.balance.toLocaleString("pt-BR")}</p>
+                  </div>
+                  <div className="rounded-xl border border-cyan-300/20 bg-cyan-500/10 p-3">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-cyan-200">Média por movimento</p>
+                    <p className="mt-1 text-lg font-semibold text-white">R$ {financeSummary.average.toLocaleString("pt-BR")}</p>
+                  </div>
+                </div>
+                <label className="mt-4 block text-sm text-slate-300">
+                  <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Saldo inicial do caixa</span>
+                  <input type="text" inputMode="decimal" value={openingBalance} onChange={(event) => setOpeningBalance(event.target.value.replace(/[^0-9,.-]/g, ""))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="0,00" />
+                </label>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Ações profissionais</p>
+                <div className="mt-3 space-y-2">
+                  <button type="button" onClick={() => handleGenerateWorkbook()} className="flex w-full items-center justify-center rounded-xl border border-cyan-300/30 bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-cyan-100">
+                    Gerar planilha CSV
+                  </button>
+                  <button type="button" onClick={() => setClosingMessage("Informe a senha do pastor para fechar o caixa.")} className="flex w-full items-center justify-center rounded-xl border border-amber-300/30 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-100">
+                    Solicitar fechamento
+                  </button>
+                </div>
+              </div>
+            </div>
           </section>
 
           <section className="grid gap-6 lg:grid-cols-2">
@@ -524,6 +696,35 @@ export function FinanceReportClient() {
                 ))}
               </div>
             </article>
+          </section>
+
+          <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Histórico de fechamento e planilhas</h3>
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-400">Últimos registros</span>
+            </div>
+            <div className="mt-4 space-y-3">
+              {cashHistory.length > 0 ? cashHistory.map((entry) => (
+                <div key={entry.id} className="rounded-2xl border border-white/10 bg-slate-950/50 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-100">{entry.kind === "fechamento" ? "Fechamento de caixa" : "Planilha aberta"}</p>
+                      <p className="text-xs text-slate-400">{new Date(entry.occurredAt).toLocaleString("pt-BR")}</p>
+                    </div>
+                    <span className={`rounded-full px-2.5 py-1 text-[11px] uppercase tracking-[0.2em] ${entry.kind === "fechamento" ? "border border-emerald-300/30 bg-emerald-500/10 text-emerald-100" : "border border-cyan-300/30 bg-cyan-500/10 text-cyan-100"}`}>
+                      {entry.kind === "fechamento" ? "Fechado" : "Planilha"}
+                    </span>
+                  </div>
+                  <div className="mt-3 grid gap-2 text-sm text-slate-300 sm:grid-cols-3">
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-2">Saldo inicial: R$ {entry.openingBalance.toLocaleString("pt-BR")}</div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-2">Saldo final: R$ {entry.closingBalance.toLocaleString("pt-BR")}</div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-2">{entry.movements} movimentos</div>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-400">{entry.notes}</p>
+                  {entry.workbookName ? <p className="mt-2 text-xs text-cyan-200">Arquivo: {entry.workbookName}</p> : null}
+                </div>
+              )) : <p className="text-sm text-slate-400">Ainda não há histórico de fechamento ou abertura de planilhas.</p>}
+            </div>
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
