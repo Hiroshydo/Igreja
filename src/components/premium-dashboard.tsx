@@ -862,7 +862,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                   className="rounded-xl bg-amber-300 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-200"
                   onClick={() => {
                     setEditingMemberId(null);
-                    setMemberForm(emptyMemberForm);
+                    setMemberForm(createEmptyMemberForm(access.congregationId ?? ""));
                     setActiveTab("admin-membros");
                   }}
                 >
@@ -1010,7 +1010,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                   className="rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-200 hover:bg-white/10"
                   onClick={() => {
                     setEditingMemberId(null);
-                    setMemberForm(emptyMemberForm);
+                    setMemberForm(createEmptyMemberForm(access.congregationId ?? ""));
                   }}
                 >
                   Limpar
@@ -1045,7 +1045,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-2">
-                {congregationsData.map((item) => (
+                {congregationsList.map((item) => (
                   <article key={item.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">{item.city}</span>
@@ -1057,6 +1057,13 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                       <span className="text-xs text-slate-500">{item.members} membros</span>
                       <span className="text-xs text-slate-300">{item.attendance}% presença</span>
                     </div>
+                    <button
+                      type="button"
+                      className="mt-3 rounded-lg border border-white/15 px-2 py-1 text-xs text-slate-200 hover:bg-white/10"
+                      onClick={() => handleCongregationEdit(item)}
+                    >
+                      Editar
+                    </button>
                   </article>
                 ))}
               </div>
@@ -1071,25 +1078,62 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
             <CardContent className="space-y-3">
               <div>
                 <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Nome da congregação</label>
-                <input className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50" placeholder="Ex: Sede Vida Nova" />
+                <input
+                  value={congregationDraft.name}
+                  onChange={(event) => setCongregationDraft((prev) => ({ ...prev, name: event.target.value }))}
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                  placeholder="Ex: Sede Vida Nova"
+                />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Cidade</label>
-                  <input className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50" placeholder="Cidade" />
+                  <input
+                    value={congregationDraft.city}
+                    onChange={(event) => setCongregationDraft((prev) => ({ ...prev, city: event.target.value }))}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                    placeholder="Cidade"
+                  />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Líder</label>
-                  <input className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50" placeholder="Nome do líder" />
+                  <input
+                    value={congregationDraft.leader}
+                    onChange={(event) => setCongregationDraft((prev) => ({ ...prev, leader: event.target.value }))}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                    placeholder="Nome do líder"
+                  />
                 </div>
               </div>
-              <div>
-                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Endereço</label>
-                <input className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50" placeholder="Rua, bairro" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Membros</label>
+                  <input
+                    type="number"
+                    value={congregationDraft.members}
+                    onChange={(event) => setCongregationDraft((prev) => ({ ...prev, members: Number(event.target.value) }))}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Presença %</label>
+                  <input
+                    type="number"
+                    value={congregationDraft.attendance}
+                    onChange={(event) => setCongregationDraft((prev) => ({ ...prev, attendance: Number(event.target.value) }))}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                  />
+                </div>
               </div>
-              <button type="button" className="rounded-xl bg-emerald-300 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-200">
-                Salvar congregação
+              <button
+                type="button"
+                className="rounded-xl bg-emerald-300 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-200 disabled:opacity-60"
+                disabled={isSavingCongregation}
+                onClick={() => void handleCongregationSave()}
+              >
+                {isSavingCongregation ? "Salvando..." : editingCongregationId ? "Salvar alterações" : "Salvar congregação"}
               </button>
+              {congregationMessage ? <p className="text-xs text-slate-300">{congregationMessage}</p> : null}
             </CardContent>
           </Card>
         </section>
@@ -1132,6 +1176,49 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                   {filter}
                 </Button>
               ))}
+            </div>
+            <div className="mb-4 rounded-xl border border-dashed border-white/10 bg-white/5 p-3">
+              <div className="grid gap-3 md:grid-cols-3">
+                <input
+                  value={newGalleryTitle}
+                  onChange={(event) => setNewGalleryTitle(event.target.value)}
+                  className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                  placeholder="Título do álbum"
+                />
+                <input
+                  value={newGalleryCategory}
+                  onChange={(event) => setNewGalleryCategory(event.target.value)}
+                  className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                  placeholder="Categoria"
+                />
+                <input
+                  value={newGalleryImage}
+                  onChange={(event) => setNewGalleryImage(event.target.value)}
+                  className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                  placeholder="URL da imagem"
+                />
+              </div>
+              <button
+                type="button"
+                className="mt-3 rounded-xl bg-emerald-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-200"
+                onClick={() => {
+                  if (!newGalleryTitle.trim()) return;
+                  setGalleryItemsState((current) => [
+                    ...current,
+                    {
+                      id: Date.now(),
+                      title: newGalleryTitle.trim(),
+                      category: newGalleryCategory.trim() || "Outros",
+                      image: newGalleryImage.trim() || "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80",
+                    },
+                  ]);
+                  setNewGalleryTitle("");
+                  setNewGalleryCategory("");
+                  setNewGalleryImage("");
+                }}
+              >
+                Criar álbum
+              </button>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {filteredGallery.map((item) => (
@@ -1282,13 +1369,35 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
             <CardTitle>Liturgia e comunicacao</CardTitle>
             <CardDescription>Checklist de culto e equipe de midia.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm text-slate-200">
-            {worshipChecklist.map((item) => (
-              <div key={item.item} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3">
-                <span>{item.item}</span>
-                <Badge variant={item.status === "ok" ? "success" : "default"}>{item.status === "ok" ? "Concluido" : "Ajustar"}</Badge>
-              </div>
-            ))}
+          <CardContent className="space-y-3 text-sm text-slate-200">
+            <div className="space-y-2">
+              {worshipChecklistItems.map((item) => (
+                <div key={item.item} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3">
+                  <span>{item.item}</span>
+                  <Badge variant={item.status === "ok" ? "success" : "default"}>{item.status === "ok" ? "Concluido" : "Ajustar"}</Badge>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-xl border border-dashed border-white/10 p-3">
+              <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Adicionar item</label>
+              <input
+                value={newWorshipItem}
+                onChange={(event) => setNewWorshipItem(event.target.value)}
+                className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                placeholder="Ex: PDF da letra de uma música"
+              />
+              <button
+                type="button"
+                className="mt-3 rounded-xl bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-200"
+                onClick={() => {
+                  if (!newWorshipItem.trim()) return;
+                  setWorshipChecklistItems((current) => [...current, { item: newWorshipItem.trim(), status: "warn" }]);
+                  setNewWorshipItem("");
+                }}
+              >
+                Adicionar item
+              </button>
+            </div>
           </CardContent>
         </Card>
       );

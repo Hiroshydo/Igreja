@@ -74,7 +74,17 @@ export const congregationsService = {
 
   async update(id: string, input: Partial<CongregationRecord>, context: AccessContext): Promise<CongregationRecord> {
     const admin = createAdminSupabaseClient();
-    const payload: Record<string, unknown> = {};
+    const payload: {
+      name?: string;
+      code?: string;
+      legal_name?: string | null;
+      tax_id?: string | null;
+      email?: string | null;
+      phone?: string | null;
+      city?: string | null;
+      state?: string | null;
+      is_active?: boolean;
+    } = {};
 
     if (typeof input.name === "string") payload.name = input.name;
     if (typeof input.code === "string") payload.code = input.code;
