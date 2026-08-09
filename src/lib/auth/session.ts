@@ -114,7 +114,7 @@ export async function getAuthContext(): Promise<AccessContext | null> {
     const admin = createAdminSupabaseClient();
     const { data: profile, error: profileError } = await admin
       .from("profiles")
-      .select("id, congregation_id, full_name, email")
+      .select("id, congregation_id, full_name, email, is_active")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -131,6 +131,10 @@ export async function getAuthContext(): Promise<AccessContext | null> {
     if (typedProfile) {
       fullName = typedProfile.full_name ?? fullName;
       congregationId = typedProfile.congregation_id ?? null;
+
+      if (typedProfile.is_active === false) {
+        throw new AppError("Conta bloqueada", 403, "account_blocked");
+      }
     }
   }
 

@@ -2,7 +2,7 @@
  * Serviços de API para comunicação com o backend
  */
 
-import { ApiResponse, Member, Event, Ministry, DashboardStats, HealthStatus } from '@/types';
+import { ApiResponse, Member, Event, Ministry, DashboardStats, HealthStatus, FinanceTransaction } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -150,6 +150,36 @@ export const ministryService = {
 /**
  * Serviço de Dashboard
  */
+export const financeServiceApi = {
+  async getAll(): Promise<ApiResponse<FinanceTransaction[]>> {
+    return apiCall<FinanceTransaction[]>('/api/finance');
+  },
+
+  async getById(id: string | number): Promise<ApiResponse<FinanceTransaction>> {
+    return apiCall<FinanceTransaction>(`/api/finance/${id}`);
+  },
+
+  async create(data: Partial<FinanceTransaction>): Promise<ApiResponse<FinanceTransaction>> {
+    return apiCall<FinanceTransaction>('/api/finance', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async update(id: string | number, data: Partial<FinanceTransaction>): Promise<ApiResponse<FinanceTransaction>> {
+    return apiCall<FinanceTransaction>(`/api/finance/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async delete(id: string | number): Promise<ApiResponse<void>> {
+    return apiCall<void>(`/api/finance/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
 export const dashboardService = {
   async getStats(): Promise<ApiResponse<DashboardStats>> {
     return apiCall<DashboardStats>('/api/dashboard/stats');

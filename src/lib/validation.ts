@@ -43,9 +43,27 @@ export const ministryCreateSchema = z.object({
 
 export const ministryUpdateSchema = ministryCreateSchema.partial();
 
+export const financeMovementCreateSchema = z.object({
+  accountId: z.string().min(1),
+  type: z.enum(['receita', 'despesa']),
+  category: z.string().min(1),
+  amount: z.union([z.number().nonnegative(), z.string().min(1)]),
+  occurredAt: z.string().min(1),
+  description: z.string().optional().or(z.literal("")),
+  origin: z.string().optional().or(z.literal("")),
+  reference: z.string().optional().or(z.literal("")),
+  documentReference: z.string().optional().or(z.literal("")),
+  observations: z.string().optional().or(z.literal("")),
+  eventId: z.string().optional().or(z.literal("")),
+});
+
+export const financeMovementUpdateSchema = financeMovementCreateSchema.partial();
+
 export type MemberCreateInput = z.infer<typeof memberCreateSchema>;
 export type MemberUpdateInput = z.infer<typeof memberUpdateSchema>;
 export type EventCreateInput = z.infer<typeof eventCreateSchema>;
 export type EventUpdateInput = z.infer<typeof eventUpdateSchema>;
 export type MinistryCreateInput = z.infer<typeof ministryCreateSchema>;
 export type MinistryUpdateInput = z.infer<typeof ministryUpdateSchema>;
+export type FinanceMovementCreateInput = z.infer<typeof financeMovementCreateSchema>;
+export type FinanceMovementUpdateInput = z.infer<typeof financeMovementUpdateSchema>;

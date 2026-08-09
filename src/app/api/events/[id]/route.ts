@@ -6,30 +6,32 @@ import { eventUpdateSchema } from "@/lib/validation";
 import { writeAuditLog } from "@/services/audit.service";
 import { eventsService } from "@/services/events.service";
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const access = await requireRouteAccess({ request, resource: "events", action: "read" });
     if (access.response) {
       return access.response;
     }
 
-    const event = await eventsService.getById(params.id, access.context.congregationId);
+    const { id } = await context.params;
+    const event = await eventsService.getById(id, access.context.congregationId);
     return jsonSuccess(event);
   } catch (error) {
     return jsonError(error, "Erro ao buscar evento");
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const access = await requireRouteAccess({ request, resource: "events", action: "update" });
     if (access.response) {
       return access.response;
     }
 
-    const beforeData = await eventsService.getById(params.id, access.context.congregationId);
+    const { id } = await context.params;
+    const beforeData = await eventsService.getById(id, access.context.congregationId);
     const body = eventUpdateSchema.parse(await request.json());
-    const updatedEvent = await eventsService.update(params.id, body, access.context);
+    const updatedEvent = await eventsService.update(id, body, access.context);
 
     await writeAuditLog({
       request,
@@ -47,22 +49,23 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const access = await requireRouteAccess({ request, resource: "events", action: "delete" });
     if (access.response) {
       return access.response;
     }
 
-    const beforeData = await eventsService.getById(params.id, access.context.congregationId);
-    await eventsService.remove(params.id, access.context);
+    const { id } = await context.params;
+    const beforeData = await eventsService.getById(id, access.context.congregationId);
+    await eventsService.remove(id, access.context);
 
     await writeAuditLog({
       request,
       context: access.context,
       action: "delete",
       entityName: "events",
-      entityId: params.id,
+      entityId: id,
       beforeData,
     });
 

@@ -6,6 +6,20 @@ export function isDeveloper(roleCodes: string[]) {
   return roleCodes.includes(developerRoleCode);
 }
 
+export function canGrantDeveloperRole(actorRoleCodes: string[], requestedRoleCodes: string[]) {
+  const actorIsDeveloper = isDeveloper(actorRoleCodes);
+  const requestedDev = requestedRoleCodes.includes(developerRoleCode);
+
+  return actorIsDeveloper ? false : requestedDev;
+}
+
+export function canRemoveDeveloperRole(actorRoleCodes: string[], roleCodes: string[]) {
+  const actorIsDeveloper = isDeveloper(actorRoleCodes);
+  const hasDevRole = roleCodes.includes(developerRoleCode);
+
+  return Boolean(actorIsDeveloper && hasDevRole && roleCodes.length > 1);
+}
+
 export function hasPermission(permissionKeys: string[], roleCodes: string[], permission: PermissionKey) {
   return isDeveloper(roleCodes) || permissionKeys.includes(permission);
 }

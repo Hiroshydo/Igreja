@@ -570,10 +570,10 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
     if (adminModule === "members") {
       return (
         <div className="space-y-2 text-sm text-slate-200">
-          {members.map((member) => (
+          {membersData.map((member) => (
             <div key={member.id} className="rounded-xl border border-white/10 bg-white/5 p-3">
               <p className="font-semibold text-slate-50">{member.name}</p>
-              <p className="text-xs text-slate-400">{member.status} - {member.ministry}</p>
+              <p className="text-xs text-slate-400">{member.status} - {member.role ?? "Sem função"}</p>
             </div>
           ))}
         </div>

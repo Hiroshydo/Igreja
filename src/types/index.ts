@@ -66,6 +66,8 @@ export interface Member {
   status: 'ativo' | 'inativo' | 'pendente';
   role?: string;
   avatar?: string;
+  ministry?: string;
+  lastVisit?: string;
 }
 
 export interface Event {
@@ -94,6 +96,79 @@ export interface Ministry {
   image?: string;
   meetingDay?: string;
   meetingTime?: string;
+}
+
+export interface FinanceAccount {
+  id: string;
+  congregationId: string;
+  name: string;
+  category: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface FinanceCategory {
+  id: string;
+  congregationId: string;
+  code: string;
+  name: string;
+  type: 'receita' | 'despesa' | 'ambos';
+  description?: string | null;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface FinanceTransaction {
+  id: string;
+  congregationId: string;
+  accountId: string;
+  type: 'receita' | 'despesa';
+  category: string;
+  amount: number;
+  occurredAt: string;
+  description?: string | null;
+  origin?: string | null;
+  reference?: string | null;
+  documentReference?: string | null;
+  observations?: string | null;
+  eventId?: string | null;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+  account?: {
+    name: string;
+    category: string;
+  } | null;
+}
+
+export interface FinanceMovementInput {
+  accountId: string;
+  type: 'receita' | 'despesa';
+  category: string;
+  amount: number | string;
+  occurredAt: string;
+  description?: string;
+  origin?: string;
+  reference?: string;
+  documentReference?: string;
+  observations?: string;
+  eventId?: string;
+}
+
+export interface FinanceSummaryReport {
+  period: string;
+  totalIncome: number;
+  totalExpenses: number;
+  balance: number;
+  movementCount: number;
+  topCategories: Array<{ category: string; total: number; count: number }>;
+  topCongregations: Array<{ congregationId: string; total: number }>; 
+  topOrigins: Array<{ origin: string; total: number }>; 
+  eventsWithMovement: Array<{ eventId: string; total: number }>;
 }
 
 export interface DashboardStats {

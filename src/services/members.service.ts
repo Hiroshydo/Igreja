@@ -1,5 +1,6 @@
 import { AppError } from "@/lib/http";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import type { Database } from "@/types/supabase";
 import type { Member } from "@/types";
 import type { AccessContext } from "@/types";
 import type { MemberCreateInput, MemberUpdateInput } from "@/lib/validation";
@@ -112,7 +113,7 @@ export const membersService = {
       throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
     }
 
-    const payload: Record<string, unknown> = {
+    const payload: Database["public"]["Tables"]["members"]["Update"] = {
       updated_by: context.userId,
     };
 
@@ -120,8 +121,8 @@ export const membersService = {
     if (typeof input.email === "string") payload.email = input.email || null;
     if (typeof input.phone === "string") payload.phone = input.phone || null;
     if (typeof input.birthDate === "string") payload.birth_date = input.birthDate || null;
-    if (typeof input.joinDate === "string") payload.join_date = input.joinDate || null;
-    if (typeof input.status === "string") payload.status = input.status;
+    if (typeof input.joinDate === "string") payload.join_date = input.joinDate;
+    if (typeof input.status === "string") payload.status = input.status as "ativo" | "inativo" | "pendente";
     if (typeof input.role === "string") payload.role_label = input.role || null;
     if (typeof input.avatar === "string") payload.avatar_url = input.avatar || null;
 
@@ -156,7 +157,6 @@ export const membersService = {
       .from("members")
       .update({
         deleted_at: new Date().toISOString(),
-        deleted_by: context.userId,
         updated_by: context.userId,
       })
       .eq("id", id)

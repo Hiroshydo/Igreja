@@ -1,5 +1,6 @@
 import { AppError } from "@/lib/http";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import type { Database } from "@/types/supabase";
 import type { AccessContext, Ministry } from "@/types";
 import type { MinistryCreateInput, MinistryUpdateInput } from "@/lib/validation";
 
@@ -118,7 +119,7 @@ export const ministriesService = {
       throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
     }
 
-    const payload: Record<string, unknown> = {
+    const payload: Database["public"]["Tables"]["ministries"]["Update"] = {
       updated_by: context.userId,
     };
 
@@ -164,7 +165,6 @@ export const ministriesService = {
       .from("ministries")
       .update({
         deleted_at: new Date().toISOString(),
-        deleted_by: context.userId,
         updated_by: context.userId,
       })
       .eq("id", id)

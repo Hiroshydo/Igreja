@@ -1,23 +1,74 @@
 export interface Database {
   public: {
     Tables: {
+      congregations: {
+        Row: {
+          id: string;
+          name: string;
+          code: string;
+          legal_name: string | null;
+          tax_id: string | null;
+          email: string | null;
+          phone: string | null;
+          city: string | null;
+          state: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          code: string;
+          legal_name?: string | null;
+          tax_id?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          city?: string | null;
+          state?: string | null;
+          is_active?: boolean;
+        };
+        Update: {
+          name?: string;
+          code?: string;
+          legal_name?: string | null;
+          tax_id?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          city?: string | null;
+          state?: string | null;
+          is_active?: boolean;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           id: string;
           congregation_id: string | null;
           full_name: string | null;
           email: string | null;
+          is_active: boolean;
+          phone: string | null;
+          avatar_url: string | null;
+          created_at: string;
+          updated_at: string;
         };
         Insert: {
           id: string;
           congregation_id?: string | null;
           full_name?: string | null;
           email?: string | null;
+          is_active?: boolean;
+          phone?: string | null;
+          avatar_url?: string | null;
         };
         Update: {
           congregation_id?: string | null;
           full_name?: string | null;
           email?: string | null;
+          is_active?: boolean;
+          phone?: string | null;
+          avatar_url?: string | null;
         };
         Relationships: [];
       };
@@ -102,6 +153,7 @@ export interface Database {
           status: 'ativo' | 'inativo' | 'pendente';
           role_label: string | null;
           avatar_url: string | null;
+          deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -126,6 +178,7 @@ export interface Database {
           status?: 'ativo' | 'inativo' | 'pendente';
           role_label?: string | null;
           avatar_url?: string | null;
+          deleted_at?: string | null;
           updated_by?: string | null;
         };
         Relationships: [];
@@ -142,6 +195,7 @@ export interface Database {
           location: string;
           attendees: number | null;
           organizer_name: string | null;
+          deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -166,6 +220,7 @@ export interface Database {
           location?: string;
           attendees?: number | null;
           organizer_name?: string | null;
+          deleted_at?: string | null;
           updated_by?: string | null;
         };
         Relationships: [];
@@ -185,6 +240,7 @@ export interface Database {
           image_url: string | null;
           meeting_day: string | null;
           meeting_time: string | null;
+          deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -215,7 +271,165 @@ export interface Database {
           image_url?: string | null;
           meeting_day?: string | null;
           meeting_time?: string | null;
+          deleted_at?: string | null;
           updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      finance_accounts: {
+        Row: {
+          id: string;
+          congregation_id: string;
+          name: string;
+          category: string;
+          is_active: boolean;
+          created_by: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          congregation_id: string;
+          name: string;
+          category: string;
+          is_active?: boolean;
+          created_by?: string | null;
+          updated_by?: string | null;
+        };
+        Update: {
+          name?: string;
+          category?: string;
+          is_active?: boolean;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      finance_categories: {
+        Row: {
+          id: string;
+          congregation_id: string;
+          code: string;
+          name: string;
+          type: 'receita' | 'despesa' | 'ambos';
+          description: string | null;
+          is_active: boolean;
+          created_by: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          congregation_id: string;
+          code: string;
+          name: string;
+          type: 'receita' | 'despesa' | 'ambos';
+          description?: string | null;
+          is_active?: boolean;
+          created_by?: string | null;
+          updated_by?: string | null;
+        };
+        Update: {
+          code?: string;
+          name?: string;
+          type?: 'receita' | 'despesa' | 'ambos';
+          description?: string | null;
+          is_active?: boolean;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      finance_transactions: {
+        Row: {
+          id: string;
+          congregation_id: string;
+          account_id: string;
+          type: 'receita' | 'despesa';
+          category: string;
+          amount: number;
+          occurred_at: string;
+          description: string | null;
+          origin: string | null;
+          reference: string | null;
+          document_reference: string | null;
+          observations: string | null;
+          event_id: string | null;
+          created_by: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          congregation_id: string;
+          account_id: string;
+          type: 'receita' | 'despesa';
+          category: string;
+          amount: number;
+          occurred_at: string;
+          description?: string | null;
+          origin?: string | null;
+          reference?: string | null;
+          document_reference?: string | null;
+          observations?: string | null;
+          event_id?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+        };
+        Update: {
+          account_id?: string;
+          type?: 'receita' | 'despesa';
+          category?: string;
+          amount?: number;
+          occurred_at?: string;
+          description?: string | null;
+          origin?: string | null;
+          reference?: string | null;
+          document_reference?: string | null;
+          observations?: string | null;
+          event_id?: string | null;
+          updated_by?: string | null;
+          deleted_at?: string | null;
+        };
+        Relationships: [];
+      };
+      media_assets: {
+        Row: {
+          id: string;
+          congregation_id: string;
+          bucket_name: string;
+          object_path: string;
+          file_name: string;
+          mime_type: string;
+          size_bytes: number;
+          url: string | null;
+          is_public: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          congregation_id: string;
+          bucket_name: string;
+          object_path: string;
+          file_name: string;
+          mime_type: string;
+          size_bytes: number;
+          url?: string | null;
+          is_public?: boolean;
+          created_by?: string | null;
+        };
+        Update: {
+          bucket_name?: string;
+          object_path?: string;
+          file_name?: string;
+          mime_type?: string;
+          size_bytes?: number;
+          url?: string | null;
+          is_public?: boolean;
         };
         Relationships: [];
       };

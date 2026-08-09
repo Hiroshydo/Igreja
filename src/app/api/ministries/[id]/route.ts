@@ -6,30 +6,32 @@ import { ministryUpdateSchema } from "@/lib/validation";
 import { writeAuditLog } from "@/services/audit.service";
 import { ministriesService } from "@/services/ministries.service";
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const access = await requireRouteAccess({ request, resource: "ministries", action: "read" });
     if (access.response) {
       return access.response;
     }
 
-    const ministry = await ministriesService.getById(params.id, access.context.congregationId);
+    const { id } = await context.params;
+    const ministry = await ministriesService.getById(id, access.context.congregationId);
     return jsonSuccess(ministry);
   } catch (error) {
     return jsonError(error, "Erro ao buscar ministério");
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const access = await requireRouteAccess({ request, resource: "ministries", action: "update" });
     if (access.response) {
       return access.response;
     }
 
-    const beforeData = await ministriesService.getById(params.id, access.context.congregationId);
+    const { id } = await context.params;
+    const beforeData = await ministriesService.getById(id, access.context.congregationId);
     const body = ministryUpdateSchema.parse(await request.json());
-    const updatedMinistry = await ministriesService.update(params.id, body, access.context);
+    const updatedMinistry = await ministriesService.update(id, body, access.context);
 
     await writeAuditLog({
       request,
@@ -47,22 +49,23 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const access = await requireRouteAccess({ request, resource: "ministries", action: "delete" });
     if (access.response) {
       return access.response;
     }
 
-    const beforeData = await ministriesService.getById(params.id, access.context.congregationId);
-    await ministriesService.remove(params.id, access.context);
+    const { id } = await context.params;
+    const beforeData = await ministriesService.getById(id, access.context.congregationId);
+    await ministriesService.remove(id, access.context);
 
     await writeAuditLog({
       request,
       context: access.context,
       action: "delete",
       entityName: "ministries",
-      entityId: params.id,
+      entityId: id,
       beforeData,
     });
 

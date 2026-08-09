@@ -1,5 +1,6 @@
 import { AppError } from "@/lib/http";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import type { Database } from "@/types/supabase";
 import type { Event, AccessContext } from "@/types";
 import type { EventCreateInput, EventUpdateInput } from "@/lib/validation";
 
@@ -119,13 +120,13 @@ export const eventsService = {
       throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
     }
 
-    const payload: Record<string, unknown> = {
+    const payload: Database["public"]["Tables"]["events"]["Update"] = {
       updated_by: context.userId,
     };
 
     if (typeof input.title === "string") payload.title = input.title;
     if (typeof input.description === "string") payload.description = input.description || null;
-    if (typeof input.category === "string") payload.category = input.category;
+    if (typeof input.category === "string") payload.category = input.category as "culto" | "reuniao" | "evento" | "estudo" | "outro";
     if (typeof input.location === "string") payload.location = input.location;
     if (typeof input.attendees === "number") payload.attendees = input.attendees;
     if (typeof input.organizer === "string") payload.organizer_name = input.organizer || null;
@@ -170,7 +171,6 @@ export const eventsService = {
       .from("events")
       .update({
         deleted_at: new Date().toISOString(),
-        deleted_by: context.userId,
         updated_by: context.userId,
       })
       .eq("id", id)
