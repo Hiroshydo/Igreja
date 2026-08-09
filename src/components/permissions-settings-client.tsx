@@ -324,10 +324,10 @@ export function PermissionsSettingsClient() {
 
       <div className="grid gap-4 xl:grid-cols-2">
         {permissionGroups.map((group) => (
-          <div key={group.key} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div key={group.key} className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 shadow-[0_18px_50px_-25px_rgba(251,191,36,0.35)]">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">{group.label}</h3>
-              <span className="text-xs text-slate-500">{group.permissions.length} itens</span>
+              <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] uppercase tracking-[0.2em] text-slate-400">{group.permissions.length} itens</span>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
@@ -351,7 +351,7 @@ export function PermissionsSettingsClient() {
 
                     return (
                       <tr key={role} className="border-t border-white/10 text-slate-300">
-                        <td className="py-2 pr-4 font-medium text-slate-100">{row.roleCode}</td>
+                        <td className="py-2 pr-4 font-medium text-slate-100">{roleLabels[role] ?? role}</td>
                         {group.permissions.map((permission) => (
                           <td key={`${role}-${permission}`} className="py-2 pr-3">
                             <input

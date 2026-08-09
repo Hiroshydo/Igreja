@@ -83,6 +83,8 @@ export function FinanceReportClient() {
   const [movements, setMovements] = useState<FinanceMovementItem[]>([]);
   const [congregations, setCongregations] = useState<CongregationOption[]>([]);
   const [draftPreview, setDraftPreview] = useState<{ label: string; value: number }[]>([]);
+  const [closingPassword, setClosingPassword] = useState("");
+  const [closingMessage, setClosingMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -421,12 +423,33 @@ export function FinanceReportClient() {
             <textarea value={form.observations} onChange={(event) => setForm((prev) => ({ ...prev, observations: event.target.value }))} className="min-h-24 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Detalhes adicionais do lançamento" />
           </label>
         </div>
+        {closingMessage ? (
+          <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-500/10 p-3">
+            <p className="text-sm font-semibold text-amber-100">{closingMessage}</p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <input type="password" value={closingPassword} onChange={(event) => setClosingPassword(event.target.value)} className="w-full max-w-sm rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Senha do pastor" />
+              <button type="button" onClick={() => {
+                if (closingPassword.trim() === "pastor2026") {
+                  setClosingMessage("Caixa fechado com sucesso. O fluxo foi aprovado pelo pastor.");
+                  setClosingPassword("");
+                } else {
+                  setClosingMessage("Senha incorreta. Solicite o acesso correto ao pastor.");
+                }
+              }} className="rounded-xl bg-emerald-300 px-4 py-2 text-sm font-semibold text-slate-950">
+                Confirmar fechamento
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         <div className="mt-4 flex flex-wrap gap-3">
           <button type="button" onClick={() => void handleSave()} disabled={saving} className="rounded-xl bg-emerald-300 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-200 disabled:opacity-60">
             {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Lançar valor"}
           </button>
-          <button type="button" className="rounded-xl border border-amber-300/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-100">
-            Solicitar aprovação do pastor
+          <button type="button" onClick={() => {
+            setClosingMessage("Informe a senha do pastor para fechar o caixa.");
+          }} className="rounded-xl border border-amber-300/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-100">
+            Fechar caixa
           </button>
           <button type="button" onClick={() => {
             setEditingId(null);

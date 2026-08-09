@@ -93,9 +93,10 @@ const navItems = [
 ] satisfies Array<{ key: TabKey; label: string; icon: typeof LayoutDashboard }>;
 
 const stats = [
-  { label: "Membros", value: "1.248", trend: "+12%" },
-  { label: "Visitantes", value: "84", trend: "+6%" },
-  { label: "Pedidos de oracao", value: "24", trend: "-2%" },
+  { label: "Membros ativos", value: "1.248", trend: "+12%" },
+  { label: "Visitantes este mês", value: "84", trend: "+6%" },
+  { label: "Pedidos de oração", value: "24", trend: "-2%" },
+  { label: "Congregações ativas", value: "3", trend: "+1" },
 ];
 
 const congregationsData = [
@@ -1151,7 +1152,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
             </div>
           </motion.section>
 
-          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {stats.map((item, index) => (
               <motion.div
                 key={item.label}
@@ -1173,7 +1174,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
             ))}
           </section>
 
-          <section className="grid gap-4 lg:grid-cols-2">
+          <section className="grid gap-4 lg:grid-cols-3">
             <Card>
               <CardHeader>
                 <CardTitle>Resumo ministerial</CardTitle>
@@ -1193,6 +1194,41 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                     <p className="text-xs uppercase tracking-[0.2em] text-amber-200">Congregações</p>
                     <p className="mt-1 text-xl font-semibold text-white">{congregationsList.length}</p>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Saúde pastoral</CardTitle>
+                <CardDescription>Indicadores distribuídos por cuidado e acompanhamento</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-slate-300">
+                {[
+                  { label: "Visitas semanais", value: "72" },
+                  { label: "Acompanhamento ativo", value: "81" },
+                  { label: "Cuidado pastoral", value: "64" },
+                  { label: "Retenção", value: "77%" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
+                    <span>{item.label}</span>
+                    <span className="font-semibold text-slate-50">{item.value}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Finanças</CardTitle>
+                <CardDescription>Resumo de entradas e saldo da semana</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-slate-300">
+                <div className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-3">
+                  <p className="text-xs uppercase tracking-[0.2em] text-emerald-200">Entradas</p>
+                  <p className="mt-1 text-xl font-semibold text-white">R$ 18.420</p>
+                </div>
+                <div className="rounded-2xl border border-amber-300/20 bg-amber-500/10 p-3">
+                  <p className="text-xs uppercase tracking-[0.2em] text-amber-200">Saldo</p>
+                  <p className="mt-1 text-xl font-semibold text-white">R$ 12.780</p>
                 </div>
               </CardContent>
             </Card>
@@ -1595,7 +1631,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
         <Card>
           <CardHeader>
             <CardTitle>Galeria de fotos</CardTitle>
-            <CardDescription>Filtros por categoria e visual publico dos registros.</CardDescription>
+            <CardDescription>Organize álbuns, visualize as imagens e adicione novos registros na mesma tela.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-4 flex flex-wrap gap-2">
@@ -1692,6 +1728,14 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                       </div>
                     </div>
                     <p className="text-xs text-slate-400">{item.category}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button type="button" className="rounded-lg border border-emerald-300/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-100">
+                        Abrir álbum
+                      </button>
+                      <button type="button" className="rounded-lg border border-sky-300/30 bg-sky-500/10 px-2.5 py-1.5 text-xs font-semibold text-sky-100">
+                        + Adicionar imagem
+                      </button>
+                    </div>
                   </div>
                 </article>
               ))}
