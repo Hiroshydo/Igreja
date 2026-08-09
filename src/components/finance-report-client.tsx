@@ -12,6 +12,14 @@ interface FinanceMovementItem {
   description?: string | null;
   amount: number;
   origin?: string | null;
+  reference?: string | null;
+  documentReference?: string | null;
+  observations?: string | null;
+}
+
+interface CongregationOption {
+  id: string;
+  name: string;
 }
 
 interface FinanceReportPayload {
@@ -73,6 +81,7 @@ interface FinanceReportPayload {
 export function FinanceReportClient() {
   const [report, setReport] = useState<FinanceReportPayload | null>(null);
   const [movements, setMovements] = useState<FinanceMovementItem[]>([]);
+  const [congregations, setCongregations] = useState<CongregationOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +93,10 @@ export function FinanceReportClient() {
     description: "",
     amount: "",
     origin: "",
+    congregationId: "",
+    reference: "",
+    documentReference: "",
+    observations: "",
   });
 
   async function loadReport() {
@@ -91,9 +104,10 @@ export function FinanceReportClient() {
     setError(null);
 
     try {
-      const [reportResponse, movementResponse] = await Promise.all([
+      const [reportResponse, movementResponse, congregationsResponse] = await Promise.all([
         fetch("/api/reports/finance"),
         fetch("/api/finance"),
+        fetch("/api/congregations"),
       ]);
 
       if (!reportResponse.ok) {
@@ -117,9 +131,24 @@ export function FinanceReportClient() {
               description: row.description,
               amount: Number(row.amount ?? 0),
               origin: row.origin,
+              reference: row.reference,
+              documentReference: row.document_reference ?? row.documentReference,
+              observations: row.observations,
             }))
           : [];
         setMovements(nextMovements);
+      }
+
+      if (congregationsResponse.ok) {
+        const congregationPayload = await congregationsResponse.json();
+        const nextCongregations = Array.isArray(congregationPayload.data)
+          ? congregationPayload.data.map((row: any) => ({ id: row.id, name: row.name }))
+          : [];
+        setCongregations(nextCongregations);
+        setForm((prev) => ({
+          ...prev,
+          congregationId: prev.congregationId || nextCongregations[0]?.id || "",
+        }));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao gerar relatório");
@@ -138,17 +167,27 @@ export function FinanceReportClient() {
       return;
     }
 
+    const normalizedAmount = Number(String(form.amount).replace(",", "."));
+    if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
+      setError("Informe um valor válido para a movimentação.");
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
     try {
       const payload = {
         occurredAt: form.occurredAt,
+        congregationId: form.congregationId || undefined,
         type: form.type,
         category: form.category,
         description: form.description,
-        amount: Number(form.amount),
+        amount: normalizedAmount,
         origin: form.origin || "Painel administrativo",
+        reference: form.reference || undefined,
+        documentReference: form.documentReference || undefined,
+        observations: form.observations || undefined,
       };
 
       const response = editingId
@@ -175,6 +214,10 @@ export function FinanceReportClient() {
         description: "",
         amount: "",
         origin: "",
+        congregationId: form.congregationId || congregations[0]?.id || "",
+        reference: "",
+        documentReference: "",
+        observations: "",
       });
       setEditingId(null);
       await loadReport();
@@ -211,6 +254,10 @@ export function FinanceReportClient() {
       description: entry.description ?? "",
       amount: String(entry.amount),
       origin: entry.origin ?? "",
+      congregationId: entry.congregationId || "",
+      reference: entry.reference ?? "",
+      documentReference: entry.documentReference ?? "",
+      observations: entry.observations ?? "",
     });
   }
 
@@ -266,11 +313,30 @@ export function FinanceReportClient() {
             <input type="date" value={form.occurredAt} onChange={(event) => setForm((prev) => ({ ...prev, occurredAt: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" />
           </label>
           <label className="text-sm text-slate-300">
-            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Tipo</span>
-            <select value={form.type} onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value as "receita" | "despesa" }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100">
-              <option value="receita">Receita</option>
-              <option value="despesa">Despesa</option>
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Congregação</span>
+            <select value={form.congregationId} onChange={(event) => setForm((prev) => ({ ...prev, congregationId: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100">
+              {congregations.map((congregation) => (
+                <option key={congregation.id} value={congregation.id}>{congregation.name}</option>
+              ))}
             </select>
+          </label>
+          <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-1">
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Tipo</span>
+            <div className="flex gap-2 rounded-xl border border-white/10 bg-white/5 p-1">
+              {([
+                { value: "receita", label: "Receita", accent: "bg-emerald-400/20 text-emerald-100" },
+                { value: "despesa", label: "Despesa", accent: "bg-rose-400/20 text-rose-100" },
+              ] as const).map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, type: option.value as "receita" | "despesa" }))}
+                  className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${form.type === option.value ? option.accent : "text-slate-300 hover:bg-white/10"}`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </label>
           <label className="text-sm text-slate-300">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Categoria</span>
@@ -278,15 +344,27 @@ export function FinanceReportClient() {
           </label>
           <label className="text-sm text-slate-300">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Valor</span>
-            <input type="number" value={form.amount} onChange={(event) => setForm((prev) => ({ ...prev, amount: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="0.00" />
+            <input type="text" inputMode="decimal" value={form.amount} onChange={(event) => setForm((prev) => ({ ...prev, amount: event.target.value.replace(/[^0-9,.-]/g, "") }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="0,00" />
           </label>
           <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-2">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Descrição</span>
             <input value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Ex: Oferta do domingo ou compra de material" />
           </label>
+          <label className="text-sm text-slate-300">
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Referência</span>
+            <input value={form.reference} onChange={(event) => setForm((prev) => ({ ...prev, reference: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Ex: pedido 101" />
+          </label>
+          <label className="text-sm text-slate-300">
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Comprovante</span>
+            <input value={form.documentReference} onChange={(event) => setForm((prev) => ({ ...prev, documentReference: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Nº, link ou anexo" />
+          </label>
           <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-2">
-            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Origem / referência</span>
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Origem / observações</span>
             <input value={form.origin} onChange={(event) => setForm((prev) => ({ ...prev, origin: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Ex: Tesouraria, culto, viagem" />
+          </label>
+          <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-4">
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Observações</span>
+            <textarea value={form.observations} onChange={(event) => setForm((prev) => ({ ...prev, observations: event.target.value }))} className="min-h-24 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Detalhes adicionais do lançamento" />
           </label>
         </div>
         <div className="mt-4 flex flex-wrap gap-3">
@@ -295,7 +373,7 @@ export function FinanceReportClient() {
           </button>
           <button type="button" onClick={() => {
             setEditingId(null);
-            setForm({ occurredAt: new Date().toISOString().slice(0, 10), type: "receita", category: "Oferta", description: "", amount: "", origin: "" });
+            setForm({ occurredAt: new Date().toISOString().slice(0, 10), type: "receita", category: "Oferta", description: "", amount: "", origin: "", congregationId: form.congregationId || congregations[0]?.id || "", reference: "", documentReference: "", observations: "" });
           }} className="rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-200 hover:bg-white/10">
             Limpar
           </button>

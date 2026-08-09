@@ -45,7 +45,8 @@ export const ministryCreateSchema = z.object({
 export const ministryUpdateSchema = ministryCreateSchema.partial();
 
 export const financeMovementCreateSchema = z.object({
-  accountId: z.string().min(1),
+  accountId: z.string().min(1).optional().or(z.literal("")),
+  congregationId: z.string().min(1).optional().or(z.literal("")),
   type: z.enum(['receita', 'despesa']),
   category: z.string().min(1),
   amount: z.union([z.number().nonnegative(), z.string().min(1)]),

@@ -13,6 +13,48 @@ const normalizeMoney = (value: number | string) => {
   return numeric;
 };
 
+async function resolveFinanceAccountId(admin: ReturnType<typeof createAdminSupabaseClient>, congregationId: string, userId: string, requestedAccountId?: string) {
+  if (requestedAccountId) {
+    return requestedAccountId;
+  }
+
+  const { data: existingAccount, error: existingError } = await admin
+    .from("finance_accounts")
+    .select("id")
+    .eq("congregation_id", congregationId)
+    .eq("is_active", true)
+    .order("created_at")
+    .limit(1)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new AppError("Não foi possível localizar a conta financeira", 500, "finance_account_fetch_failed");
+  }
+
+  if (existingAccount?.id) {
+    return existingAccount.id;
+  }
+
+  const { data: createdAccount, error: createError } = await admin
+    .from("finance_accounts")
+    .insert({
+      congregation_id: congregationId,
+      name: "Caixa principal",
+      category: "caixa",
+      is_active: true,
+      created_by: userId,
+      updated_by: userId,
+    })
+    .select("id")
+    .single();
+
+  if (createError || !createdAccount?.id) {
+    throw new AppError("Não foi possível criar a conta financeira padrão", 500, "finance_account_create_failed");
+  }
+
+  return createdAccount.id;
+}
+
 export const financeService = {
   async list(congregationId: string | null): Promise<FinanceTransaction[]> {
     if (!congregationId) {
@@ -80,9 +122,13 @@ export const financeService = {
       throw new AppError("Ambiente de servidor indisponível", 500, "server_env_missing");
     }
 
+    const admin = createAdminSupabaseClient();
+    const accountId = await resolveFinanceAccountId(admin, context.congregationId, context.userId, input.accountId);
+    const targetCongregationId = input.congregationId || context.congregationId;
+
     const payload = {
-      congregation_id: context.congregationId,
-      account_id: input.accountId,
+      congregation_id: targetCongregationId,
+      account_id: accountId,
       type: input.type,
       category: input.category,
       amount: normalizeMoney(input.amount),
@@ -96,8 +142,6 @@ export const financeService = {
       created_by: context.userId,
       updated_by: context.userId,
     };
-
-    const admin = createAdminSupabaseClient();
     const { data, error } = await admin
       .from("finance_transactions")
       .insert(payload)

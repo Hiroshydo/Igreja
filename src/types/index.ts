@@ -146,7 +146,8 @@ export interface FinanceTransaction {
 }
 
 export interface FinanceMovementInput {
-  accountId: string;
+  accountId?: string;
+  congregationId?: string;
   type: 'receita' | 'despesa';
   category: string;
   amount: number | string;
