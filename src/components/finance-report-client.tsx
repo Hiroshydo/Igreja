@@ -2,6 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+interface FinanceMovementItem {
+  id: string;
+  occurredAt: string;
+  congregationId: string;
+  congregationName: string;
+  type: "receita" | "despesa";
+  category: string;
+  description?: string | null;
+  amount: number;
+  origin?: string | null;
+}
+
 interface FinanceReportPayload {
   summary: {
     totalIncome: number;
@@ -60,22 +72,55 @@ interface FinanceReportPayload {
 
 export function FinanceReportClient() {
   const [report, setReport] = useState<FinanceReportPayload | null>(null);
+  const [movements, setMovements] = useState<FinanceMovementItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    occurredAt: new Date().toISOString().slice(0, 10),
+    type: "receita" as "receita" | "despesa",
+    category: "Oferta",
+    description: "",
+    amount: "",
+    origin: "",
+  });
 
   async function loadReport() {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/reports/finance");
-      if (!response.ok) {
-        const body = await response.json().catch(() => null);
+      const [reportResponse, movementResponse] = await Promise.all([
+        fetch("/api/reports/finance"),
+        fetch("/api/finance"),
+      ]);
+
+      if (!reportResponse.ok) {
+        const body = await reportResponse.json().catch(() => null);
         throw new Error(body?.error ?? "Não foi possível gerar o relatório");
       }
 
-      const payload = await response.json();
-      setReport(payload.data);
+      const reportPayload = await reportResponse.json();
+      setReport(reportPayload.data);
+
+      if (movementResponse.ok) {
+        const movementPayload = await movementResponse.json();
+        const nextMovements = Array.isArray(movementPayload.data)
+          ? movementPayload.data.map((row: any) => ({
+              id: row.id,
+              occurredAt: row.occurred_at ?? row.occurredAt,
+              congregationId: row.congregation_id ?? row.congregationId,
+              congregationName: row.congregationName ?? "Congregação",
+              type: row.type,
+              category: row.category,
+              description: row.description,
+              amount: Number(row.amount ?? 0),
+              origin: row.origin,
+            }))
+          : [];
+        setMovements(nextMovements);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao gerar relatório");
     } finally {
@@ -86,6 +131,88 @@ export function FinanceReportClient() {
   useEffect(() => {
     void loadReport();
   }, []);
+
+  async function handleSave() {
+    if (!form.description.trim() || !form.amount) {
+      setError("Informe a descrição, valor e categoria para lançar a movimentação.");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      const payload = {
+        occurredAt: form.occurredAt,
+        type: form.type,
+        category: form.category,
+        description: form.description,
+        amount: Number(form.amount),
+        origin: form.origin || "Painel administrativo",
+      };
+
+      const response = editingId
+        ? await fetch(`/api/finance/${editingId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          })
+        : await fetch("/api/finance", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error ?? "Não foi possível salvar a movimentação");
+      }
+
+      setForm({
+        occurredAt: new Date().toISOString().slice(0, 10),
+        type: "receita",
+        category: "Oferta",
+        description: "",
+        amount: "",
+        origin: "",
+      });
+      setEditingId(null);
+      await loadReport();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao salvar movimentação");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!window.confirm("Deseja excluir esta movimentação?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/finance/${id}`, { method: "DELETE" });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error ?? "Não foi possível excluir a movimentação");
+      }
+      await loadReport();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao excluir movimentação");
+    }
+  }
+
+  function handleEdit(entry: FinanceMovementItem) {
+    setEditingId(entry.id);
+    setForm({
+      occurredAt: entry.occurredAt.slice(0, 10),
+      type: entry.type,
+      category: entry.category,
+      description: entry.description ?? "",
+      amount: String(entry.amount),
+      origin: entry.origin ?? "",
+    });
+  }
 
   const csvHref = useMemo(() => {
     return "/api/reports/finance/export";
@@ -122,6 +249,58 @@ export function FinanceReportClient() {
       {error ? (
         <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</div>
       ) : null}
+
+      <section className="rounded-2xl border border-white/10 bg-slate-950/50 p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Lançar movimentação</h3>
+            <p className="text-sm text-slate-400">Informe o dia, valor, tipo e categoria para registrar entradas e saídas.</p>
+          </div>
+          <span className="rounded-full border border-amber-300/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">
+            {editingId ? "Editando" : "Novo lançamento"}
+          </span>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <label className="text-sm text-slate-300">
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Dia</span>
+            <input type="date" value={form.occurredAt} onChange={(event) => setForm((prev) => ({ ...prev, occurredAt: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" />
+          </label>
+          <label className="text-sm text-slate-300">
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Tipo</span>
+            <select value={form.type} onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value as "receita" | "despesa" }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100">
+              <option value="receita">Receita</option>
+              <option value="despesa">Despesa</option>
+            </select>
+          </label>
+          <label className="text-sm text-slate-300">
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Categoria</span>
+            <input value={form.category} onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Oferta, despesas, etc." />
+          </label>
+          <label className="text-sm text-slate-300">
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Valor</span>
+            <input type="number" value={form.amount} onChange={(event) => setForm((prev) => ({ ...prev, amount: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="0.00" />
+          </label>
+          <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-2">
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Descrição</span>
+            <input value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Ex: Oferta do domingo ou compra de material" />
+          </label>
+          <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-2">
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Origem / referência</span>
+            <input value={form.origin} onChange={(event) => setForm((prev) => ({ ...prev, origin: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Ex: Tesouraria, culto, viagem" />
+          </label>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button type="button" onClick={() => void handleSave()} disabled={saving} className="rounded-xl bg-emerald-300 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-200 disabled:opacity-60">
+            {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Lançar valor"}
+          </button>
+          <button type="button" onClick={() => {
+            setEditingId(null);
+            setForm({ occurredAt: new Date().toISOString().slice(0, 10), type: "receita", category: "Oferta", description: "", amount: "", origin: "" });
+          }} className="rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-200 hover:bg-white/10">
+            Limpar
+          </button>
+        </div>
+      </section>
 
       {report ? (
         <>
@@ -187,10 +366,11 @@ export function FinanceReportClient() {
                     <th className="pb-3 pr-4">Categoria</th>
                     <th className="pb-3 pr-4">Descrição</th>
                     <th className="pb-3 pr-4">Valor</th>
+                    <th className="pb-3 pr-4">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {report.detailRows.map((row) => (
+                  {movements.length > 0 ? movements.map((row) => (
                     <tr key={row.id} className="border-t border-white/10 text-slate-300">
                       <td className="py-3 pr-4">{new Date(row.occurredAt).toLocaleDateString("pt-BR")}</td>
                       <td className="py-3 pr-4">{row.congregationName}</td>
@@ -198,6 +378,22 @@ export function FinanceReportClient() {
                       <td className="py-3 pr-4">{row.category}</td>
                       <td className="py-3 pr-4">{row.description ?? "—"}</td>
                       <td className="py-3 pr-4 font-medium text-slate-100">R$ {Number(row.amount).toLocaleString("pt-BR")}</td>
+                      <td className="py-3 pr-4">
+                        <div className="flex gap-2">
+                          <button type="button" onClick={() => handleEdit(row)} className="rounded-lg border border-white/15 px-2 py-1 text-xs text-slate-200 hover:bg-white/10">Editar</button>
+                          <button type="button" onClick={() => void handleDelete(row.id)} className="rounded-lg border border-rose-300/40 px-2 py-1 text-xs text-rose-100 hover:bg-rose-300/10">Excluir</button>
+                        </div>
+                      </td>
+                    </tr>
+                  )) : report.detailRows.map((row) => (
+                    <tr key={row.id} className="border-t border-white/10 text-slate-300">
+                      <td className="py-3 pr-4">{new Date(row.occurredAt).toLocaleDateString("pt-BR")}</td>
+                      <td className="py-3 pr-4">{row.congregationName}</td>
+                      <td className="py-3 pr-4">{row.type}</td>
+                      <td className="py-3 pr-4">{row.category}</td>
+                      <td className="py-3 pr-4">{row.description ?? "—"}</td>
+                      <td className="py-3 pr-4 font-medium text-slate-100">R$ {Number(row.amount).toLocaleString("pt-BR")}</td>
+                      <td className="py-3 pr-4">—</td>
                     </tr>
                   ))}
                 </tbody>

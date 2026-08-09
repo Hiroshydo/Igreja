@@ -55,6 +55,34 @@ export function PermissionsSettingsClient() {
     }));
   }, [matrix]);
 
+  const permissionGroups = useMemo(() => {
+    const groups = new Map<string, { key: string; label: string; permissions: string[] }>();
+
+    permissionKeys.forEach((permission) => {
+      const [prefix = "geral"] = permission.split(".");
+      const labelMap: Record<string, string> = {
+        system: "Sistema",
+        members: "Membros",
+        congregations: "Congregações",
+        finance: "Financeiro",
+        reports: "Relatórios",
+        events: "Eventos",
+        media: "Mídia",
+        worship: "Louvor",
+        ministries: "Ministérios",
+        dashboard: "Dashboard",
+        audit: "Auditoria",
+        geral: "Geral",
+      };
+
+      const existing = groups.get(prefix) ?? { key: prefix, label: labelMap[prefix] ?? prefix.toUpperCase(), permissions: [] };
+      existing.permissions.push(permission);
+      groups.set(prefix, existing);
+    });
+
+    return Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [permissionKeys]);
+
   function togglePermission(roleCode: string, permission: string, checked: boolean) {
     setMatrix((current) => current.map((row) => {
       if (row.roleCode !== roleCode) {
@@ -118,66 +146,80 @@ export function PermissionsSettingsClient() {
   }
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
-      <div className="mb-4 flex items-center justify-between gap-4">
+    <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-6 shadow-[0_35px_80px_-40px_rgba(250,204,21,0.45)]">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold">Matriz de permissões</h2>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Ecclesia One / acesso</p>
+          <h2 className="text-xl font-semibold text-slate-50">Matriz de permissões</h2>
+          <p className="mt-1 text-sm text-slate-400">Organize o acesso por área do sistema com controles claros e rápidos.</p>
         </div>
-        <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-200">
-          Sistema
-        </span>
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-200">
+            {roles.length} perfis
+          </span>
+          <span className="rounded-full border border-amber-300/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">
+            {permissionKeys.length} permissões
+          </span>
+        </div>
       </div>
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+        <div className="mb-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
           {error}
         </div>
       ) : null}
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="text-left text-slate-400">
-              <th className="pb-4 pr-4">Perfil</th>
-              {permissionKeys.map((permission) => (
-                <th key={permission} className="pb-4 pr-4 whitespace-nowrap">
-                  {permission}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {roles.map((role) => {
-              const row = normalizedMatrix.find((item) => item.roleCode === role) ?? {
-                roleCode: role,
-                roleName: role,
-                permissions: [] as string[],
-              };
+      <div className="grid gap-4 xl:grid-cols-2">
+        {permissionGroups.map((group) => (
+          <div key={group.key} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">{group.label}</h3>
+              <span className="text-xs text-slate-500">{group.permissions.length} itens</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="text-left text-slate-400">
+                    <th className="pb-2 pr-4">Perfil</th>
+                    {group.permissions.map((permission) => (
+                      <th key={permission} className="pb-2 pr-3 whitespace-nowrap text-[11px] uppercase tracking-[0.2em]">
+                        {permission.split(".").pop()}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {roles.map((role) => {
+                    const row = normalizedMatrix.find((item) => item.roleCode === role) ?? {
+                      roleCode: role,
+                      roleName: role,
+                      permissions: [] as string[],
+                    };
 
-              return (
-                <tr key={role} className="border-t border-white/10 text-slate-300">
-                  <td className="py-4 pr-4 font-medium text-slate-100">
-                    <div className="min-w-28">{row.roleCode}</div>
-                  </td>
-                  {permissionKeys.map((permission) => (
-                    <td key={`${role}-${permission}`} className="py-4 pr-4">
-                      <input
-                        type="checkbox"
-                        aria-label={`Permissão ${permission} para ${role}`}
-                        checked={row.permissions.includes(permission)}
-                        onChange={(event) => togglePermission(role, permission, event.target.checked)}
-                      />
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    return (
+                      <tr key={role} className="border-t border-white/10 text-slate-300">
+                        <td className="py-2 pr-4 font-medium text-slate-100">{row.roleCode}</td>
+                        {group.permissions.map((permission) => (
+                          <td key={`${role}-${permission}`} className="py-2 pr-3">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-white/15 bg-transparent accent-amber-300"
+                              aria-label={`Permissão ${permission} para ${role}`}
+                              checked={row.permissions.includes(permission)}
+                              onChange={(event) => togglePermission(role, permission, event.target.checked)}
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="mt-6 flex gap-3">
+      <div className="mt-6 flex flex-wrap gap-3">
         <button
           type="button"
           disabled={busy}

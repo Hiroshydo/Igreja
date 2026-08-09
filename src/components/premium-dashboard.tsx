@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
@@ -387,7 +388,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [membersData, setMembersData] = useState<Member[]>(seedMembers);
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
-  const [congregationsList, setCongregationsList] = useState<Array<{ id: string; name: string; city: string | null; leader: string; members: number; attendance: number; status: string }>>([]);
+  const [congregationsList, setCongregationsList] = useState<Array<{ id: string; name: string; city: string | null; leader: string; members: number; attendance: number; status: string }>>(congregationsData);
   const [memberForm, setMemberForm] = useState<MemberFormState>(() => createEmptyMemberForm(access.congregationId ?? ""));
   const [congregationDraft, setCongregationDraft] = useState({ id: "", name: "", city: "", leader: "", members: 0, attendance: 0, status: "Ativa" });
   const [editingCongregationId, setEditingCongregationId] = useState<string | null>(null);
@@ -395,6 +396,14 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [congregationMessage, setCongregationMessage] = useState<string | null>(null);
   const [galleryItemsState, setGalleryItemsState] = useState(galleryItems);
   const [worshipChecklistItems, setWorshipChecklistItems] = useState(worshipChecklist);
+  const [booksState, setBooksState] = useState(books);
+  const [doctrineCardsState, setDoctrineCardsState] = useState(doctrineCards);
+  const [discipleshipFlowState, setDiscipleshipFlowState] = useState(discipleshipFlow);
+  const [ebdClassesState, setEbdClassesState] = useState([
+    { title: "Adultos - Sala 1", leader: "Prof. Marcos" },
+    { title: "Jovens - Sala 2", leader: "Profa. Daniela" },
+    { title: "Crianças - Sala Kids", leader: "Equipe Infantil" },
+  ]);
   const [newWorshipItem, setNewWorshipItem] = useState("");
   const [newGalleryTitle, setNewGalleryTitle] = useState("");
   const [newGalleryCategory, setNewGalleryCategory] = useState("");
@@ -644,6 +653,240 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
     setIsDeletingMemberId(null);
   };
 
+  const handleGalleryCreate = () => {
+    const title = window.prompt("Título do álbum", "Novo álbum");
+    if (!title) {
+      return;
+    }
+
+    const category = window.prompt("Categoria", "Outros");
+    if (category === null) {
+      return;
+    }
+
+    setGalleryItemsState((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        title,
+        category: category || "Outros",
+        image: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80",
+      },
+    ]);
+  };
+
+  const handleGalleryEdit = (item: { id: number; title: string; category: string; image: string }) => {
+    const nextTitle = window.prompt("Editar título do álbum", item.title);
+    if (!nextTitle) {
+      return;
+    }
+
+    const nextCategory = window.prompt("Editar categoria", item.category);
+    if (nextCategory === null) {
+      return;
+    }
+
+    setGalleryItemsState((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, title: nextTitle, category: nextCategory || item.category } : entry)));
+  };
+
+  const handleGalleryDelete = (id: number) => {
+    if (!window.confirm("Excluir este álbum da galeria?")) {
+      return;
+    }
+
+    setGalleryItemsState((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleWorshipAdd = () => {
+    const item = window.prompt("Novo item do checklist de louvor");
+    if (!item) {
+      return;
+    }
+
+    setWorshipChecklistItems((prev) => [...prev, { item, status: "warn" }]);
+  };
+
+  const handleWorshipEdit = (entry: { item: string; status: string }) => {
+    const nextValue = window.prompt("Editar item", entry.item);
+    if (!nextValue) {
+      return;
+    }
+
+    setWorshipChecklistItems((prev) => prev.map((item) => (item.item === entry.item ? { ...item, item: nextValue } : item)));
+  };
+
+  const handleWorshipDelete = (item: string) => {
+    if (!window.confirm("Excluir este item do checklist?")) {
+      return;
+    }
+
+    setWorshipChecklistItems((prev) => prev.filter((entry) => entry.item !== item));
+  };
+
+  const handleBookAdd = () => {
+    const title = window.prompt("Título do livro");
+    if (!title) {
+      return;
+    }
+
+    const author = window.prompt("Autor", "Equipe Ecclesia");
+    if (author === null) {
+      return;
+    }
+
+    const category = window.prompt("Categoria", "Doutrina");
+    if (category === null) {
+      return;
+    }
+
+    setBooksState((prev) => [...prev, { title, author, category }]);
+  };
+
+  const handleBookEdit = (book: { title: string; author: string; category: string }) => {
+    const nextTitle = window.prompt("Editar título", book.title);
+    if (!nextTitle) {
+      return;
+    }
+
+    const nextAuthor = window.prompt("Editar autor", book.author);
+    if (nextAuthor === null) {
+      return;
+    }
+
+    const nextCategory = window.prompt("Editar categoria", book.category);
+    if (nextCategory === null) {
+      return;
+    }
+
+    setBooksState((prev) => prev.map((entry) => (entry.title === book.title && entry.author === book.author ? { ...entry, title: nextTitle, author: nextAuthor, category: nextCategory } : entry)));
+  };
+
+  const handleBookDelete = (title: string) => {
+    if (!window.confirm("Excluir este livro da biblioteca?")) {
+      return;
+    }
+
+    setBooksState((prev) => prev.filter((book) => book.title !== title));
+  };
+
+  const handleDoctrineAdd = () => {
+    const title = window.prompt("Título da doutrina");
+    if (!title) {
+      return;
+    }
+
+    const summary = window.prompt("Resumo", "Nova doutrina para a igreja");
+    if (summary === null) {
+      return;
+    }
+
+    const detail = window.prompt("Detalhamento", "Descreva a prática e o fundamento da doutrina.");
+    if (detail === null) {
+      return;
+    }
+
+    setDoctrineCardsState((prev) => [...prev, { id: Date.now().toString(), title, summary, detail }]);
+  };
+
+  const handleDoctrineEdit = (item: { id: string; title: string; summary: string; detail: string }) => {
+    const nextTitle = window.prompt("Editar título", item.title);
+    if (!nextTitle) {
+      return;
+    }
+
+    const nextSummary = window.prompt("Editar resumo", item.summary);
+    if (nextSummary === null) {
+      return;
+    }
+
+    const nextDetail = window.prompt("Editar detalhe", item.detail);
+    if (nextDetail === null) {
+      return;
+    }
+
+    setDoctrineCardsState((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, title: nextTitle, summary: nextSummary, detail: nextDetail } : entry)));
+  };
+
+  const handleDoctrineDelete = (id: string) => {
+    if (!window.confirm("Excluir esta doutrina?")) {
+      return;
+    }
+
+    setDoctrineCardsState((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleDiscipleshipAdd = () => {
+    const stage = window.prompt("Nome da etapa");
+    if (!stage) {
+      return;
+    }
+
+    const count = window.prompt("Quantidade de pessoas", "0");
+    if (count === null) {
+      return;
+    }
+
+    setDiscipleshipFlowState((prev) => [...prev, { stage, count: Number(count) || 0 }]);
+  };
+
+  const handleDiscipleshipEdit = (item: { stage: string; count: number }) => {
+    const nextStage = window.prompt("Editar etapa", item.stage);
+    if (!nextStage) {
+      return;
+    }
+
+    const nextCount = window.prompt("Editar quantidade", String(item.count));
+    if (nextCount === null) {
+      return;
+    }
+
+    setDiscipleshipFlowState((prev) => prev.map((entry) => (entry.stage === item.stage ? { ...entry, stage: nextStage, count: Number(nextCount) || 0 } : entry)));
+  };
+
+  const handleDiscipleshipDelete = (stage: string) => {
+    if (!window.confirm("Excluir esta etapa do discipulado?")) {
+      return;
+    }
+
+    setDiscipleshipFlowState((prev) => prev.filter((item) => item.stage !== stage));
+  };
+
+  const handleEbdAdd = () => {
+    const title = window.prompt("Nome da turma");
+    if (!title) {
+      return;
+    }
+
+    const leader = window.prompt("Professor ou responsável", "Equipe Ecclesia");
+    if (leader === null) {
+      return;
+    }
+
+    setEbdClassesState((prev) => [...prev, { title, leader }]);
+  };
+
+  const handleEbdEdit = (item: { title: string; leader: string }) => {
+    const nextTitle = window.prompt("Editar turma", item.title);
+    if (!nextTitle) {
+      return;
+    }
+
+    const nextLeader = window.prompt("Editar responsável", item.leader);
+    if (nextLeader === null) {
+      return;
+    }
+
+    setEbdClassesState((prev) => prev.map((entry) => (entry.title === item.title && entry.leader === item.leader ? { ...entry, title: nextTitle, leader: nextLeader } : entry)));
+  };
+
+  const handleEbdDelete = (title: string) => {
+    if (!window.confirm("Excluir esta turma?")) {
+      return;
+    }
+
+    setEbdClassesState((prev) => prev.filter((item) => item.title !== title));
+  };
+
   const handleMembersDownload = () => {
     const blob = new Blob([JSON.stringify(membersData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -682,13 +925,26 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const renderAdminModule = () => {
     if (adminModule === "gallery") {
       return (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {galleryItems.map((item) => (
-            <div key={item.id} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-slate-200">
-              <p className="font-semibold text-slate-50">{item.title}</p>
-              <p className="text-xs text-slate-400">{item.category}</p>
-            </div>
-          ))}
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => handleGalleryCreate()} className="rounded-xl bg-emerald-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-200">
+              + Novo álbum
+            </button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {galleryItemsState.map((item) => (
+              <div key={item.id} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-slate-200">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="font-semibold text-slate-50">{item.title}</p>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => handleGalleryEdit(item)} className="text-xs text-amber-200">Editar</button>
+                    <button type="button" onClick={() => handleGalleryDelete(item.id)} className="text-xs text-rose-200">Excluir</button>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-400">{item.category}</p>
+              </div>
+            ))}
+          </div>
         </div>
       );
     }
@@ -717,10 +973,21 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
     }
 
     return (
-      <div className="space-y-2 text-sm text-slate-200">
-        {books.map((book) => (
-          <div key={book.title} className="rounded-xl border border-white/10 bg-white/5 p-3">
-            <p className="font-semibold text-slate-50">{book.title}</p>
+      <div className="space-y-3 text-sm text-slate-200">
+        <div className="flex justify-end">
+          <button type="button" onClick={() => handleBookAdd()} className="rounded-xl bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-200">
+            + Novo livro
+          </button>
+        </div>
+        {booksState.map((book) => (
+          <div key={`${book.title}-${book.author}`} className="rounded-xl border border-white/10 bg-white/5 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="font-semibold text-slate-50">{book.title}</p>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => handleBookEdit(book)} className="text-xs text-amber-200">Editar</button>
+                <button type="button" onClick={() => handleBookDelete(book.title)} className="text-xs text-rose-200">Excluir</button>
+              </div>
+            </div>
             <p className="text-xs text-slate-400">{book.author} - {book.category}</p>
           </div>
         ))}
@@ -775,6 +1042,31 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
           <section className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
+                <CardTitle>Resumo ministerial</CardTitle>
+                <CardDescription>Geral e ação rápida para o dia a dia</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-slate-300">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Próximo passo</p>
+                  <p className="mt-1 font-semibold text-slate-50">Revisar congregações, membros e financeiro em uma visão integrada.</p>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-3">
+                    <p className="text-xs uppercase tracking-[0.2em] text-emerald-200">Membros ativos</p>
+                    <p className="mt-1 text-xl font-semibold text-white">{membersData.filter((item) => item.status === "ativo").length}</p>
+                  </div>
+                  <div className="rounded-2xl border border-amber-300/20 bg-amber-500/10 p-3">
+                    <p className="text-xs uppercase tracking-[0.2em] text-amber-200">Congregações</p>
+                    <p className="mt-1 text-xl font-semibold text-white">{congregationsList.length}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          <section className="grid gap-4 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
                 <CardTitle>Crescimento da igreja</CardTitle>
                 <CardDescription>Evolucao de membros nos ultimos meses</CardDescription>
               </CardHeader>
@@ -819,8 +1111,15 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
         <Card>
           <>
             <CardHeader>
-              <CardTitle>Painel DEV</CardTitle>
-              <CardDescription>Área exclusiva para operação avançada, auditoria e gestão central do sistema.</CardDescription>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <CardTitle>Painel DEV</CardTitle>
+                  <CardDescription>Área exclusiva para operação avançada, auditoria e gestão central do sistema.</CardDescription>
+                </div>
+                <Link href="/configuracoes/permissoes" className="rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-500/20">
+                  Gerenciar permissões
+                </Link>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="mb-3 flex flex-wrap gap-2">
@@ -1220,6 +1519,11 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                 Criar álbum
               </button>
             </div>
+            <div className="mb-4 flex justify-end">
+              <button type="button" onClick={() => handleGalleryCreate()} className="rounded-xl bg-emerald-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-200">
+                + Novo álbum
+              </button>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {filteredGallery.map((item) => (
                 <article key={item.id} className="overflow-hidden rounded-xl border border-white/12 bg-white/5">
@@ -1231,7 +1535,13 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                     className="h-36 w-full object-cover"
                   />
                   <div className="p-3">
-                    <p className="font-semibold text-slate-100">{item.title}</p>
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <p className="font-semibold text-slate-100">{item.title}</p>
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => handleGalleryEdit(item)} className="text-xs text-amber-200">Editar</button>
+                        <button type="button" onClick={() => handleGalleryDelete(item.id)} className="text-xs text-rose-200">Excluir</button>
+                      </div>
+                    </div>
                     <p className="text-xs text-slate-400">{item.category}</p>
                   </div>
                 </article>
@@ -1250,9 +1560,23 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
             <CardDescription>Turmas, professores e material de ensino.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-slate-200">
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3">Adultos - Sala 1 - Prof. Marcos</div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3">Jovens - Sala 2 - Profa. Daniela</div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3">Criancas - Sala Kids - Equipe Infantil</div>
+            <div className="flex justify-end">
+              <button type="button" onClick={() => handleEbdAdd()} className="rounded-xl bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-200">
+                + Nova turma
+              </button>
+            </div>
+            {ebdClassesState.map((item) => (
+              <div key={item.title} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="font-semibold text-slate-50">{item.title}</p>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => handleEbdEdit(item)} className="text-xs text-amber-200">Editar</button>
+                    <button type="button" onClick={() => handleEbdDelete(item.title)} className="text-xs text-rose-200">Excluir</button>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-400">{item.leader}</p>
+              </div>
+            ))}
             <div className="rounded-xl border border-emerald-300/25 bg-emerald-400/10 p-3">7 novos alunos confirmados este mes.</div>
           </CardContent>
         </Card>
@@ -1273,10 +1597,21 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
               className="mb-3 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
               placeholder="Buscar livro..."
             />
+            <div className="mb-3 flex justify-end">
+              <button type="button" onClick={() => handleBookAdd()} className="rounded-xl bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-200">
+                + Novo livro
+              </button>
+            </div>
             <div className="space-y-2">
               {filteredBooks.map((book) => (
                 <div key={book.title} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-slate-200">
-                  <p className="font-semibold text-slate-50">{book.title}</p>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="font-semibold text-slate-50">{book.title}</p>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => handleBookEdit(book)} className="text-xs text-amber-200">Editar</button>
+                      <button type="button" onClick={() => handleBookDelete(book.title)} className="text-xs text-rose-200">Excluir</button>
+                    </div>
+                  </div>
                   <p className="text-xs text-slate-400">{book.author} - {book.category}</p>
                 </div>
               ))}
@@ -1289,11 +1624,24 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
     if (resolvedActiveTab === "centro-doutrinas") {
       return (
         <div className="space-y-3">
-          {doctrineCards.map((item) => (
+          <div className="flex justify-end">
+            <button type="button" onClick={() => handleDoctrineAdd()} className="rounded-xl bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-200">
+              + Nova doutrina
+            </button>
+          </div>
+          {doctrineCardsState.map((item) => (
             <Card key={item.id}>
               <CardHeader>
-                <CardTitle>{item.title}</CardTitle>
-                <CardDescription>{item.summary}</CardDescription>
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <CardTitle>{item.title}</CardTitle>
+                    <CardDescription>{item.summary}</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => handleDoctrineEdit(item)} className="text-xs text-amber-200">Editar</button>
+                    <button type="button" onClick={() => handleDoctrineDelete(item.id)} className="text-xs text-rose-200">Excluir</button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <Button
@@ -1417,11 +1765,20 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
           <CardTitle>Mapa de discipulado</CardTitle>
           <CardDescription>Fluxo de crescimento espiritual por etapa.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-slate-200">
-          {discipleshipFlow.map((item) => (
+        <CardContent className="space-y-3 text-sm text-slate-200">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => handleDiscipleshipAdd()} className="rounded-xl bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-200">
+              + Nova etapa
+            </button>
+          </div>
+          {discipleshipFlowState.map((item) => (
             <div key={item.stage} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3">
               <span>{item.stage}</span>
-              <Badge variant="info">{item.count} pessoas</Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="info">{item.count} pessoas</Badge>
+                <button type="button" onClick={() => handleDiscipleshipEdit(item)} className="text-xs text-amber-200">Editar</button>
+                <button type="button" onClick={() => handleDiscipleshipDelete(item.stage)} className="text-xs text-rose-200">Excluir</button>
+              </div>
             </div>
           ))}
         </CardContent>
