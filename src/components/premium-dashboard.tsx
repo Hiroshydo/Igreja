@@ -252,7 +252,15 @@ const doctrineCards = [
   },
 ];
 
-const worshipChecklist = [
+interface WorshipChecklistItem {
+  item: string;
+  status: "ok" | "warn";
+  owner: string;
+  channel: string;
+  notes: string;
+}
+
+const worshipChecklist: WorshipChecklistItem[] = [
   { item: "Escala de louvor confirmada", status: "ok", owner: "Luan", channel: "Palco", notes: "Abertura do culto pronta" },
   { item: "Slides revisados", status: "ok", owner: "Maria", channel: "Tecnologia", notes: "Versículos e ordem alinhados" },
   { item: "Streaming testado", status: "warn", owner: "Rafael", channel: "Streaming", notes: "Checar conexão do segundo ponto" },
@@ -424,7 +432,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [isSavingCongregation, setIsSavingCongregation] = useState(false);
   const [congregationMessage, setCongregationMessage] = useState<string | null>(null);
   const [galleryItemsState, setGalleryItemsState] = useState(galleryItems);
-  const [worshipChecklistItems, setWorshipChecklistItems] = useState(worshipChecklist);
+  const [worshipChecklistItems, setWorshipChecklistItems] = useState<WorshipChecklistItem[]>(worshipChecklist);
   const [newWorshipItem, setNewWorshipItem] = useState("");
   const [newWorshipOwner, setNewWorshipOwner] = useState("");
   const [newWorshipChannel, setNewWorshipChannel] = useState("Palco");
@@ -738,10 +746,10 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
       return;
     }
 
-    setWorshipChecklistItems((prev) => [...prev, { item, status: "warn" }]);
+    setWorshipChecklistItems((prev) => [...prev, { item, status: "warn", owner: "Equipe", channel: "A definir", notes: "Checklist criado no painel" }]);
   };
 
-  const handleWorshipEdit = (entry: { item: string; status: string }) => {
+  const handleWorshipEdit = (entry: WorshipChecklistItem) => {
     const nextValue = window.prompt("Editar item", entry.item);
     if (!nextValue) {
       return;
@@ -1774,7 +1782,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                 className="mt-3 rounded-xl bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-200"
                 onClick={() => {
                   if (!newWorshipItem.trim()) return;
-                  setWorshipChecklistItems((current) => [...current, { item: newWorshipItem.trim(), status: "warn" }]);
+                  setWorshipChecklistItems((current) => [...current, { item: newWorshipItem.trim(), status: "warn", owner: "Equipe", channel: "A definir", notes: "Checklist criado no painel" }]);
                   setNewWorshipItem("");
                 }}
               >
