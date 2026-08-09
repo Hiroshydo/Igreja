@@ -34,7 +34,7 @@ export type PermissionResource =
   | 'discipleship'
   | 'system';
 
-export type PermissionAction = 'read' | 'create' | 'update' | 'delete' | 'manage';
+export type PermissionAction = 'read' | 'create' | 'update' | 'delete' | 'export' | 'manage';
 
 export type PermissionKey = `${PermissionResource}.${PermissionAction}`;
 
