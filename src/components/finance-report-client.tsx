@@ -344,9 +344,7 @@ export function FinanceReportClient() {
     });
   }
 
-  const csvHref = useMemo(() => {
-    return "/api/reports/finance/export";
-  }, []);
+  const workbookHref = "/api/reports/finance/export";
 
   const financeSummary = useMemo(() => {
     const income = movements.filter((item) => item.type === "receita").reduce((sum, item) => sum + Number(item.amount ?? 0), 0);
@@ -411,37 +409,12 @@ export function FinanceReportClient() {
     });
   }, [movements, report]);
 
-  function buildWorkbookCsv() {
-    const rows = movements.length > 0 ? movements : report?.detailRows ?? [];
-    const header = ["Data", "Congregação", "Tipo", "Categoria", "Descrição", "Valor", "Origem", "Referência"];
-    const body = rows.map((row) => [
-      row.occurredAt ? new Date(row.occurredAt).toLocaleDateString("pt-BR") : "",
-      row.congregationName ?? "",
-      row.type ?? "",
-      row.category ?? "",
-      row.description ?? "",
-      Number(row.amount ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
-      row.origin ?? "",
-      row.reference ?? "",
-    ]);
-
-    const csvContent = [header, ...body]
-      .map((line) => line.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-
-    return csvContent;
-  }
-
   function handleGenerateWorkbook() {
-    const workbookName = `planilha-financeira-${new Date().toISOString().slice(0, 10)}.csv`;
-    const csvContent = buildWorkbookCsv();
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+    const workbookName = `relatorio-financeiro-${new Date().toISOString().slice(0, 10)}.xlsx`;
     const link = document.createElement("a");
-    link.href = url;
+    link.href = workbookHref;
     link.download = workbookName;
     link.click();
-    URL.revokeObjectURL(url);
 
     const newRecord: CashClosureRecord = {
       id: `planilha-${Date.now()}`,
@@ -452,12 +425,12 @@ export function FinanceReportClient() {
       receipts: financeSummary.income,
       expenses: financeSummary.expenses,
       movements: financeSummary.movements,
-      notes: "Planilha aberta e exportada para análise do caixa.",
+      notes: "Planilha em Excel gerada e pronta para documentação financeira.",
       workbookName,
     };
 
     setCashHistory((prev) => [newRecord, ...prev].slice(0, 8));
-    setClosingMessage("Planilha aberta com sucesso. O arquivo foi preparado para download.");
+      setClosingMessage("Planilha profissional gerada com sucesso. O arquivo foi preparado para download.");
   }
 
   function handleCloseCash() {
@@ -515,10 +488,10 @@ export function FinanceReportClient() {
         </div>
         <div className="flex gap-3">
           <a
-            href={csvHref}
+            href={workbookHref}
             className="rounded-xl border border-emerald-300/40 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-500/20"
           >
-            Exportar CSV
+            Exportar planilha
           </a>
           <button
             type="button"

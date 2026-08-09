@@ -2,6 +2,7 @@ import { AppError } from "@/lib/http";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { hasServerEnv } from "@/lib/env";
 import type { AccessContext } from "@/types";
+import ExcelJS from "exceljs";
 
 export interface FinanceReportFilters {
   period?: string;
@@ -333,5 +334,131 @@ export const financeReportsService = {
       .join("\n");
 
     return content;
+  },
+
+  async exportWorkbook(filters: FinanceReportFilters, context: AccessContext): Promise<Buffer> {
+    const report = await this.getFinanceReport(filters, context);
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Ecclesia One";
+    workbook.lastModifiedBy = "Ecclesia One";
+    workbook.created = new Date();
+    workbook.modified = new Date();
+
+    const summarySheet = workbook.addWorksheet("Resumo");
+    summarySheet.columns = [
+      { header: "Indicador", key: "indicator", width: 34 },
+      { header: "Valor", key: "value", width: 22 },
+    ];
+
+    summarySheet.addRow(["Relatório financeiro", "Ecclesia One"]);
+    summarySheet.addRow(["Gerado em", new Date().toLocaleString("pt-BR")]);
+    summarySheet.addRow(["Período", filters.period ?? "Personalizado"]);
+    summarySheet.addRow([]);
+    summarySheet.addRow(["Total de receitas", report.summary.totalIncome]);
+    summarySheet.addRow(["Total de despesas", report.summary.totalExpenses]);
+    summarySheet.addRow(["Saldo", report.summary.balance]);
+    summarySheet.addRow(["Quantidade de movimentações", report.summary.movementCount]);
+    summarySheet.addRow(["Maior receita", report.summary.largestIncome]);
+    summarySheet.addRow(["Maior despesa", report.summary.largestExpense]);
+
+    summarySheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    summarySheet.getRow(1).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF0F172A" },
+    };
+
+    summarySheet.getRow(5).font = { bold: true };
+    for (let rowIndex = 5; rowIndex <= 10; rowIndex += 1) {
+      summarySheet.getCell(`B${rowIndex}`).numFmt = '"R$" #,##0.00';
+    }
+
+    summarySheet.eachRow((row) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: "thin", color: { argb: "22364759" } },
+          left: { style: "thin", color: { argb: "22364759" } },
+          bottom: { style: "thin", color: { argb: "22364759" } },
+          right: { style: "thin", color: { argb: "22364759" } },
+        };
+      });
+    });
+
+    const detailsSheet = workbook.addWorksheet("Lançamentos");
+    detailsSheet.columns = [
+      { header: "Data", key: "date", width: 14 },
+      { header: "Congregação", key: "congregation", width: 28 },
+      { header: "Evento", key: "event", width: 28 },
+      { header: "Tipo", key: "type", width: 14 },
+      { header: "Categoria", key: "category", width: 20 },
+      { header: "Descrição", key: "description", width: 34 },
+      { header: "Entrada", key: "income", width: 16 },
+      { header: "Saída", key: "expense", width: 16 },
+      { header: "Saldo", key: "balance", width: 16 },
+      { header: "Origem", key: "origin", width: 22 },
+      { header: "Referência", key: "reference", width: 22 },
+      { header: "Responsável", key: "createdBy", width: 24 },
+    ];
+
+    for (const row of report.detailRows) {
+      const amount = Number(row.amount ?? 0);
+      const income = row.type === "receita" ? amount : 0;
+      const expense = row.type === "despesa" ? amount : 0;
+
+      detailsSheet.addRow({
+        date: row.occurredAt ? new Date(row.occurredAt) : null,
+        congregation: row.congregationName ?? "",
+        event: row.eventName ?? "",
+        type: row.type,
+        category: row.category ?? "",
+        description: row.description ?? "",
+        income,
+        expense,
+        balance: income - expense,
+        origin: row.origin ?? "",
+        reference: row.reference ?? "",
+        createdBy: row.createdBy ?? "",
+      });
+    }
+
+    const headerRow = detailsSheet.getRow(1);
+    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    headerRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF1E293B" },
+    };
+
+    detailsSheet.views = [{ state: "frozen", ySplit: 1 }];
+
+    detailsSheet.eachRow((row, rowNumber) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: "thin", color: { argb: "22364759" } },
+          left: { style: "thin", color: { argb: "22364759" } },
+          bottom: { style: "thin", color: { argb: "22364759" } },
+          right: { style: "thin", color: { argb: "22364759" } },
+        };
+      });
+
+      if (rowNumber > 1 && rowNumber % 2 === 0) {
+        row.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFF8FAFC" },
+        };
+      }
+    });
+
+    for (let index = 2; index <= detailsSheet.rowCount; index += 1) {
+      detailsSheet.getCell(`A${index}`).numFmt = "dd/mm/yyyy";
+      detailsSheet.getCell(`G${index}`).numFmt = '"R$" #,##0.00';
+      detailsSheet.getCell(`H${index}`).numFmt = '"R$" #,##0.00';
+      detailsSheet.getCell(`I${index}`).numFmt = '"R$" #,##0.00';
+    }
+
+    const workbookBuffer = await workbook.xlsx.writeBuffer();
+    return Buffer.from(workbookBuffer);
   },
 };

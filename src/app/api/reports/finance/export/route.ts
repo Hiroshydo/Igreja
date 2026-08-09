@@ -24,13 +24,13 @@ export async function GET(request: NextRequest) {
       kind: (searchParams.get("kind") as "entry" | "exit" | "expense" | undefined) ?? undefined,
     };
 
-    const csv = await financeReportsService.exportCsv(filters, access.context);
+    const workbook = await financeReportsService.exportWorkbook(filters, access.context);
 
-    return new Response(csv, {
+    return new Response(new Uint8Array(workbook), {
       status: 200,
       headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": "attachment; filename=finance-report.csv",
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": "attachment; filename=relatorio-financeiro.xlsx",
       },
     });
   } catch (error) {
