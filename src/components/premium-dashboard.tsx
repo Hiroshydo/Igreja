@@ -154,6 +154,43 @@ const socialData = [
   { month: "Jun", familias: 38 },
 ];
 
+const weeklyPulseData = [
+  { day: "Seg", cultos: 48, celulas: 36 },
+  { day: "Ter", cultos: 42, celulas: 39 },
+  { day: "Qua", cultos: 54, celulas: 41 },
+  { day: "Qui", cultos: 58, celulas: 44 },
+  { day: "Sex", cultos: 46, celulas: 35 },
+  { day: "Sab", cultos: 67, celulas: 30 },
+  { day: "Dom", cultos: 92, celulas: 28 },
+];
+
+const ministryHealthData = [
+  { ministry: "Louvor", score: 88 },
+  { ministry: "Mídia", score: 74 },
+  { ministry: "Intercessão", score: 81 },
+  { ministry: "Infantil", score: 69 },
+  { ministry: "Ação social", score: 77 },
+];
+
+const dashboardStatPalette = [
+  {
+    card: "border-emerald-300/20 bg-gradient-to-br from-emerald-500/20 via-emerald-500/10 to-transparent",
+    tag: "border-emerald-300/30 bg-emerald-500/20 text-emerald-100",
+  },
+  {
+    card: "border-cyan-300/20 bg-gradient-to-br from-cyan-500/20 via-cyan-500/10 to-transparent",
+    tag: "border-cyan-300/30 bg-cyan-500/20 text-cyan-100",
+  },
+  {
+    card: "border-amber-300/20 bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-transparent",
+    tag: "border-amber-300/30 bg-amber-500/20 text-amber-100",
+  },
+  {
+    card: "border-violet-300/20 bg-gradient-to-br from-violet-500/20 via-violet-500/10 to-transparent",
+    tag: "border-violet-300/30 bg-violet-500/20 text-violet-100",
+  },
+];
+
 const galleryItems = [
   {
     id: 1,
@@ -1211,13 +1248,15 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                 transition={{ delay: 0.12 + index * 0.08 }}
                 whileHover={{ y: -4, scale: 1.01 }}
               >
-                <Card>
+                <Card className={dashboardStatPalette[index % dashboardStatPalette.length]?.card}>
                   <CardHeader className="pb-2">
                     <CardDescription>{item.label}</CardDescription>
                     <CardTitle className="text-3xl">{item.value}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Badge variant="success">{item.trend} no mês</Badge>
+                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${dashboardStatPalette[index % dashboardStatPalette.length]?.tag}`}>
+                      {item.trend} no mês
+                    </span>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -1302,8 +1341,8 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                     <CartesianGrid stroke="rgba(148,163,184,0.2)" />
                     <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
                     <YAxis stroke="#94a3b8" fontSize={12} />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="membros" stroke="#fbbf24" strokeWidth={3} dot={false} />
+                    <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(148,163,184,0.2)", borderRadius: "12px" }} />
+                    <Line type="monotone" dataKey="membros" stroke="#fbbf24" strokeWidth={3} dot={{ r: 2, fill: "#fbbf24" }} />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -1322,9 +1361,53 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                         <Cell key={entry.name} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(148,163,184,0.2)", borderRadius: "12px" }} />
                   </PieChart>
                 </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </section>
+
+          <section className="grid gap-4 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Pulso semanal de participação</CardTitle>
+                <CardDescription>Comparativo entre presença em cultos e células.</CardDescription>
+              </CardHeader>
+              <CardContent className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weeklyPulseData}>
+                    <CartesianGrid stroke="rgba(148,163,184,0.18)" />
+                    <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} />
+                    <YAxis stroke="#94a3b8" fontSize={12} />
+                    <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(148,163,184,0.2)", borderRadius: "12px" }} />
+                    <Bar dataKey="cultos" fill="#f59e0b" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="celulas" fill="#38bdf8" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Saúde por ministério</CardTitle>
+                <CardDescription>Nível atual de organização e consistência por equipe.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {ministryHealthData.map((item) => (
+                  <div key={item.ministry}>
+                    <div className="mb-1.5 flex items-center justify-between text-sm">
+                      <span className="text-slate-200">{item.ministry}</span>
+                      <span className="font-semibold text-slate-50">{item.score}%</span>
+                    </div>
+                    <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-amber-300 via-cyan-300 to-emerald-300"
+                        style={{ width: `${item.score}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </section>
