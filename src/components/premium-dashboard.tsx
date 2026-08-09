@@ -46,6 +46,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { FinanceReportClient } from "@/components/finance-report-client";
 import {
   Card,
   CardContent,
@@ -68,7 +69,8 @@ type TabKey =
   | "centro-doutrinas"
   | "scorecard-saude"
   | "liturgia-comunicacao"
-  | "mapa-discipulado";
+  | "mapa-discipulado"
+  | "relatorios-financeiros";
 
 type AdminModule = "gallery" | "events" | "members" | "books";
 
@@ -84,6 +86,7 @@ const navItems = [
   { key: "scorecard-saude", label: "Saude Pastoral", icon: Activity },
   { key: "liturgia-comunicacao", label: "Culto e Midia", icon: Radio },
   { key: "mapa-discipulado", label: "Discipulado", icon: Compass },
+  { key: "relatorios-financeiros", label: "Financeiro", icon: Activity },
 ] satisfies Array<{ key: TabKey; label: string; icon: typeof LayoutDashboard }>;
 
 const stats = [
@@ -953,6 +956,14 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
       );
     }
 
+    if (resolvedActiveTab === "relatorios-financeiros") {
+      return (
+        <div className="rounded-3xl border border-white/12 bg-white/4 p-4">
+          <FinanceReportClient />
+        </div>
+      );
+    }
+
     return (
       <Card>
         <CardHeader>
@@ -1015,7 +1026,19 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                 <p className="text-xs text-slate-400">{access.roleCodes[0] ?? "AUTENTICADO"}</p>
                 <p className="text-sm font-medium text-slate-50">{access.fullName}</p>
               </div>
-              <SignOutButton />
+              <div className="flex items-center gap-2">
+                {hasPermission(access.permissions, access.roleCodes, "system.manage" as PermissionKey) ? (
+                  <a href="/configuracoes/permissoes" className="rounded-xl border border-amber-300/30 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-300/10">
+                    Permissões
+                  </a>
+                ) : null}
+                {hasPermission(access.permissions, access.roleCodes, "finance.read" as PermissionKey) ? (
+                  <a href="/relatorios/financeiro" className="rounded-xl border border-emerald-300/30 px-3 py-1.5 text-xs font-semibold text-emerald-100 hover:bg-emerald-300/10">
+                    Relatórios
+                  </a>
+                ) : null}
+                <SignOutButton />
+              </div>
             </div>
           </div>
         </div>

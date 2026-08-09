@@ -36,6 +36,7 @@ export const dashboardPermissionByTab = {
   "scorecard-saude": "pastoral_care.read",
   "liturgia-comunicacao": "worship.read",
   "mapa-discipulado": "discipleship.read",
+  "relatorios-financeiros": "finance.read",
 } satisfies Record<string, PermissionKey>;
 
 export const systemRoleCodes: SystemRoleCode[] = [
