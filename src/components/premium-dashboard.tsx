@@ -1284,7 +1284,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                   </div>
                   <div className="rounded-2xl border border-amber-300/20 bg-amber-500/10 p-3">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs uppercase tracking-[0.2em] text-amber-200">Congregações</span>
+                      <span className="min-w-0 text-[11px] uppercase tracking-[0.12em] leading-tight text-amber-200 break-words">Congregações</span>
                       <Church className="h-4 w-4 text-amber-100" />
                     </div>
                     <p className="mt-1 text-xl font-semibold text-white">{congregationsList.length}</p>
