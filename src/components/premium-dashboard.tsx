@@ -2256,7 +2256,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                 Ecclesia One
               </p>
               <h1 className="truncate text-sm font-semibold text-slate-50 sm:text-base">
-                Plataforma Ministerial Premium
+                Plataforma Ministerial
               </h1>
             </div>
           </div>
