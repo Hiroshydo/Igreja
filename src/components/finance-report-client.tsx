@@ -82,6 +82,7 @@ export function FinanceReportClient() {
   const [report, setReport] = useState<FinanceReportPayload | null>(null);
   const [movements, setMovements] = useState<FinanceMovementItem[]>([]);
   const [congregations, setCongregations] = useState<CongregationOption[]>([]);
+  const [draftPreview, setDraftPreview] = useState<{ label: string; value: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -265,6 +266,25 @@ export function FinanceReportClient() {
     return "/api/reports/finance/export";
   }, []);
 
+  useEffect(() => {
+    if (!form.amount) {
+      setDraftPreview([]);
+      return;
+    }
+
+    const amount = Number(String(form.amount).replace(",", "."));
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setDraftPreview([]);
+      return;
+    }
+
+    const preview = [
+      { label: "Lançamento", value: amount },
+      { label: form.type === "receita" ? "Saldo esperado" : "Saída prevista", value: form.type === "receita" ? amount : amount * -1 },
+    ];
+    setDraftPreview(preview);
+  }, [form.amount, form.type]);
+
   if (loading) {
     return <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-300">Carregando relatório financeiro...</div>;
   }
@@ -371,6 +391,9 @@ export function FinanceReportClient() {
           <button type="button" onClick={() => void handleSave()} disabled={saving} className="rounded-xl bg-emerald-300 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-200 disabled:opacity-60">
             {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Lançar valor"}
           </button>
+          <button type="button" className="rounded-xl border border-amber-300/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-100">
+            Solicitar aprovação do pastor
+          </button>
           <button type="button" onClick={() => {
             setEditingId(null);
             setForm({ occurredAt: new Date().toISOString().slice(0, 10), type: "receita", category: "Oferta", description: "", amount: "", origin: "", congregationId: form.congregationId || congregations[0]?.id || "", reference: "", documentReference: "", observations: "" });
@@ -379,6 +402,20 @@ export function FinanceReportClient() {
           </button>
         </div>
       </section>
+
+      {draftPreview.length > 0 ? (
+        <section className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-4">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-200">Pré-visualização</h3>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {draftPreview.map((item) => (
+              <div key={item.label} className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{item.label}</p>
+                <p className="mt-1 text-lg font-semibold text-white">R$ {item.value.toLocaleString("pt-BR")}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {report ? (
         <>

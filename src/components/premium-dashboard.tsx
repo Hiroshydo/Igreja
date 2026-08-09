@@ -253,10 +253,39 @@ const doctrineCards = [
 ];
 
 const worshipChecklist = [
-  { item: "Escala de louvor confirmada", status: "ok" },
-  { item: "Slides revisados", status: "ok" },
-  { item: "Streaming testado", status: "warn" },
-  { item: "Microfones checados", status: "ok" },
+  { item: "Escala de louvor confirmada", status: "ok", owner: "Luan", channel: "Palco", notes: "Abertura do culto pronta" },
+  { item: "Slides revisados", status: "ok", owner: "Maria", channel: "Tecnologia", notes: "Versículos e ordem alinhados" },
+  { item: "Streaming testado", status: "warn", owner: "Rafael", channel: "Streaming", notes: "Checar conexão do segundo ponto" },
+  { item: "Microfones checados", status: "ok", owner: "Nina", channel: "Áudio", notes: "Todos os bolsos com bateria" },
+];
+
+const pastoralHealthSeries = [
+  { name: "Visitas", value: 72, color: "#f59e0b" },
+  { name: "Acompanhamento", value: 81, color: "#38bdf8" },
+  { name: "Cuidado", value: 64, color: "#a78bfa" },
+  { name: "Retenção", value: 77, color: "#34d399" },
+];
+
+const pastoralCareTrend = [
+  { month: "Jan", visitas: 58, cuidado: 48 },
+  { month: "Fev", visitas: 61, cuidado: 52 },
+  { month: "Mar", visitas: 66, cuidado: 56 },
+  { month: "Abr", visitas: 72, cuidado: 61 },
+  { month: "Mai", visitas: 74, cuidado: 64 },
+  { month: "Jun", visitas: 78, cuidado: 68 },
+];
+
+const pastoralDemandData = [
+  { name: "Orações", value: 38, color: "#fb923c" },
+  { name: "Apoio", value: 27, color: "#38bdf8" },
+  { name: "Aconselhamento", value: 21, color: "#a78bfa" },
+  { name: "Visitas", value: 14, color: "#34d399" },
+];
+
+const mediaTasksSeed = [
+  { id: 1, title: "Capa do culto", owner: "Davi", status: "Pronto" },
+  { id: 2, title: "Preparar playlist", owner: "Lia", status: "Em revisão" },
+  { id: 3, title: "Checklist de streaming", owner: "Marcos", status: "Pendente" },
 ];
 
 const discipleshipFlow = [
@@ -396,6 +425,13 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [congregationMessage, setCongregationMessage] = useState<string | null>(null);
   const [galleryItemsState, setGalleryItemsState] = useState(galleryItems);
   const [worshipChecklistItems, setWorshipChecklistItems] = useState(worshipChecklist);
+  const [newWorshipItem, setNewWorshipItem] = useState("");
+  const [newWorshipOwner, setNewWorshipOwner] = useState("");
+  const [newWorshipChannel, setNewWorshipChannel] = useState("Palco");
+  const [newWorshipNotes, setNewWorshipNotes] = useState("");
+  const [mediaTasksState, setMediaTasksState] = useState(mediaTasksSeed);
+  const [newMediaTask, setNewMediaTask] = useState("");
+  const [newMediaOwner, setNewMediaOwner] = useState("");
   const [booksState, setBooksState] = useState(books);
   const [doctrineCardsState, setDoctrineCardsState] = useState(doctrineCards);
   const [discipleshipFlowState, setDiscipleshipFlowState] = useState(discipleshipFlow);
@@ -404,7 +440,6 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
     { title: "Jovens - Sala 2", leader: "Profa. Daniela" },
     { title: "Crianças - Sala Kids", leader: "Equipe Infantil" },
   ]);
-  const [newWorshipItem, setNewWorshipItem] = useState("");
   const [newGalleryTitle, setNewGalleryTitle] = useState("");
   const [newGalleryCategory, setNewGalleryCategory] = useState("");
   const [newGalleryImage, setNewGalleryImage] = useState("");

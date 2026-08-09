@@ -12,6 +12,17 @@ interface PermissionMatrixResponse {
   }>;
 }
 
+const roleLabels: Record<string, string> = {
+  DEV: "Desenvolvedor",
+  PASTOR: "Pastor",
+  CORPO_ECLESIASTICO: "Corpo Eclesiástico",
+  TESOURARIA: "Tesouraria",
+  MIDIA: "Mídia",
+  MUSICOS: "Músicos",
+  MEMBROS: "Membros",
+  VISITANTES: "Visitantes",
+};
+
 export function PermissionsSettingsClient() {
   const [roles, setRoles] = useState<string[]>([]);
   const [permissionKeys, setPermissionKeys] = useState<string[]>([]);
@@ -234,7 +245,7 @@ export function PermissionsSettingsClient() {
               <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Perfil em edição</span>
               <select value={selectedRole} onChange={(event) => setSelectedRole(event.target.value)} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100">
                 {roles.map((role) => (
-                  <option key={role} value={role}>{role}</option>
+                  <option key={role} value={role}>{roleLabels[role] ?? role}</option>
                 ))}
               </select>
             </label>
