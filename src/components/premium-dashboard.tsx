@@ -290,7 +290,14 @@ const pastoralDemandData = [
   { name: "Visitas", value: 14, color: "#34d399" },
 ];
 
-const mediaTasksSeed = [
+interface MediaTaskItem {
+  id: number;
+  title: string;
+  owner: string;
+  status: "Pronto" | "Em revisão" | "Pendente";
+}
+
+const mediaTasksSeed: MediaTaskItem[] = [
   { id: 1, title: "Capa do culto", owner: "Davi", status: "Pronto" },
   { id: 2, title: "Preparar playlist", owner: "Lia", status: "Em revisão" },
   { id: 3, title: "Checklist de streaming", owner: "Marcos", status: "Pendente" },
@@ -437,7 +444,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [newWorshipOwner, setNewWorshipOwner] = useState("");
   const [newWorshipChannel, setNewWorshipChannel] = useState("Palco");
   const [newWorshipNotes, setNewWorshipNotes] = useState("");
-  const [mediaTasksState, setMediaTasksState] = useState(mediaTasksSeed);
+  const [mediaTasksState, setMediaTasksState] = useState<MediaTaskItem[]>(mediaTasksSeed);
   const [newMediaTask, setNewMediaTask] = useState("");
   const [newMediaOwner, setNewMediaOwner] = useState("");
   const [booksState, setBooksState] = useState(books);
@@ -749,13 +756,38 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
     setWorshipChecklistItems((prev) => [...prev, { item, status: "warn", owner: "Equipe", channel: "A definir", notes: "Checklist criado no painel" }]);
   };
 
+  const handleWorshipToggle = (entry: WorshipChecklistItem) => {
+    setWorshipChecklistItems((prev) => prev.map((item) => (item.item === entry.item ? { ...item, status: item.status === "ok" ? "warn" : "ok" } : item)));
+  };
+
   const handleWorshipEdit = (entry: WorshipChecklistItem) => {
     const nextValue = window.prompt("Editar item", entry.item);
-    if (!nextValue) {
+    if (nextValue === null) {
       return;
     }
 
-    setWorshipChecklistItems((prev) => prev.map((item) => (item.item === entry.item ? { ...item, item: nextValue } : item)));
+    const nextOwner = window.prompt("Editar responsável", entry.owner);
+    if (nextOwner === null) {
+      return;
+    }
+
+    const nextChannel = window.prompt("Editar canal ou equipe", entry.channel);
+    if (nextChannel === null) {
+      return;
+    }
+
+    const nextNotes = window.prompt("Editar observação", entry.notes);
+    if (nextNotes === null) {
+      return;
+    }
+
+    setWorshipChecklistItems((prev) => prev.map((item) => (item.item === entry.item ? {
+      ...item,
+      item: nextValue.trim() || item.item,
+      owner: nextOwner.trim() || item.owner,
+      channel: nextChannel.trim() || item.channel,
+      notes: nextNotes.trim() || item.notes,
+    } : item)));
   };
 
   const handleWorshipDelete = (item: string) => {
@@ -764,6 +796,49 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
     }
 
     setWorshipChecklistItems((prev) => prev.filter((entry) => entry.item !== item));
+  };
+
+  const handleMediaAdd = () => {
+    if (!newMediaTask.trim()) {
+      return;
+    }
+
+    setMediaTasksState((prev) => [{ id: Date.now(), title: newMediaTask.trim(), owner: newMediaOwner.trim() || "Equipe", status: "Pendente" }, ...prev]);
+    setNewMediaTask("");
+    setNewMediaOwner("");
+  };
+
+  const handleMediaStatusToggle = (id: number) => {
+    setMediaTasksState((prev) => prev.map((task) => (task.id === id ? {
+      ...task,
+      status: task.status === "Pronto" ? "Pendente" : "Pronto",
+    } : task)));
+  };
+
+  const handleMediaEdit = (task: MediaTaskItem) => {
+    const nextTitle = window.prompt("Editar tarefa de mídia", task.title);
+    if (nextTitle === null) {
+      return;
+    }
+
+    const nextOwner = window.prompt("Editar responsável", task.owner);
+    if (nextOwner === null) {
+      return;
+    }
+
+    setMediaTasksState((prev) => prev.map((item) => (item.id === task.id ? {
+      ...item,
+      title: nextTitle.trim() || item.title,
+      owner: nextOwner.trim() || item.owner,
+    } : item)));
+  };
+
+  const handleMediaDelete = (id: number) => {
+    if (!window.confirm("Excluir esta tarefa de mídia?")) {
+      return;
+    }
+
+    setMediaTasksState((prev) => prev.filter((task) => task.id !== id));
   };
 
   const handleBookAdd = () => {
@@ -1758,36 +1833,121 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
         <Card>
           <CardHeader>
             <CardTitle>Liturgia e comunicacao</CardTitle>
-            <CardDescription>Checklist de culto e equipe de midia.</CardDescription>
+            <CardDescription>Checklist de culto, responsaveis e entregas de midia em um unico fluxo.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm text-slate-200">
-            <div className="space-y-2">
-              {worshipChecklistItems.map((item) => (
-                <div key={item.item} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3">
-                  <span>{item.item}</span>
-                  <Badge variant={item.status === "ok" ? "success" : "default"}>{item.status === "ok" ? "Concluido" : "Ajustar"}</Badge>
-                </div>
-              ))}
+          <CardContent className="space-y-4 text-sm text-slate-200">
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-emerald-200">Itens do culto</p>
+                <p className="mt-2 text-2xl font-semibold text-white">{worshipChecklistItems.length}</p>
+              </div>
+              <div className="rounded-xl border border-amber-400/20 bg-amber-500/10 p-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-200">Pendentes</p>
+                <p className="mt-2 text-2xl font-semibold text-white">{worshipChecklistItems.filter((item) => item.status !== "ok").length}</p>
+              </div>
+              <div className="rounded-xl border border-sky-400/20 bg-sky-500/10 p-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-sky-200">Tarefas de midia</p>
+                <p className="mt-2 text-2xl font-semibold text-white">{mediaTasksState.length}</p>
+              </div>
             </div>
-            <div className="rounded-xl border border-dashed border-white/10 p-3">
-              <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Adicionar item</label>
-              <input
-                value={newWorshipItem}
-                onChange={(event) => setNewWorshipItem(event.target.value)}
-                className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
-                placeholder="Ex: PDF da letra de uma música"
-              />
-              <button
-                type="button"
-                className="mt-3 rounded-xl bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-200"
-                onClick={() => {
-                  if (!newWorshipItem.trim()) return;
-                  setWorshipChecklistItems((current) => [...current, { item: newWorshipItem.trim(), status: "warn", owner: "Equipe", channel: "A definir", notes: "Checklist criado no painel" }]);
-                  setNewWorshipItem("");
-                }}
-              >
-                Adicionar item
-              </button>
+
+            <div className="grid gap-4 xl:grid-cols-2">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-slate-100">Checklist de culto</h3>
+                  <span className="text-xs text-slate-400">Editavel e rastreavel</span>
+                </div>
+                {worshipChecklistItems.map((item) => (
+                  <div key={item.item} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-white">{item.item}</p>
+                        <p className="mt-1 text-xs text-slate-400">Responsavel: {item.owner} • Canal: {item.channel}</p>
+                        {item.notes ? <p className="mt-1 text-xs text-slate-500">{item.notes}</p> : null}
+                      </div>
+                      <Badge variant={item.status === "ok" ? "success" : "default"}>{item.status === "ok" ? "Concluido" : "Ajustar"}</Badge>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button type="button" onClick={() => handleWorshipToggle(item)} className="rounded-lg border border-emerald-400/20 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-100">
+                        {item.status === "ok" ? "Marcar pendente" : "Marcar pronto"}
+                      </button>
+                      <button type="button" onClick={() => handleWorshipEdit(item)} className="rounded-lg border border-white/10 bg-white/10 px-2.5 py-1.5 text-xs text-slate-200">
+                        Editar
+                      </button>
+                      <button type="button" onClick={() => handleWorshipDelete(item.item)} className="rounded-lg border border-rose-400/20 bg-rose-500/10 px-2.5 py-1.5 text-xs text-rose-100">
+                        Excluir
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <div className="rounded-xl border border-dashed border-white/10 p-3">
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Adicionar item</label>
+                  <input
+                    value={newWorshipItem}
+                    onChange={(event) => setNewWorshipItem(event.target.value)}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                    placeholder="Ex: PDF da letra de uma música"
+                  />
+                  <button
+                    type="button"
+                    className="mt-3 rounded-xl bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-200"
+                    onClick={() => {
+                      if (!newWorshipItem.trim()) return;
+                      setWorshipChecklistItems((current) => [...current, { item: newWorshipItem.trim(), status: "warn", owner: "Equipe", channel: "A definir", notes: "Checklist criado no painel" }]);
+                      setNewWorshipItem("");
+                    }}
+                  >
+                    Adicionar item
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-slate-100">Mídia e produção</h3>
+                  <span className="text-xs text-slate-400">Fluxo de entregas</span>
+                </div>
+                {mediaTasksState.map((task) => (
+                  <div key={task.id} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-white">{task.title}</p>
+                        <p className="mt-1 text-xs text-slate-400">Responsavel: {task.owner}</p>
+                      </div>
+                      <Badge variant={task.status === "Pronto" ? "success" : "default"}>{task.status}</Badge>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button type="button" onClick={() => handleMediaStatusToggle(task.id)} className="rounded-lg border border-sky-400/20 bg-sky-500/10 px-2.5 py-1.5 text-xs font-semibold text-sky-100">
+                        {task.status === "Pronto" ? "Reabrir" : "Concluir"}
+                      </button>
+                      <button type="button" onClick={() => handleMediaEdit(task)} className="rounded-lg border border-white/10 bg-white/10 px-2.5 py-1.5 text-xs text-slate-200">
+                        Editar
+                      </button>
+                      <button type="button" onClick={() => handleMediaDelete(task.id)} className="rounded-lg border border-rose-400/20 bg-rose-500/10 px-2.5 py-1.5 text-xs text-rose-100">
+                        Excluir
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <div className="rounded-xl border border-dashed border-white/10 p-3">
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Nova entrega</label>
+                  <input
+                    value={newMediaTask}
+                    onChange={(event) => setNewMediaTask(event.target.value)}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-300/50"
+                    placeholder="Ex: Preparar teaser para o culto"
+                  />
+                  <input
+                    value={newMediaOwner}
+                    onChange={(event) => setNewMediaOwner(event.target.value)}
+                    className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-300/50"
+                    placeholder="Responsável"
+                  />
+                  <button type="button" onClick={handleMediaAdd} className="mt-3 rounded-xl bg-sky-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-200">
+                    Adicionar tarefa
+                  </button>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

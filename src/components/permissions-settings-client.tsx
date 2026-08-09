@@ -23,6 +23,17 @@ const roleLabels: Record<string, string> = {
   VISITANTES: "Visitantes",
 };
 
+const roleDescriptions: Record<string, { title: string; description: string }> = {
+  DEV: { title: "Operação técnica", description: "Acesso completo para configurar integrações, permissões e ajustes avançados do sistema." },
+  PASTOR: { title: "Liderança espiritual", description: "Visão ampla de membros, congregações, finance e decisões pastorais." },
+  CORPO_ECLESIASTICO: { title: "Gestão ministerial", description: "Acesso para coordenar ministérios, comunicação e acompanhamento da vida da igreja." },
+  TESOURARIA: { title: "Financeiro e controle", description: "Permite lançar, revisar e acompanhar movimentações financeiras com clareza." },
+  MIDIA: { title: "Produção e publicação", description: "Acesso para organizar cultos, mídias, entregas e conteúdos da igreja." },
+  MUSICOS: { title: "Preparação musical", description: "Foco em louvor, escalas e organização do ambiente do culto." },
+  MEMBROS: { title: "Participação local", description: "Acesso pessoal para agenda, avisos, pedidos de oração e eventos." },
+  VISITANTES: { title: "Primeiro contato", description: "Visão introdutória para conhecer a igreja, cultos e próximos passos." },
+};
+
 export function PermissionsSettingsClient() {
   const [roles, setRoles] = useState<string[]>([]);
   const [permissionKeys, setPermissionKeys] = useState<string[]>([]);
@@ -76,6 +87,13 @@ export function PermissionsSettingsClient() {
       permissions: Array.from(new Set(row.permissions ?? [])),
     }));
   }, [matrix]);
+
+  const selectedRoleMeta = useMemo(() => {
+    const roleCode = selectedRole || roles[0] || "";
+    const label = roleLabels[roleCode] ?? roleCode;
+    const description = roleDescriptions[roleCode]?.description ?? "Defina as permissões para este perfil.";
+    return { roleCode, label, description };
+  }, [roles, selectedRole]);
 
   const permissionGroups = useMemo(() => {
     const groups = new Map<string, { key: string; label: string; permissions: string[] }>();
@@ -235,7 +253,7 @@ export function PermissionsSettingsClient() {
             <p className="mt-1 text-sm text-slate-400">Defina o perfil em foco e crie um acesso rápido para um novo usuário.</p>
           </div>
           <span className="rounded-full border border-amber-300/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">
-            {selectedRole || "Selecione um perfil"}
+            {selectedRoleMeta.label || "Selecione um perfil"}
           </span>
         </div>
 
@@ -249,6 +267,17 @@ export function PermissionsSettingsClient() {
                 ))}
               </select>
             </label>
+            <div className="mt-3 rounded-xl border border-amber-300/20 bg-amber-500/10 p-3">
+              <p className="text-sm font-semibold text-amber-100">{selectedRoleMeta.label}</p>
+              <p className="mt-1 text-sm text-slate-300">{selectedRoleMeta.description}</p>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {roles.map((role) => (
+                <button key={role} type="button" onClick={() => setSelectedRole(role)} className={`rounded-full border px-3 py-1 text-xs font-medium ${selectedRole === role ? "border-amber-300/40 bg-amber-500/20 text-amber-100" : "border-white/10 bg-white/5 text-slate-300"}`}>
+                  {roleLabels[role] ?? role}
+                </button>
+              ))}
+            </div>
             <p className="mt-3 text-sm text-slate-400">As permissões marcadas abaixo serão aplicadas ao perfil selecionado e servirão como base para novos acessos.</p>
           </div>
 
