@@ -249,23 +249,23 @@ const doctrineCards = [
   {
     id: "sola-scriptura",
     title: "Sola Scriptura",
-    summary: "A Biblia como regra final de fe e pratica.",
+    summary: "A Bíblia como regra final de fé e prática.",
     detail:
-      "Toda decisao ministerial passa pela Palavra. Estrategia, ensino e aconselhamento sao alinhados ao texto biblico.",
+      "Toda decisão ministerial passa pela Palavra. Estratégia, ensino e aconselhamento são alinhados ao texto bíblico.",
   },
   {
     id: "sola-gratia",
     title: "Sola Gratia",
-    summary: "Salvacao somente pela graca.",
+    summary: "Salvação somente pela graça.",
     detail:
-      "A igreja reforca acolhimento, discipulado e restauracao com base na graca, nao em meritocracia espiritual.",
+      "A igreja reforça acolhimento, discipulado e restauração com base na graça, não em meritocracia espiritual.",
   },
   {
     id: "sola-fide",
     title: "Sola Fide",
-    summary: "Justificacao mediante a fe.",
+    summary: "Justificação mediante a fé.",
     detail:
-      "A comunicacao evangelistica enfatiza fe em Cristo e transformacao de vida como resposta ao Evangelho.",
+      "A comunicação evangelística enfatiza fé em Cristo e transformação de vida como resposta ao Evangelho.",
   },
 ];
 
@@ -375,43 +375,43 @@ const roleWelcomePriority = [
 const roleWelcomeMap: Record<string, RoleWelcomeContent> = {
   DEV: {
     roleCode: "DEV",
-    headline: "Painel completo do sistema com visao tecnica e operacao avancada.",
-    items: ["Resumo geral", "Alertas tecnicos", "Usuarios ativos", "Logs"],
+    headline: "Painel completo do sistema com visão técnica e operação avançada.",
+    items: ["Resumo geral", "Alertas técnicos", "Usuários ativos", "Logs"],
   },
   PASTOR: {
     roleCode: "PASTOR",
-    headline: "Visao pastoral para cuidado de pessoas e direcionamento ministerial.",
-    items: ["Pedidos de oracao", "Novos visitantes", "Aniversariantes", "Agenda pastoral"],
+    headline: "Visão pastoral para cuidado de pessoas e direcionamento ministerial.",
+    items: ["Pedidos de oração", "Novos visitantes", "Aniversariantes", "Agenda pastoral"],
   },
   CORPO_ECLESIASTICO: {
     roleCode: "CORPO_ECLESIASTICO",
-    headline: "Acompanhamento de crescimento e integracao da comunidade.",
+    headline: "Acompanhamento de crescimento e integração da comunidade.",
     items: ["Novos membros", "Batismos", "Discipulados", "Classes"],
   },
   MUSICOS: {
     roleCode: "MUSICOS",
-    headline: "Organizacao de louvor e preparacao das escalas ministeriais.",
-    items: ["Proxima escala", "Repertorio", "Ensaios", "Arquivos"],
+    headline: "Organização de louvor e preparação das escalas ministeriais.",
+    items: ["Próxima escala", "Repertório", "Ensaios", "Arquivos"],
   },
   MIDIA: {
     roleCode: "MIDIA",
-    headline: "Coordenacao de comunicacao e entregas para a congregacao.",
-    items: ["Transmissoes", "Eventos", "Escalas", "Publicacoes"],
+    headline: "Coordenação de comunicação e entregas para a congregação.",
+    items: ["Transmissões", "Eventos", "Escalas", "Publicações"],
   },
   TESOURARIA: {
     roleCode: "TESOURARIA",
-    headline: "Controle financeiro com rastreabilidade e acompanhamento continuo.",
-    items: ["Entradas", "Despesas", "Saldo", "Pendencias"],
+    headline: "Controle financeiro com rastreabilidade e acompanhamento contínuo.",
+    items: ["Entradas", "Despesas", "Saldo", "Pendências"],
   },
   MEMBROS: {
     roleCode: "MEMBROS",
-    headline: "Espaco pessoal para participar, acompanhar avisos e manter conexao.",
-    items: ["Agenda", "Avisos", "Pedidos de oracao", "Eventos"],
+    headline: "Espaço pessoal para participar, acompanhar avisos e manter conexão.",
+    items: ["Agenda", "Avisos", "Pedidos de oração", "Eventos"],
   },
   VISITANTES: {
     roleCode: "VISITANTES",
-    headline: "Recepcao inicial com informacoes para conhecer a igreja.",
-    items: ["Mensagem de boas-vindas", "Proximos cultos", "Como conhecer a igreja"],
+    headline: "Recepção inicial com informações para conhecer a igreja.",
+    items: ["Mensagem de boas-vindas", "Próximos cultos", "Como conhecer a igreja"],
   },
 };
 
@@ -424,8 +424,8 @@ function resolveWelcomeRole(roleCodes: string[]) {
 
   return {
     roleCode: "AUTENTICADO",
-    headline: "Sua visao inicial esta pronta para acompanhar a vida da igreja.",
-    items: ["Dashboard", "Agenda", "Comunicacao"],
+    headline: "Sua visão inicial está pronta para acompanhar a vida da igreja.",
+    items: ["Dashboard", "Agenda", "Comunicação"],
   } satisfies RoleWelcomeContent;
 }
 
@@ -805,12 +805,22 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   };
 
   const handleWorshipAdd = () => {
-    const item = window.prompt("Novo item do checklist de louvor");
+    const item = newWorshipItem.trim();
     if (!item) {
       return;
     }
 
-    setWorshipChecklistItems((prev) => [...prev, { item, status: "warn", owner: "Equipe", channel: "A definir", notes: "Checklist criado no painel" }]);
+    setWorshipChecklistItems((prev) => [...prev, {
+      item,
+      status: "warn",
+      owner: newWorshipOwner.trim() || "Equipe",
+      channel: newWorshipChannel.trim() || "A definir",
+      notes: newWorshipNotes.trim() || "Checklist criado no painel",
+    }]);
+    setNewWorshipItem("");
+    setNewWorshipOwner("");
+    setNewWorshipChannel("Palco");
+    setNewWorshipNotes("");
   };
 
   const handleWorshipToggle = (entry: WorshipChecklistItem) => {
@@ -1182,7 +1192,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
           >
             <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(251,191,36,0.45),rgba(14,165,233,0.1),rgba(244,63,94,0.25))] opacity-55" />
             <div className="relative rounded-[calc(1.5rem-1px)] bg-slate-950/90 p-6 backdrop-blur-2xl">
-              <Badge variant="info" className="mb-3">Dashboard Executivo</Badge>
+              <Badge variant="info" className="mb-3">Dashboard executivo</Badge>
               <h2 className="max-w-2xl text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
                 Visão inteligente da saúde, crescimento e cuidado pastoral.
               </h2>
@@ -1207,7 +1217,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                     <CardTitle className="text-3xl">{item.value}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Badge variant="success">{item.trend} no mes</Badge>
+                    <Badge variant="success">{item.trend} no mês</Badge>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -1218,7 +1228,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
             <Card>
               <CardHeader>
                 <CardTitle>Resumo ministerial</CardTitle>
-                <CardDescription>Geral e ação rápida para o dia a dia</CardDescription>
+                <CardDescription>Geral e ação rápida para o dia a dia.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-slate-300">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
@@ -1246,7 +1256,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
             <Card>
               <CardHeader>
                 <CardTitle>Saúde pastoral</CardTitle>
-                <CardDescription>Indicadores distribuídos por cuidado e acompanhamento</CardDescription>
+                <CardDescription>Indicadores distribuídos por cuidado e acompanhamento.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-slate-300">
                 {[
@@ -1265,7 +1275,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
             <Card>
               <CardHeader>
                 <CardTitle>Finanças</CardTitle>
-                <CardDescription>Resumo de entradas e saldo da semana</CardDescription>
+                <CardDescription>Resumo de entradas e saldo da semana.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-slate-300">
                 <div className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-3">
@@ -1284,7 +1294,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
             <Card>
               <CardHeader>
                 <CardTitle>Crescimento da igreja</CardTitle>
-                <CardDescription>Evolucao de membros nos ultimos meses</CardDescription>
+                <CardDescription>Evolução de membros nos últimos meses.</CardDescription>
               </CardHeader>
               <CardContent className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
@@ -1301,8 +1311,8 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
 
             <Card>
               <CardHeader>
-                <CardTitle>Frequencia por ministerio</CardTitle>
-                <CardDescription>Distribuicao de presenca semanal</CardDescription>
+                <CardTitle>Frequência por ministério</CardTitle>
+                <CardDescription>Distribuição de presença semanal.</CardDescription>
               </CardHeader>
               <CardContent className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
@@ -1659,14 +1669,83 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
       return (
         <Card>
           <CardHeader>
-            <CardTitle>Ministerio de Louvor</CardTitle>
-            <CardDescription>Escalas, repertorio e agenda de ensaios.</CardDescription>
+            <CardTitle>Ministério de Louvor</CardTitle>
+            <CardDescription>Organize escalas, repertório e entregas do culto com ações rápidas de edição e acompanhamento.</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">Ensaio geral - Quinta 20h</div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">Passagem de som - Domingo 17h30</div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">Repertorio: Graca Sublime, Bondade de Deus, Eu Navegarei</div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">Pendencias: 2 musicos sem confirmacao</div>
+          <CardContent className="space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <div className="md:col-span-2 xl:col-span-2">
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Novo item</label>
+                  <input
+                    value={newWorshipItem}
+                    onChange={(event) => setNewWorshipItem(event.target.value)}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                    placeholder="Ex.: Ensaio de abertura"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Responsável</label>
+                  <input
+                    value={newWorshipOwner}
+                    onChange={(event) => setNewWorshipOwner(event.target.value)}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                    placeholder="Nome do responsável"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Canal</label>
+                  <input
+                    value={newWorshipChannel}
+                    onChange={(event) => setNewWorshipChannel(event.target.value)}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                    placeholder="Palco, áudio, teclado..."
+                  />
+                </div>
+                <div className="md:col-span-2 xl:col-span-4">
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Observação</label>
+                  <input
+                    value={newWorshipNotes}
+                    onChange={(event) => setNewWorshipNotes(event.target.value)}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                    placeholder="Detalhes da tarefa ou do ensaio"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                className="mt-3 rounded-xl bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-200"
+                onClick={handleWorshipAdd}
+              >
+                Adicionar item
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {worshipChecklistItems.map((item) => (
+                <div key={item.item} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-white">{item.item}</p>
+                      <p className="mt-1 text-xs text-slate-400">Responsável: {item.owner} • Canal: {item.channel}</p>
+                      {item.notes ? <p className="mt-1 text-xs text-slate-500">{item.notes}</p> : null}
+                    </div>
+                    <Badge variant={item.status === "ok" ? "success" : "default"}>{item.status === "ok" ? "Concluído" : "Em andamento"}</Badge>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button type="button" onClick={() => handleWorshipToggle(item)} className="rounded-lg border border-emerald-400/20 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-100">
+                      {item.status === "ok" ? "Marcar pendente" : "Marcar pronto"}
+                    </button>
+                    <button type="button" onClick={() => handleWorshipEdit(item)} className="rounded-lg border border-white/10 bg-white/10 px-2.5 py-1.5 text-xs text-slate-200">
+                      Editar
+                    </button>
+                    <button type="button" onClick={() => handleWorshipDelete(item.item)} className="rounded-lg border border-rose-400/20 bg-rose-500/10 px-2.5 py-1.5 text-xs text-rose-100">
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       );

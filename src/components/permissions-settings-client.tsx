@@ -25,7 +25,7 @@ const roleLabels: Record<string, string> = {
 
 const roleDescriptions: Record<string, { title: string; description: string }> = {
   DEV: { title: "Operação técnica", description: "Acesso completo para configurar integrações, permissões e ajustes avançados do sistema." },
-  PASTOR: { title: "Liderança espiritual", description: "Visão ampla de membros, congregações, finance e decisões pastorais." },
+  PASTOR: { title: "Liderança espiritual", description: "Visão ampla de membros, congregações, finanças e decisões pastorais." },
   CORPO_ECLESIASTICO: { title: "Gestão ministerial", description: "Acesso para coordenar ministérios, comunicação e acompanhamento da vida da igreja." },
   TESOURARIA: { title: "Financeiro e controle", description: "Permite lançar, revisar e acompanhar movimentações financeiras com clareza." },
   MIDIA: { title: "Produção e publicação", description: "Acesso para organizar cultos, mídias, entregas e conteúdos da igreja." },

@@ -73,7 +73,7 @@ export function LoginCard({ isConfigured }: LoginCardProps) {
         router.refresh();
       });
     } catch {
-      setError("Nao foi possivel iniciar a sessao.");
+      setError("Não foi possível iniciar a sessão.");
     } finally {
       setIsPending(false);
     }
@@ -89,7 +89,7 @@ export function LoginCard({ isConfigured }: LoginCardProps) {
     }
 
     if (!email) {
-      setError("Informe o e-mail para receber o link de recuperacao.");
+      setError("Informe o e-mail para receber o link de recuperação.");
       return;
     }
 
@@ -107,7 +107,7 @@ export function LoginCard({ isConfigured }: LoginCardProps) {
 
       setInfo("Enviamos um link de recuperacao para o e-mail informado.");
     } catch {
-      setError("Nao foi possivel enviar o link de recuperacao agora.");
+        setError("Não foi possível enviar o link de recuperação agora.");
     } finally {
       setIsSendingReset(false);
     }

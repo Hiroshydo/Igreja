@@ -14,7 +14,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Ecclesia One",
-  description: "Plataforma premium de gestao eclesiastica com experiencia moderna.",
+  description: "Plataforma premium de gestão eclesiástica com experiência moderna.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

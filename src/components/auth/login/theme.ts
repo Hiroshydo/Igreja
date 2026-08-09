@@ -1,16 +1,16 @@
 export const loginTheme = {
   brandName: "Ecclesia One",
-  brandSubtitle: "Sistema Inteligente de Gestao Eclesiastica",
+  brandSubtitle: "Sistema inteligente de gestão eclesiástica",
   heroTitles: [
     "Tecnologia servindo ao Reino.",
     "Mais tempo para pessoas. Menos tempo com burocracia.",
-    "A Igreja cresce. A gestao acompanha.",
+    "A igreja cresce. A gestão acompanha.",
   ],
   heroDescription:
-    "Uma plataforma completa para gestao ministerial, membros, eventos, patrimonio, financas e comunicacao.",
+    "Uma plataforma completa para gestão ministerial, membros, eventos, patrimônio, finanças e comunicação.",
   statusLabel: "Status da plataforma",
   statusValue: "Operando normalmente",
-  maintenanceWindow: "Janela de manutencao: domingo, 02:00 as 03:00",
+  maintenanceWindow: "Janela de manutenção: domingo, 02:00 às 03:00",
   releaseInfo: "Release ativo: 2026.08",
   imageUrl:
     "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=2400&q=80",
