@@ -62,6 +62,7 @@ type TabKey =
   | "dashboard"
   | "admin-dashboard"
   | "admin-membros"
+  | "congregacoes"
   | "ministerios-musica"
   | "galeria-fotos"
   | "ebd-ensino"
@@ -78,6 +79,7 @@ const navItems = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "admin-dashboard", label: "Painel DEV", icon: ShieldCheck },
   { key: "admin-membros", label: "Membros", icon: Users },
+  { key: "congregacoes", label: "Congregações", icon: Church },
   { key: "ministerios-musica", label: "Louvor", icon: Music },
   { key: "galeria-fotos", label: "Galeria", icon: Images },
   { key: "ebd-ensino", label: "Escola Biblica", icon: GraduationCap },
@@ -93,6 +95,36 @@ const stats = [
   { label: "Membros", value: "1.248", trend: "+12%" },
   { label: "Visitantes", value: "84", trend: "+6%" },
   { label: "Pedidos de oracao", value: "24", trend: "-2%" },
+];
+
+const congregationsData = [
+  {
+    id: "cg-001",
+    name: "Sede Vida Nova",
+    city: "São Paulo",
+    leader: "Pr. Daniel Silva",
+    members: 348,
+    attendance: 89,
+    status: "Ativa",
+  },
+  {
+    id: "cg-002",
+    name: "Congregação Jardim Esperança",
+    city: "Osasco",
+    leader: "Pr. Gabriela Martins",
+    members: 124,
+    attendance: 78,
+    status: "Ativa",
+  },
+  {
+    id: "cg-003",
+    name: "Comunidade Nova Aliança",
+    city: "Guarulhos",
+    leader: "Pr. Samuel Costa",
+    members: 106,
+    attendance: 76,
+    status: "Em crescimento",
+  },
 ];
 
 const growthData = [
@@ -716,11 +748,26 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
 
     if (resolvedActiveTab === "admin-membros") {
       return (
-        <section className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
+        <section className="grid gap-4 lg:grid-cols-[1.12fr_0.88fr]">
           <Card>
             <CardHeader>
-              <CardTitle>Prontuario de membros</CardTitle>
-              <CardDescription>Busca por nome, status ou ministerio.</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Prontuario de membros</CardTitle>
+                  <CardDescription>Busca por nome, status ou ministerio.</CardDescription>
+                </div>
+                <button
+                  type="button"
+                  className="rounded-xl bg-amber-300 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-200"
+                  onClick={() => {
+                    setEditingMemberId(null);
+                    setMemberForm(emptyMemberForm);
+                    setActiveTab("admin-membros");
+                  }}
+                >
+                  + Cadastrar
+                </button>
+              </div>
             </CardHeader>
             <CardContent>
               <input
@@ -732,9 +779,29 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
               <div className="space-y-2">
                 {filteredMembers.map((member) => (
                   <div key={member.id} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
-                    <p className="font-semibold text-slate-50">{member.name}</p>
-                    <p className="text-xs text-slate-400">{member.status} - {member.ministry}</p>
-                    <p className="text-xs text-amber-200">Ultima visita: {member.lastVisit}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-slate-50">{member.name}</p>
+                        <p className="text-xs text-slate-400">{member.status} - {member.role ?? member.ministry ?? "Sem função"}</p>
+                        <p className="text-xs text-amber-200">Ultima visita: {member.lastVisit ?? "Não informado"}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => startMemberEdit(member)}
+                          className="rounded-lg border border-white/15 px-2 py-1 text-xs text-slate-200 hover:bg-white/10"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleMemberDelete(member.id)}
+                          className="rounded-lg border border-rose-300/40 px-2 py-1 text-xs text-rose-100 hover:bg-rose-300/10"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -743,15 +810,171 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle>Linha do tempo espiritual</CardTitle>
-              <CardDescription>Historico pastoral do membro selecionado.</CardDescription>
+              <CardTitle>{editingMemberId ? "Editar membro" : "Cadastrar membro"}</CardTitle>
+              <CardDescription>Cadastro rápido de membro na congregação.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              {timeline.map((step) => (
-                <div key={step} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-slate-200">
-                  {step}
+            <CardContent className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Nome completo</label>
+                <input
+                  value={memberForm.name}
+                  onChange={(event) => setMemberForm((prev) => ({ ...prev, name: event.target.value }))}
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                  placeholder="Nome do membro"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">E-mail</label>
+                  <input
+                    value={memberForm.email}
+                    onChange={(event) => setMemberForm((prev) => ({ ...prev, email: event.target.value }))}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                    placeholder="email@igreja.org"
+                  />
                 </div>
-              ))}
+
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Telefone</label>
+                  <input
+                    value={memberForm.phone}
+                    onChange={(event) => setMemberForm((prev) => ({ ...prev, phone: event.target.value }))}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                    placeholder="(11) 99999-0000"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Status</label>
+                  <select
+                    value={memberForm.status}
+                    onChange={(event) => setMemberForm((prev) => ({ ...prev, status: event.target.value as Member["status"] }))}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                  >
+                    <option value="ativo">Ativo</option>
+                    <option value="pendente">Pendente</option>
+                    <option value="inativo">Inativo</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Função</label>
+                  <input
+                    value={memberForm.role}
+                    onChange={(event) => setMemberForm((prev) => ({ ...prev, role: event.target.value }))}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                    placeholder="Ministerio / função"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Data de integração</label>
+                <input
+                  type="date"
+                  value={memberForm.joinDate}
+                  onChange={(event) => setMemberForm((prev) => ({ ...prev, joinDate: event.target.value }))}
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="rounded-xl bg-emerald-300 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-200 disabled:opacity-60"
+                  disabled={isSavingMember}
+                  onClick={() => void handleMemberSave()}
+                >
+                  {isSavingMember ? "Salvando..." : editingMemberId ? "Salvar alterações" : "Cadastrar membro"}
+                </button>
+                <button
+                  type="button"
+                  className="rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-200 hover:bg-white/10"
+                  onClick={() => {
+                    setEditingMemberId(null);
+                    setMemberForm(emptyMemberForm);
+                  }}
+                >
+                  Limpar
+                </button>
+              </div>
+
+              {membersError ? (
+                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs text-rose-200">
+                  {membersError}
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+        </section>
+      );
+    }
+
+    if (resolvedActiveTab === "congregacoes") {
+      return (
+        <section className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Congregações</CardTitle>
+                  <CardDescription>Local de atuação, líderes e fluxo.</CardDescription>
+                </div>
+                <button type="button" className="rounded-xl bg-amber-300 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-200">
+                  + Nova congregação
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {congregationsData.map((item) => (
+                  <article key={item.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">{item.city}</span>
+                      <span className="rounded-full border border-emerald-300/40 bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-100">{item.status}</span>
+                    </div>
+                    <h3 className="mt-3 text-lg font-semibold text-slate-50">{item.name}</h3>
+                    <p className="mt-1 text-xs text-slate-400">Líder: {item.leader}</p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="text-xs text-slate-500">{item.members} membros</span>
+                      <span className="text-xs text-slate-300">{item.attendance}% presença</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Cadastro rápido</CardTitle>
+              <CardDescription>Registrar congregação sem sair do painel.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Nome da congregação</label>
+                <input className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50" placeholder="Ex: Sede Vida Nova" />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Cidade</label>
+                  <input className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50" placeholder="Cidade" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Líder</label>
+                  <input className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50" placeholder="Nome do líder" />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Endereço</label>
+                <input className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50" placeholder="Rua, bairro" />
+              </div>
+              <button type="button" className="rounded-xl bg-emerald-300 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-200">
+                Salvar congregação
+              </button>
             </CardContent>
           </Card>
         </section>

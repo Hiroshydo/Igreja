@@ -28,6 +28,7 @@ export const dashboardPermissionByTab = {
   dashboard: "dashboard.read",
   "admin-dashboard": "system.manage",
   "admin-membros": "members.read",
+  congregacoes: "congregations.read",
   "ministerios-musica": "music.read",
   "galeria-fotos": "media.read",
   "ebd-ensino": "education.read",
