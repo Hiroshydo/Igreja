@@ -4,6 +4,19 @@
 
 import { ApiResponse, Member, Event, Ministry, DashboardStats, HealthStatus, FinanceTransaction } from '@/types';
 
+export interface CongregationOption {
+  id: string;
+  name: string;
+  code: string;
+  city: string | null;
+  state: string | null;
+  email: string | null;
+  phone: string | null;
+  legalName: string | null;
+  taxId: string | null;
+  isActive: boolean;
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 async function apiCall<T>(
@@ -47,6 +60,26 @@ async function apiCall<T>(
 /**
  * Serviço de Membros
  */
+export const congregationService = {
+  async getAll(): Promise<ApiResponse<CongregationOption[]>> {
+    return apiCall<CongregationOption[]>('/api/congregations');
+  },
+
+  async create(data: Partial<CongregationOption>): Promise<ApiResponse<CongregationOption>> {
+    return apiCall<CongregationOption>('/api/congregations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async update(id: string | number, data: Partial<CongregationOption>): Promise<ApiResponse<CongregationOption>> {
+    return apiCall<CongregationOption>(`/api/congregations/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+};
+
 export const memberService = {
   async getAll(): Promise<ApiResponse<Member[]>> {
     return apiCall<Member[]>('/api/members');

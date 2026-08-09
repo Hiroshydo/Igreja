@@ -55,7 +55,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { dashboardPermissionByTab, hasPermission } from "@/lib/auth/permissions";
-import { memberService } from "@/services/api";
+import { congregationService, memberService } from "@/services/api";
 import type { AuthenticatedAppUser, Member, PermissionKey } from "@/types";
 
 type TabKey =
@@ -283,6 +283,7 @@ interface MemberFormState {
   role: string;
   joinDate: string;
   avatar: string;
+  congregationId: string;
 }
 
 const emptyMemberForm: MemberFormState = {
@@ -293,6 +294,7 @@ const emptyMemberForm: MemberFormState = {
   role: "",
   joinDate: new Date().toISOString().slice(0, 10),
   avatar: "",
+  congregationId: "",
 };
 
 const roleWelcomePriority = [
@@ -383,6 +385,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [membersData, setMembersData] = useState<Member[]>(seedMembers);
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
+  const [congregationsList, setCongregationsList] = useState<Array<{ id: string; name: string; city: string | null }>>([]);
   const [memberForm, setMemberForm] = useState<MemberFormState>(emptyMemberForm);
   const [editingMemberId, setEditingMemberId] = useState<string | number | null>(null);
   const [isSavingMember, setIsSavingMember] = useState(false);
@@ -441,7 +444,18 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
       setMembersLoading(false);
     }
 
-    loadMembers();
+    async function loadCongregations() {
+      const result = await congregationService.getAll();
+      if (!mounted) {
+        return;
+      }
+      if (result.success && result.data) {
+        setCongregationsList(result.data.map((item) => ({ id: item.id, name: item.name, city: item.city })));
+      }
+    }
+
+    void loadMembers();
+    void loadCongregations();
     return () => {
       mounted = false;
     };
@@ -495,6 +509,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
       role: memberForm.role,
       joinDate: memberForm.joinDate,
       avatar: memberForm.avatar,
+      congregationId: memberForm.congregationId || undefined,
     };
 
     const response = editingMemberId
@@ -869,6 +884,20 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                     placeholder="Ministerio / função"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Congregação</label>
+                <select
+                  value={memberForm.congregationId}
+                  onChange={(event) => setMemberForm((prev) => ({ ...prev, congregationId: event.target.value }))}
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                >
+                  <option value="">Selecione uma congregação</option>
+                  {congregationsList.map((congregation) => (
+                    <option key={congregation.id} value={congregation.id}>{congregation.name} {congregation.city ? `- ${congregation.city}` : ""}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
