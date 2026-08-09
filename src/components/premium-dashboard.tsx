@@ -27,7 +27,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import Image from "next/image";
 import {
   Bar,
@@ -458,6 +458,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [newGalleryTitle, setNewGalleryTitle] = useState("");
   const [newGalleryCategory, setNewGalleryCategory] = useState("");
   const [newGalleryImage, setNewGalleryImage] = useState("");
+  const [galleryUploadName, setGalleryUploadName] = useState("");
   const [editingMemberId, setEditingMemberId] = useState<string | number | null>(null);
   const [isSavingMember, setIsSavingMember] = useState(false);
   const [isDeletingMemberId, setIsDeletingMemberId] = useState<string | number | null>(null);
@@ -701,6 +702,21 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
 
     setMembersData((prev) => prev.filter((item) => item.id !== memberId));
     setIsDeletingMemberId(null);
+  };
+
+  const handleGalleryFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      setNewGalleryImage(result);
+      setGalleryUploadName(file.name);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleGalleryCreate = () => {
@@ -1608,12 +1624,26 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                   className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
                   placeholder="Categoria"
                 />
-                <input
-                  value={newGalleryImage}
-                  onChange={(event) => setNewGalleryImage(event.target.value)}
-                  className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
-                  placeholder="URL da imagem"
-                />
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleGalleryFileSelect}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                  />
+                  <input
+                    value={newGalleryImage}
+                    onChange={(event) => setNewGalleryImage(event.target.value)}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                    placeholder="Ou cole uma URL da imagem"
+                  />
+                  <p className="text-xs text-slate-400">{galleryUploadName ? `Arquivo selecionado: ${galleryUploadName}` : "Faça upload de uma imagem para o álbum."}</p>
+                  {newGalleryImage ? (
+                    <div className="overflow-hidden rounded-xl border border-white/10">
+                      <img src={newGalleryImage} alt="Pré-visualização do álbum" className="h-24 w-full object-cover" />
+                    </div>
+                  ) : null}
+                </div>
               </div>
               <button
                 type="button"
@@ -1632,6 +1662,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                   setNewGalleryTitle("");
                   setNewGalleryCategory("");
                   setNewGalleryImage("");
+                  setGalleryUploadName("");
                 }}
               >
                 Criar álbum

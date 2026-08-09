@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 
 interface FinanceMovementItem {
   id: string;
@@ -98,6 +98,8 @@ export function FinanceReportClient() {
     reference: "",
     documentReference: "",
     observations: "",
+    attachmentUrl: "",
+    attachmentName: "",
   });
 
   async function loadReport() {
@@ -162,6 +164,25 @@ export function FinanceReportClient() {
     void loadReport();
   }, []);
 
+  function handleAttachmentUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      setForm((prev) => ({
+        ...prev,
+        attachmentUrl: result,
+        attachmentName: file.name,
+        documentReference: prev.documentReference || file.name,
+      }));
+    };
+    reader.readAsDataURL(file);
+  }
+
   async function handleSave() {
     if (!form.description.trim() || !form.amount) {
       setError("Informe a descrição, valor e categoria para lançar a movimentação.");
@@ -219,6 +240,8 @@ export function FinanceReportClient() {
         reference: "",
         documentReference: "",
         observations: "",
+        attachmentUrl: "",
+        attachmentName: "",
       });
       setEditingId(null);
       await loadReport();
@@ -259,6 +282,8 @@ export function FinanceReportClient() {
       reference: entry.reference ?? "",
       documentReference: entry.documentReference ?? "",
       observations: entry.observations ?? "",
+      attachmentUrl: "",
+      attachmentName: "",
     });
   }
 
@@ -339,6 +364,13 @@ export function FinanceReportClient() {
                 <option key={congregation.id} value={congregation.id}>{congregation.name}</option>
               ))}
             </select>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {congregations.map((congregation) => (
+                <button key={congregation.id} type="button" onClick={() => setForm((prev) => ({ ...prev, congregationId: congregation.id }))} className={`rounded-full border px-2.5 py-1 text-xs ${form.congregationId === congregation.id ? "border-emerald-300/40 bg-emerald-500/20 text-emerald-100" : "border-white/10 bg-white/5 text-slate-300"}`}>
+                  {congregation.name}
+                </button>
+              ))}
+            </div>
           </label>
           <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-1">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Tipo</span>
@@ -375,8 +407,10 @@ export function FinanceReportClient() {
             <input value={form.reference} onChange={(event) => setForm((prev) => ({ ...prev, reference: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Ex: pedido 101" />
           </label>
           <label className="text-sm text-slate-300">
-            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Comprovante</span>
-            <input value={form.documentReference} onChange={(event) => setForm((prev) => ({ ...prev, documentReference: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Nº, link ou anexo" />
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Comprovante / imagem</span>
+            <input type="file" accept="image/*" onChange={handleAttachmentUpload} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" />
+            <p className="mt-2 text-xs text-slate-400">{form.attachmentName ? `Anexo: ${form.attachmentName}` : "Envie uma imagem do comprovante ou recibo."}</p>
+            {form.attachmentUrl ? <img src={form.attachmentUrl} alt="Pré-visualização do comprovante" className="mt-3 h-24 w-full rounded-xl object-cover" /> : null}
           </label>
           <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-2">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Origem / observações</span>
@@ -396,7 +430,7 @@ export function FinanceReportClient() {
           </button>
           <button type="button" onClick={() => {
             setEditingId(null);
-            setForm({ occurredAt: new Date().toISOString().slice(0, 10), type: "receita", category: "Oferta", description: "", amount: "", origin: "", congregationId: form.congregationId || congregations[0]?.id || "", reference: "", documentReference: "", observations: "" });
+            setForm({ occurredAt: new Date().toISOString().slice(0, 10), type: "receita", category: "Oferta", description: "", amount: "", origin: "", congregationId: form.congregationId || congregations[0]?.id || "", reference: "", documentReference: "", observations: "", attachmentUrl: "", attachmentName: "" });
           }} className="rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-200 hover:bg-white/10">
             Limpar
           </button>
