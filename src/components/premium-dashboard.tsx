@@ -286,16 +286,18 @@ interface MemberFormState {
   congregationId: string;
 }
 
-const emptyMemberForm: MemberFormState = {
-  name: "",
-  email: "",
-  phone: "",
-  status: "ativo",
-  role: "",
-  joinDate: new Date().toISOString().slice(0, 10),
-  avatar: "",
-  congregationId: "",
-};
+function createEmptyMemberForm(defaultCongregationId = ""): MemberFormState {
+  return {
+    name: "",
+    email: "",
+    phone: "",
+    status: "ativo",
+    role: "",
+    joinDate: new Date().toISOString().slice(0, 10),
+    avatar: "",
+    congregationId: defaultCongregationId,
+  };
+}
 
 const roleWelcomePriority = [
   "DEV",
@@ -385,16 +387,26 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [membersData, setMembersData] = useState<Member[]>(seedMembers);
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
-  const [congregationsList, setCongregationsList] = useState<Array<{ id: string; name: string; city: string | null }>>([]);
-  const [memberForm, setMemberForm] = useState<MemberFormState>(emptyMemberForm);
+  const [congregationsList, setCongregationsList] = useState<Array<{ id: string; name: string; city: string | null; leader: string; members: number; attendance: number; status: string }>>([]);
+  const [memberForm, setMemberForm] = useState<MemberFormState>(() => createEmptyMemberForm(access.congregationId ?? ""));
+  const [congregationDraft, setCongregationDraft] = useState({ id: "", name: "", city: "", leader: "", members: 0, attendance: 0, status: "Ativa" });
+  const [editingCongregationId, setEditingCongregationId] = useState<string | null>(null);
+  const [isSavingCongregation, setIsSavingCongregation] = useState(false);
+  const [congregationMessage, setCongregationMessage] = useState<string | null>(null);
+  const [galleryItemsState, setGalleryItemsState] = useState(galleryItems);
+  const [worshipChecklistItems, setWorshipChecklistItems] = useState(worshipChecklist);
+  const [newWorshipItem, setNewWorshipItem] = useState("");
+  const [newGalleryTitle, setNewGalleryTitle] = useState("");
+  const [newGalleryCategory, setNewGalleryCategory] = useState("");
+  const [newGalleryImage, setNewGalleryImage] = useState("");
   const [editingMemberId, setEditingMemberId] = useState<string | number | null>(null);
   const [isSavingMember, setIsSavingMember] = useState(false);
   const [isDeletingMemberId, setIsDeletingMemberId] = useState<string | number | null>(null);
 
   const filteredGallery = useMemo(() => {
-    if (galleryFilter === "Todos") return galleryItems;
-    return galleryItems.filter((item) => item.category === galleryFilter);
-  }, [galleryFilter]);
+    if (galleryFilter === "Todos") return galleryItemsState;
+    return galleryItemsState.filter((item) => item.category === galleryFilter);
+  }, [galleryFilter, galleryItemsState]);
 
   const visibleNavItems = useMemo(
     () =>
@@ -450,7 +462,15 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
         return;
       }
       if (result.success && result.data) {
-        setCongregationsList(result.data.map((item) => ({ id: item.id, name: item.name, city: item.city })));
+        setCongregationsList(result.data.map((item) => ({
+          id: item.id,
+          name: item.name,
+          city: item.city,
+          leader: item.name.includes("Sede") ? "Pr. Daniel Silva" : "Líder da congregação",
+          members: 0,
+          attendance: 0,
+          status: "Ativa",
+        })));
       }
     }
 
@@ -463,7 +483,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
 
   const startMemberCreate = () => {
     setEditingMemberId(null);
-    setMemberForm(emptyMemberForm);
+    setMemberForm(createEmptyMemberForm(access.congregationId ?? ""));
   };
 
   const startMemberEdit = (member: Member) => {
@@ -476,6 +496,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
       role: member.role ?? "",
       joinDate: member.joinDate,
       avatar: member.avatar ?? "",
+      congregationId: access.congregationId ?? "",
     });
   };
 
@@ -530,9 +551,74 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
       return prev.map((item) => (item.id === editingMemberId ? (response.data as Member) : item));
     });
 
-    setMemberForm(emptyMemberForm);
+    setMemberForm(createEmptyMemberForm(access.congregationId ?? ""));
     setEditingMemberId(null);
     setIsSavingMember(false);
+  };
+
+  const handleCongregationSave = async () => {
+    setIsSavingCongregation(true);
+    setCongregationMessage(null);
+
+    try {
+      const payload = {
+        name: congregationDraft.name,
+        code: congregationDraft.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        city: congregationDraft.city,
+        state: "SP",
+        phone: "",
+        email: "",
+        legalName: congregationDraft.name,
+        taxId: "",
+        isActive: true,
+      };
+
+      const response = editingCongregationId
+        ? await congregationService.update(editingCongregationId, payload)
+        : await congregationService.create(payload);
+
+      if (!response.success || !response.data) {
+        throw new Error(response.error ?? "Não foi possível salvar a congregação");
+      }
+
+      const nextCongregation = {
+        id: response.data.id,
+        name: response.data.name,
+        city: response.data.city,
+        leader: congregationDraft.leader || "Líder da congregação",
+        members: congregationDraft.members,
+        attendance: congregationDraft.attendance,
+        status: congregationDraft.status,
+      };
+
+      setCongregationsList((current) => {
+        if (editingCongregationId) {
+          return current.map((item) => (item.id === editingCongregationId ? nextCongregation : item));
+        }
+        return [nextCongregation, ...current];
+      });
+
+      setCongregationDraft({ id: "", name: "", city: "", leader: "", members: 0, attendance: 0, status: "Ativa" });
+      setEditingCongregationId(null);
+      setCongregationMessage("Congregação salva com sucesso.");
+    } catch (error) {
+      setCongregationMessage(error instanceof Error ? error.message : "Erro ao salvar congregação");
+    } finally {
+      setIsSavingCongregation(false);
+    }
+  };
+
+  const handleCongregationEdit = (item: { id: string; name: string; city: string | null; leader: string; members: number; attendance: number; status: string }) => {
+    setEditingCongregationId(item.id);
+    setCongregationDraft({
+      id: item.id,
+      name: item.name,
+      city: item.city ?? "",
+      leader: item.leader,
+      members: item.members,
+      attendance: item.attendance,
+      status: item.status,
+    });
   };
 
   const handleMemberDelete = async (memberId: string | number) => {

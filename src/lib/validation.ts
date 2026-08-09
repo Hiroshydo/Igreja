@@ -9,6 +9,7 @@ export const memberCreateSchema = z.object({
   status: z.enum(["ativo", "inativo", "pendente"]).default("ativo"),
   role: z.string().optional().or(z.literal("")),
   avatar: z.string().url().optional().or(z.literal("")),
+  congregationId: z.string().optional().or(z.literal("")),
 });
 
 export const memberUpdateSchema = memberCreateSchema.partial();

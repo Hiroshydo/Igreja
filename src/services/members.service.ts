@@ -57,11 +57,16 @@ export const membersService = {
       throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
     }
 
+    const targetCongregationId = input.congregationId || context.congregationId;
+    if (!targetCongregationId) {
+      throw new AppError("Usuário sem congregação vinculada", 400, "congregation_required");
+    }
+
     const admin = createAdminSupabaseClient();
     const { data, error } = await admin
       .from("members")
       .insert({
-        congregation_id: context.congregationId,
+        congregation_id: targetCongregationId,
         full_name: input.name,
         email: input.email || null,
         phone: input.phone || null,
