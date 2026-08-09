@@ -28,6 +28,7 @@ interface FinanceMovementItem {
   reference?: string | null;
   documentReference?: string | null;
   observations?: string | null;
+  createdBy?: string | null;
 }
 
 interface CongregationOption {
@@ -99,9 +100,31 @@ interface FinanceReportPayload {
     reference?: string | null;
     documentReference?: string | null;
     createdBy?: string | null;
+    authorizedBy?: string | null;
     createdAt?: string;
     updatedAt?: string;
   }>;
+}
+
+const DOCUMENT_TYPES = ["Dízimo", "Oferta", "Doação", "Despesa"] as const;
+
+function buildBrasiliaTimestamp(datePart: string) {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+  const time = formatter.format(now);
+  return `${datePart}T${time}-03:00`;
+}
+
+function extractAuthorizedBy(observations?: string | null) {
+  if (!observations) return "";
+  const match = observations.match(/Autorizado por:\s*([^|\n]+)/i);
+  return match?.[1]?.trim() ?? "";
 }
 
 export function FinanceReportClient() {
@@ -120,7 +143,7 @@ export function FinanceReportClient() {
   const [form, setForm] = useState({
     occurredAt: new Date().toISOString().slice(0, 10),
     type: "receita" as "receita" | "despesa",
-    category: "Oferta",
+    category: "Dízimo",
     description: "",
     amount: "",
     origin: "",
@@ -128,6 +151,8 @@ export function FinanceReportClient() {
     reference: "",
     documentReference: "",
     observations: "",
+    authorizedBy: "",
+    pastorPassword: "",
     attachmentUrl: "",
     attachmentName: "",
   });
@@ -170,6 +195,7 @@ export function FinanceReportClient() {
               reference: row.reference,
               documentReference: row.document_reference ?? row.documentReference,
               observations: row.observations,
+              createdBy: row.created_by ?? row.createdBy ?? null,
             }))
           : [];
         setMovements(nextMovements);
@@ -240,6 +266,17 @@ export function FinanceReportClient() {
     reader.readAsDataURL(file);
   }
 
+  function buildReferenceNumber(dateValue: string) {
+    const sourceRows = movements.length > 0 ? movements : report?.detailRows ?? [];
+    const prefix = `${dateValue}-`;
+    const currentCount = sourceRows.filter((row) => {
+      const ref = row.reference ?? row.documentReference ?? "";
+      return ref.startsWith(prefix);
+    }).length;
+
+    return `${prefix}${String(currentCount + 1).padStart(3, "0")}`;
+  }
+
   async function handleSave() {
     if (!form.description.trim() || !form.amount) {
       setError("Informe a descrição, valor e categoria para lançar a movimentação.");
@@ -252,21 +289,38 @@ export function FinanceReportClient() {
       return;
     }
 
+    if (!form.authorizedBy.trim()) {
+      setError("Informe quem autorizou o lançamento.");
+      return;
+    }
+
+    if (form.pastorPassword.trim() !== "pastor2026") {
+      setError("Senha do pastor inválida para autorizar o lançamento.");
+      return;
+    }
+
+    const documentType = form.category;
+    const movementType: "receita" | "despesa" = documentType === "Despesa" ? "despesa" : "receita";
+    const generatedReference = form.reference.trim() || buildReferenceNumber(form.occurredAt);
+    const occurredAtWithTime = buildBrasiliaTimestamp(form.occurredAt);
+    const authorizationNote = `Autorizado por: ${form.authorizedBy.trim()}`;
+    const composedObservations = [form.observations?.trim(), authorizationNote].filter(Boolean).join(" | ");
+
     setSaving(true);
     setError(null);
 
     try {
       const payload = {
-        occurredAt: form.occurredAt,
+        occurredAt: occurredAtWithTime,
         congregationId: form.congregationId || undefined,
-        type: form.type,
-        category: form.category,
+        type: movementType,
+        category: documentType,
         description: form.description,
         amount: normalizedAmount,
         origin: form.origin || "Painel administrativo",
-        reference: form.reference || undefined,
-        documentReference: form.documentReference || undefined,
-        observations: form.observations || undefined,
+        reference: generatedReference,
+        documentReference: form.documentReference || generatedReference,
+        observations: composedObservations || undefined,
       };
 
       const response = editingId
@@ -289,7 +343,7 @@ export function FinanceReportClient() {
       setForm({
         occurredAt: new Date().toISOString().slice(0, 10),
         type: "receita",
-        category: "Oferta",
+        category: "Dízimo",
         description: "",
         amount: "",
         origin: "",
@@ -297,6 +351,8 @@ export function FinanceReportClient() {
         reference: "",
         documentReference: "",
         observations: "",
+        authorizedBy: "",
+        pastorPassword: "",
         attachmentUrl: "",
         attachmentName: "",
       });
@@ -339,12 +395,21 @@ export function FinanceReportClient() {
       reference: entry.reference ?? "",
       documentReference: entry.documentReference ?? "",
       observations: entry.observations ?? "",
+      authorizedBy: extractAuthorizedBy(entry.observations),
+      pastorPassword: "",
       attachmentUrl: "",
       attachmentName: "",
     });
   }
 
-  const workbookHref = "/api/reports/finance/export";
+  const workbookHref = useMemo(() => {
+    const params = new URLSearchParams();
+    if (form.congregationId) {
+      params.set("congregationId", form.congregationId);
+    }
+    const query = params.toString();
+    return query ? `/api/reports/finance/export?${query}` : "/api/reports/finance/export";
+  }, [form.congregationId]);
 
   const financeSummary = useMemo(() => {
     const income = movements.filter((item) => item.type === "receita").reduce((sum, item) => sum + Number(item.amount ?? 0), 0);
@@ -468,12 +533,13 @@ export function FinanceReportClient() {
       return;
     }
 
+    const movementType = form.category === "Despesa" ? "despesa" : "receita";
     const preview = [
       { label: "Lançamento", value: amount },
-      { label: form.type === "receita" ? "Saldo esperado" : "Saída prevista", value: form.type === "receita" ? amount : amount * -1 },
+      { label: movementType === "receita" ? "Saldo esperado" : "Saída prevista", value: movementType === "receita" ? amount : amount * -1 },
     ];
     setDraftPreview(preview);
-  }, [form.amount, form.type]);
+  }, [form.amount, form.category]);
 
   if (loading) {
     return <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-300">Carregando relatório financeiro...</div>;
@@ -511,7 +577,7 @@ export function FinanceReportClient() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Lançar movimentação</h3>
-            <p className="text-sm text-slate-400">Informe o dia, o valor, o tipo e a categoria para registrar entradas e saídas.</p>
+            <p className="text-sm text-slate-400">Informe o dia, o valor e o tipo de documento para registrar o lançamento.</p>
           </div>
           <span className="rounded-full border border-amber-300/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">
             {editingId ? "Editando" : "Novo lançamento"}
@@ -538,26 +604,30 @@ export function FinanceReportClient() {
             </div>
           </label>
           <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-1">
-            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Tipo</span>
-            <div className="flex gap-2 rounded-xl border border-white/10 bg-white/5 p-1">
-              {([
-                { value: "receita", label: "Receita", accent: "bg-emerald-400/20 text-emerald-100" },
-                { value: "despesa", label: "Despesa", accent: "bg-rose-400/20 text-rose-100" },
-              ] as const).map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, type: option.value as "receita" | "despesa" }))}
-                  className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${form.type === option.value ? option.accent : "text-slate-300 hover:bg-white/10"}`}
-                >
-                  {option.label}
-                </button>
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Tipo do documento</span>
+            <select
+              value={form.category}
+              onChange={(event) =>
+                setForm((prev) => ({
+                  ...prev,
+                  category: event.target.value,
+                  type: event.target.value === "Despesa" ? "despesa" : "receita",
+                }))
+              }
+              className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
+            >
+              {DOCUMENT_TYPES.map((item) => (
+                <option key={item} value={item}>{item}</option>
               ))}
-            </div>
+            </select>
           </label>
           <label className="text-sm text-slate-300">
-            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Categoria</span>
-            <input value={form.category} onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Oferta, despesas, etc." />
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Tipo financeiro</span>
+            <input
+              value={form.type === "despesa" ? "Despesa" : "Receita"}
+              readOnly
+              className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
+            />
           </label>
           <label className="text-sm text-slate-300">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Valor</span>
@@ -565,11 +635,11 @@ export function FinanceReportClient() {
           </label>
           <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-2">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Descrição</span>
-            <input value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Ex: Oferta do domingo ou compra de material" />
+            <input value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder={form.category === "Despesa" ? "Ex: Conta de energia, aluguel, manutenção" : "Ex: Oferta do domingo, dízimo, doação"} />
           </label>
           <label className="text-sm text-slate-300">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Referência</span>
-            <input value={form.reference} onChange={(event) => setForm((prev) => ({ ...prev, reference: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Ex: pedido 101" />
+            <input value={form.reference} onChange={(event) => setForm((prev) => ({ ...prev, reference: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder={`Automática: ${buildReferenceNumber(form.occurredAt)}`} />
           </label>
           <label className="text-sm text-slate-300">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Comprovante / imagem</span>
@@ -580,6 +650,14 @@ export function FinanceReportClient() {
           <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-2">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Origem / observações</span>
             <input value={form.origin} onChange={(event) => setForm((prev) => ({ ...prev, origin: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Ex: Tesouraria, culto, viagem" />
+          </label>
+          <label className="text-sm text-slate-300">
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Autorizado por</span>
+            <input value={form.authorizedBy} onChange={(event) => setForm((prev) => ({ ...prev, authorizedBy: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Nome do pastor ou responsável" />
+          </label>
+          <label className="text-sm text-slate-300">
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Senha do pastor</span>
+            <input type="password" value={form.pastorPassword} onChange={(event) => setForm((prev) => ({ ...prev, pastorPassword: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder="Obrigatória para autorizar" />
           </label>
           <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-4">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Observações</span>
@@ -612,7 +690,7 @@ export function FinanceReportClient() {
           </button>
           <button type="button" onClick={() => {
             setEditingId(null);
-            setForm({ occurredAt: new Date().toISOString().slice(0, 10), type: "receita", category: "Oferta", description: "", amount: "", origin: "", congregationId: form.congregationId || congregations[0]?.id || "", reference: "", documentReference: "", observations: "", attachmentUrl: "", attachmentName: "" });
+            setForm({ occurredAt: new Date().toISOString().slice(0, 10), type: "receita", category: "Dízimo", description: "", amount: "", origin: "", congregationId: form.congregationId || congregations[0]?.id || "", reference: "", documentReference: "", observations: "", authorizedBy: "", pastorPassword: "", attachmentUrl: "", attachmentName: "" });
           }} className="rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-200 hover:bg-white/10">
             Limpar
           </button>
@@ -640,9 +718,9 @@ export function FinanceReportClient() {
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-emerald-100">
                   <Sparkles className="h-3.5 w-3.5" />
-                  Gestão financeira premium
+                  Gestão financeira
                 </div>
-                <h3 className="mt-3 text-xl font-semibold text-slate-50">Visão executiva do tesouraria e do fluxo de caixa</h3>
+                <h3 className="mt-3 text-xl font-semibold text-slate-50">Visão executiva da tesouraria e do fluxo de caixa</h3>
                 <p className="mt-2 max-w-2xl text-sm text-slate-400">Indicadores estratégicos, metas operacionais e ações rápidas para decisões mais seguras.</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300">
@@ -785,7 +863,7 @@ export function FinanceReportClient() {
                 <div className="mt-3 space-y-2 text-sm text-slate-300">
                   <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2">
                     <Banknote className="h-4 w-4 text-amber-200" />
-                    Acompanhamento premium para entradas e saídas.
+                    Acompanhamento de entradas e saídas.
                   </div>
                   <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2">
                     <Sparkles className="h-4 w-4 text-emerald-200" />
@@ -827,30 +905,19 @@ export function FinanceReportClient() {
             </article>
           </section>
 
-          <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <section className="rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Histórico de fechamento e planilhas</h3>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-400">Últimos registros</span>
+              <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[11px] text-slate-400">Últimos registros</span>
             </div>
-            <div className="mt-4 space-y-3">
-              {cashHistory.length > 0 ? cashHistory.map((entry) => (
-                <div key={entry.id} className="rounded-2xl border border-white/10 bg-slate-950/50 p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-100">{entry.kind === "fechamento" ? "Fechamento de caixa" : "Planilha aberta"}</p>
-                      <p className="text-xs text-slate-400">{new Date(entry.occurredAt).toLocaleString("pt-BR")}</p>
-                    </div>
-                    <span className={`rounded-full px-2.5 py-1 text-[11px] uppercase tracking-[0.2em] ${entry.kind === "fechamento" ? "border border-emerald-300/30 bg-emerald-500/10 text-emerald-100" : "border border-cyan-300/30 bg-cyan-500/10 text-cyan-100"}`}>
-                      {entry.kind === "fechamento" ? "Fechado" : "Planilha"}
-                    </span>
+            <div className="mt-3 space-y-2">
+              {cashHistory.length > 0 ? cashHistory.slice(0, 5).map((entry) => (
+                <div key={entry.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2 text-xs text-slate-300">
+                  <div>
+                    <p className="font-semibold text-slate-100">{entry.kind === "fechamento" ? "Fechamento" : "Planilha"} • {new Date(entry.occurredAt).toLocaleString("pt-BR")}</p>
+                    <p className="text-slate-400">Saldo final: {currency(entry.closingBalance)} • {entry.movements} movimentos</p>
                   </div>
-                  <div className="mt-3 grid gap-2 text-sm text-slate-300 sm:grid-cols-3">
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-2">Saldo inicial: R$ {entry.openingBalance.toLocaleString("pt-BR")}</div>
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-2">Saldo final: R$ {entry.closingBalance.toLocaleString("pt-BR")}</div>
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-2">{entry.movements} movimentos</div>
-                  </div>
-                  <p className="mt-2 text-sm text-slate-400">{entry.notes}</p>
-                  {entry.workbookName ? <p className="mt-2 text-xs text-cyan-200">Arquivo: {entry.workbookName}</p> : null}
+                  {entry.workbookName ? <span className="text-cyan-200">{entry.workbookName}</span> : null}
                 </div>
               )) : <p className="text-sm text-slate-400">Ainda não há histórico de fechamento ou abertura de planilhas.</p>}
             </div>
@@ -863,23 +930,29 @@ export function FinanceReportClient() {
                 <thead>
                   <tr className="text-left text-slate-400">
                     <th className="pb-3 pr-4">Data</th>
+                    <th className="pb-3 pr-4">Referência</th>
                     <th className="pb-3 pr-4">Congregação</th>
+                    <th className="pb-3 pr-4">Documento</th>
                     <th className="pb-3 pr-4">Tipo</th>
-                    <th className="pb-3 pr-4">Categoria</th>
                     <th className="pb-3 pr-4">Descrição</th>
                     <th className="pb-3 pr-4">Valor</th>
+                    <th className="pb-3 pr-4">Lançado por</th>
+                    <th className="pb-3 pr-4">Autorizado por</th>
                     <th className="pb-3 pr-4">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {movements.length > 0 ? movements.map((row) => (
                     <tr key={row.id} className="border-t border-white/10 text-slate-300">
-                      <td className="py-3 pr-4">{new Date(row.occurredAt).toLocaleDateString("pt-BR")}</td>
+                      <td className="py-3 pr-4">{new Date(row.occurredAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td>
+                      <td className="py-3 pr-4">{row.reference ?? row.documentReference ?? "—"}</td>
                       <td className="py-3 pr-4">{row.congregationName}</td>
-                      <td className="py-3 pr-4">{row.type}</td>
                       <td className="py-3 pr-4">{row.category}</td>
+                      <td className="py-3 pr-4">{row.type}</td>
                       <td className="py-3 pr-4">{row.description ?? "—"}</td>
                       <td className="py-3 pr-4 font-medium text-slate-100">R$ {Number(row.amount).toLocaleString("pt-BR")}</td>
+                      <td className="py-3 pr-4">{row.createdBy ?? "—"}</td>
+                      <td className="py-3 pr-4">{extractAuthorizedBy(row.observations) || "—"}</td>
                       <td className="py-3 pr-4">
                         <div className="flex gap-2">
                           <button type="button" onClick={() => handleEdit(row)} className="rounded-lg border border-white/15 px-2 py-1 text-xs text-slate-200 hover:bg-white/10">Editar</button>
@@ -889,12 +962,15 @@ export function FinanceReportClient() {
                     </tr>
                   )) : report.detailRows.map((row) => (
                     <tr key={row.id} className="border-t border-white/10 text-slate-300">
-                      <td className="py-3 pr-4">{new Date(row.occurredAt).toLocaleDateString("pt-BR")}</td>
+                      <td className="py-3 pr-4">{new Date(row.occurredAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td>
+                      <td className="py-3 pr-4">{row.reference ?? row.documentReference ?? "—"}</td>
                       <td className="py-3 pr-4">{row.congregationName}</td>
-                      <td className="py-3 pr-4">{row.type}</td>
                       <td className="py-3 pr-4">{row.category}</td>
+                      <td className="py-3 pr-4">{row.type}</td>
                       <td className="py-3 pr-4">{row.description ?? "—"}</td>
                       <td className="py-3 pr-4 font-medium text-slate-100">R$ {Number(row.amount).toLocaleString("pt-BR")}</td>
+                      <td className="py-3 pr-4">{row.createdBy ?? "—"}</td>
+                      <td className="py-3 pr-4">{row.authorizedBy ?? "—"}</td>
                       <td className="py-3 pr-4">—</td>
                     </tr>
                   ))}

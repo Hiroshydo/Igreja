@@ -4,6 +4,23 @@ import { hasServerEnv } from "@/lib/env";
 import type { AccessContext } from "@/types";
 import ExcelJS from "exceljs";
 
+function formatBrasiliaDateTime(value?: string | null) {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    dateStyle: "short",
+    timeStyle: "medium",
+  }).format(parsed);
+}
+
+function extractAuthorizedBy(observations?: string | null) {
+  if (!observations) return "";
+  const match = observations.match(/Autorizado por:\s*([^|\n]+)/i);
+  return match?.[1]?.trim() ?? "";
+}
+
 export interface FinanceReportFilters {
   period?: string;
   startDate?: string;
@@ -66,6 +83,7 @@ export interface FinanceReportPayload {
     reference?: string | null;
     documentReference?: string | null;
     createdBy?: string | null;
+    authorizedBy?: string | null;
     createdAt?: string;
     updatedAt?: string;
   }>;
@@ -153,6 +171,27 @@ export const financeReportsService = {
 
     const rows = (data ?? []) as Array<any>;
 
+    const createdByIds = Array.from(
+      new Set(
+        rows
+          .map((row) => row.created_by as string | null)
+          .filter((value): value is string => Boolean(value))
+      )
+    );
+
+    const createdByMap = new Map<string, string>();
+    if (createdByIds.length > 0) {
+      const { data: profiles } = await admin
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", createdByIds);
+
+      for (const profile of profiles ?? []) {
+        const typedProfile = profile as { id: string; full_name: string | null; email: string | null };
+        createdByMap.set(typedProfile.id, typedProfile.full_name ?? typedProfile.email ?? typedProfile.id);
+      }
+    }
+
     const detailRows = rows.map((row) => ({
       id: row.id,
       occurredAt: row.occurred_at,
@@ -167,7 +206,8 @@ export const financeReportsService = {
       origin: row.origin,
       reference: row.reference,
       documentReference: row.document_reference,
-      createdBy: row.created_by,
+      createdBy: createdByMap.get(row.created_by) ?? row.created_by,
+      authorizedBy: extractAuthorizedBy(row.observations),
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }));
@@ -338,6 +378,9 @@ export const financeReportsService = {
 
   async exportWorkbook(filters: FinanceReportFilters, context: AccessContext): Promise<Buffer> {
     const report = await this.getFinanceReport(filters, context);
+    const uniqueCongregations = Array.from(new Set(report.detailRows.map((row) => row.congregationName)));
+    const churchHeader = uniqueCongregations.length === 1 ? uniqueCongregations[0] : "Consolidação de Congregações";
+    const generatedAt = formatBrasiliaDateTime(new Date().toISOString());
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "Ecclesia One";
@@ -352,7 +395,8 @@ export const financeReportsService = {
     ];
 
     summarySheet.addRow(["Relatório financeiro", "Ecclesia One"]);
-    summarySheet.addRow(["Gerado em", new Date().toLocaleString("pt-BR")]);
+    summarySheet.addRow(["Igreja", churchHeader]);
+    summarySheet.addRow(["Gerado em (Brasília)", generatedAt]);
     summarySheet.addRow(["Período", filters.period ?? "Personalizado"]);
     summarySheet.addRow([]);
     summarySheet.addRow(["Total de receitas", report.summary.totalIncome]);
@@ -369,8 +413,8 @@ export const financeReportsService = {
       fgColor: { argb: "FF0F172A" },
     };
 
-    summarySheet.getRow(5).font = { bold: true };
-    for (let rowIndex = 5; rowIndex <= 10; rowIndex += 1) {
+    summarySheet.getRow(6).font = { bold: true };
+    for (const rowIndex of [6, 7, 8, 10, 11]) {
       summarySheet.getCell(`B${rowIndex}`).numFmt = '"R$" #,##0.00';
     }
 
@@ -387,18 +431,21 @@ export const financeReportsService = {
 
     const detailsSheet = workbook.addWorksheet("Lançamentos");
     detailsSheet.columns = [
-      { header: "Data", key: "date", width: 14 },
+      { header: "Data e hora (Brasília)", key: "dateTime", width: 24 },
       { header: "Congregação", key: "congregation", width: 28 },
       { header: "Evento", key: "event", width: 28 },
+      { header: "Tipo de documento", key: "documentType", width: 20 },
       { header: "Tipo", key: "type", width: 14 },
       { header: "Categoria", key: "category", width: 20 },
       { header: "Descrição", key: "description", width: 34 },
       { header: "Entrada", key: "income", width: 16 },
       { header: "Saída", key: "expense", width: 16 },
       { header: "Saldo", key: "balance", width: 16 },
+      { header: "Nº referência", key: "referenceNumber", width: 20 },
       { header: "Origem", key: "origin", width: 22 },
-      { header: "Referência", key: "reference", width: 22 },
-      { header: "Responsável", key: "createdBy", width: 24 },
+      { header: "Referência", key: "reference", width: 26 },
+      { header: "Lançado por", key: "createdBy", width: 24 },
+      { header: "Autorizado por", key: "authorizedBy", width: 24 },
     ];
 
     for (const row of report.detailRows) {
@@ -407,18 +454,21 @@ export const financeReportsService = {
       const expense = row.type === "despesa" ? amount : 0;
 
       detailsSheet.addRow({
-        date: row.occurredAt ? new Date(row.occurredAt) : null,
+        dateTime: formatBrasiliaDateTime(row.occurredAt),
         congregation: row.congregationName ?? "",
         event: row.eventName ?? "",
+        documentType: row.category ?? "",
         type: row.type,
         category: row.category ?? "",
-        description: row.description ?? "",
+        description: row.type === "despesa" ? (row.description ?? "Despesa sem detalhamento") : (row.description ?? ""),
         income,
         expense,
         balance: income - expense,
+        referenceNumber: row.documentReference ?? row.reference ?? "",
         origin: row.origin ?? "",
         reference: row.reference ?? "",
         createdBy: row.createdBy ?? "",
+        authorizedBy: row.authorizedBy ?? "",
       });
     }
 
@@ -452,10 +502,9 @@ export const financeReportsService = {
     });
 
     for (let index = 2; index <= detailsSheet.rowCount; index += 1) {
-      detailsSheet.getCell(`A${index}`).numFmt = "dd/mm/yyyy";
-      detailsSheet.getCell(`G${index}`).numFmt = '"R$" #,##0.00';
       detailsSheet.getCell(`H${index}`).numFmt = '"R$" #,##0.00';
       detailsSheet.getCell(`I${index}`).numFmt = '"R$" #,##0.00';
+      detailsSheet.getCell(`J${index}`).numFmt = '"R$" #,##0.00';
     }
 
     const workbookBuffer = await workbook.xlsx.writeBuffer();
