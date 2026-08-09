@@ -191,6 +191,34 @@ const dashboardStatPalette = [
   },
 ];
 
+interface DashboardSnapshot {
+  totalMembers: number;
+  activeMembers: number;
+  musicians: number;
+  congregations: number;
+  headquarters: number;
+  subheadquarters: number;
+  localCongregations: number;
+  financeIncome: number;
+  financeExpenses: number;
+  financeBalance: number;
+  membersByCongregation: Array<{
+    congregationId: string;
+    congregationName: string;
+    members: number;
+    musicians: number;
+    kind: "sede" | "subsede" | "congregacao";
+  }>;
+  modules: {
+    gallery: number;
+    education: number;
+    pastoralCare: number;
+    worshipMedia: number;
+    discipleship: number;
+    financeMovements: number;
+  };
+}
+
 const galleryItems = [
   {
     id: 1,
@@ -518,6 +546,8 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [editingMemberId, setEditingMemberId] = useState<string | number | null>(null);
   const [isSavingMember, setIsSavingMember] = useState(false);
   const [isDeletingMemberId, setIsDeletingMemberId] = useState<string | number | null>(null);
+  const [dashboardSnapshot, setDashboardSnapshot] = useState<DashboardSnapshot | null>(null);
+  const [isSeedingDemo, setIsSeedingDemo] = useState(false);
 
   const filteredGallery = useMemo(() => {
     if (galleryFilter === "Todos") return galleryItemsState;
@@ -550,6 +580,44 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
     () => getGreetingName(access, roleWelcome.roleCode),
     [access, roleWelcome.roleCode]
   );
+
+  const dashboardStatsCards = useMemo(() => {
+    if (!dashboardSnapshot) return stats;
+
+    return [
+      { label: "Membros ativos", value: String(dashboardSnapshot.activeMembers), trend: `${dashboardSnapshot.totalMembers} total` },
+      { label: "Músicos cadastrados", value: String(dashboardSnapshot.musicians), trend: `${dashboardSnapshot.congregations} congregações` },
+      { label: "Sedes e subsedes", value: String(dashboardSnapshot.headquarters + dashboardSnapshot.subheadquarters), trend: `${dashboardSnapshot.localCongregations} congregações` },
+      {
+        label: "Saldo financeiro",
+        value: `R$ ${dashboardSnapshot.financeBalance.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`,
+        trend: `${dashboardSnapshot.modules.financeMovements} lançamentos`,
+      },
+    ];
+  }, [dashboardSnapshot]);
+
+  const membersByCongregationChart = useMemo(() => {
+    if (!dashboardSnapshot?.membersByCongregation?.length) {
+      return [] as Array<{ month: string; membros: number; musicos: number }>;
+    }
+
+    return dashboardSnapshot.membersByCongregation.map((item) => ({
+      month: item.congregationName.replace("Assembleia de Deus - ", ""),
+      membros: item.members,
+      musicos: item.musicians,
+    }));
+  }, [dashboardSnapshot]);
+
+  const congregationTypeChart = useMemo(() => {
+    if (!dashboardSnapshot) return attendanceData;
+
+    return [
+      { name: "Sede", value: dashboardSnapshot.headquarters, color: "#fbbf24" },
+      { name: "Subsede", value: dashboardSnapshot.subheadquarters, color: "#38bdf8" },
+      { name: "Congregação", value: dashboardSnapshot.localCongregations, color: "#34d399" },
+      { name: "Músicos", value: dashboardSnapshot.musicians, color: "#a78bfa" },
+    ].filter((item) => item.value > 0);
+  }, [dashboardSnapshot]);
 
   useEffect(() => {
     let mounted = true;
@@ -595,12 +663,78 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
       }
     }
 
+    async function loadDashboardSnapshot() {
+      const response = await fetch("/api/dashboard/stats");
+      if (!mounted || !response.ok) {
+        return;
+      }
+
+      const payload = await response.json().catch(() => null);
+      if (payload?.success && payload?.data) {
+        setDashboardSnapshot(payload.data as DashboardSnapshot);
+
+        setCongregationsList((current) =>
+          current.map((item) => {
+            const snapshot = (payload.data as DashboardSnapshot).membersByCongregation.find(
+              (entry) => entry.congregationId === item.id
+            );
+            return {
+              ...item,
+              members: snapshot?.members ?? item.members,
+            };
+          })
+        );
+      }
+    }
+
     void loadMembers();
     void loadCongregations();
+    void loadDashboardSnapshot();
     return () => {
       mounted = false;
     };
-  }, [access.permissions, access.roleCodes]);
+  }, [access.permissions, access.roleCodes, access.congregationId]);
+
+  const runDemoSeed = async () => {
+    setIsSeedingDemo(true);
+    setMembersError(null);
+
+    try {
+      const response = await fetch("/api/setup/seed-demo", { method: "POST" });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.success) {
+        setMembersError(payload?.error ?? "Não foi possível aplicar a carga de demonstração.");
+        return;
+      }
+
+      setMembersError("Carga de demonstração aplicada. Atualizando painel...");
+      const membersResult = await memberService.getAll();
+      if (membersResult.success && membersResult.data) {
+        setMembersData(membersResult.data);
+      }
+
+      const congregationsResult = await congregationService.getAll();
+      if (congregationsResult.success && congregationsResult.data) {
+        setCongregationsList(congregationsResult.data.map((item) => ({
+          id: item.id,
+          name: item.name,
+          city: item.city,
+          leader: item.name.includes("Sede") ? "Pr. Daniel Silva" : "Líder da congregação",
+          members: 0,
+          attendance: 0,
+          status: "Ativa",
+        })));
+      }
+
+      const statsResponse = await fetch("/api/dashboard/stats");
+      const statsPayload = await statsResponse.json().catch(() => null);
+      if (statsResponse.ok && statsPayload?.success && statsPayload?.data) {
+        setDashboardSnapshot(statsPayload.data as DashboardSnapshot);
+      }
+    } finally {
+      setIsSeedingDemo(false);
+    }
+  };
 
   const startMemberCreate = () => {
     setEditingMemberId(null);
@@ -1240,7 +1374,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
           </motion.section>
 
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {stats.map((item, index) => (
+            {dashboardStatsCards.map((item, index) => (
               <motion.div
                 key={item.label}
                 initial={{ opacity: 0, y: 20 }}
@@ -1280,14 +1414,14 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                       <p className="text-xs uppercase tracking-[0.2em] text-emerald-200">Membros ativos</p>
                       <Users className="h-4 w-4 text-emerald-100" />
                     </div>
-                    <p className="mt-1 text-xl font-semibold text-white">{membersData.filter((item) => item.status === "ativo").length}</p>
+                    <p className="mt-1 text-xl font-semibold text-white">{dashboardSnapshot?.activeMembers ?? membersData.filter((item) => item.status === "ativo").length}</p>
                   </div>
                   <div className="rounded-2xl border border-amber-300/20 bg-amber-500/10 p-3">
                     <div className="flex items-center justify-between gap-2">
                       <span className="min-w-0 text-[11px] uppercase tracking-[0.12em] leading-tight text-amber-200 break-words">Congregações</span>
                       <Church className="h-4 w-4 text-amber-100" />
                     </div>
-                    <p className="mt-1 text-xl font-semibold text-white">{congregationsList.length}</p>
+                    <p className="mt-1 text-xl font-semibold text-white">{dashboardSnapshot?.congregations ?? congregationsList.length}</p>
                   </div>
                 </div>
               </CardContent>
@@ -1337,12 +1471,13 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
               </CardHeader>
               <CardContent className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={growthData}>
+                  <LineChart data={membersByCongregationChart.length > 0 ? membersByCongregationChart : growthData}>
                     <CartesianGrid stroke="rgba(148,163,184,0.2)" />
                     <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
                     <YAxis stroke="#94a3b8" fontSize={12} />
                     <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(148,163,184,0.2)", borderRadius: "12px" }} />
                     <Line type="monotone" dataKey="membros" stroke="#fbbf24" strokeWidth={3} dot={{ r: 2, fill: "#fbbf24" }} />
+                    {membersByCongregationChart.length > 0 ? <Line type="monotone" dataKey="musicos" stroke="#38bdf8" strokeWidth={2} dot={{ r: 2, fill: "#38bdf8" }} /> : null}
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -1356,8 +1491,8 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
               <CardContent className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={attendanceData} dataKey="value" nameKey="name" innerRadius={52} outerRadius={82}>
-                      {attendanceData.map((entry) => (
+                    <Pie data={congregationTypeChart} dataKey="value" nameKey="name" innerRadius={52} outerRadius={82}>
+                      {congregationTypeChart.map((entry) => (
                         <Cell key={entry.name} fill={entry.color} />
                       ))}
                     </Pie>
@@ -1425,9 +1560,19 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                   <CardTitle>Painel DEV</CardTitle>
                   <CardDescription>Área exclusiva para operação avançada, auditoria e gestão central do sistema.</CardDescription>
                 </div>
-                <Link href="/configuracoes/permissoes" className="rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-500/20">
-                  Gerenciar permissões
-                </Link>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void runDemoSeed()}
+                    disabled={isSeedingDemo}
+                    className="rounded-xl border border-cyan-300/40 bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/20 disabled:opacity-60"
+                  >
+                    {isSeedingDemo ? "Aplicando carga..." : "Aplicar carga completa de demonstração"}
+                  </button>
+                  <Link href="/configuracoes/permissoes" className="rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-500/20">
+                    Gerenciar permissões
+                  </Link>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
