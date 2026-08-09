@@ -161,6 +161,10 @@ const galleryItems = [
     category: "Batismo",
     image:
       "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=900&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80",
+    ],
   },
   {
     id: 2,
@@ -168,6 +172,10 @@ const galleryItems = [
     category: "Reunioes",
     image:
       "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=80",
+    ],
   },
   {
     id: 3,
@@ -175,6 +183,10 @@ const galleryItems = [
     category: "Louvor",
     image:
       "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=80",
+    ],
   },
   {
     id: 4,
@@ -182,6 +194,10 @@ const galleryItems = [
     category: "Ensino",
     image:
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=900&q=80",
+    ],
   },
 ];
 
@@ -440,6 +456,8 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [isSavingCongregation, setIsSavingCongregation] = useState(false);
   const [congregationMessage, setCongregationMessage] = useState<string | null>(null);
   const [galleryItemsState, setGalleryItemsState] = useState(galleryItems);
+  const [selectedAlbumId, setSelectedAlbumId] = useState<number | null>(null);
+  const [albumImageUrl, setAlbumImageUrl] = useState("");
   const [worshipChecklistItems, setWorshipChecklistItems] = useState<WorshipChecklistItem[]>(worshipChecklist);
   const [newWorshipItem, setNewWorshipItem] = useState("");
   const [newWorshipOwner, setNewWorshipOwner] = useState("");
@@ -468,6 +486,11 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
     if (galleryFilter === "Todos") return galleryItemsState;
     return galleryItemsState.filter((item) => item.category === galleryFilter);
   }, [galleryFilter, galleryItemsState]);
+
+  const selectedAlbum = useMemo(
+    () => galleryItemsState.find((item) => item.id === selectedAlbumId) ?? null,
+    [galleryItemsState, selectedAlbumId]
+  );
 
   const visibleNavItems = useMemo(
     () =>
@@ -738,11 +761,12 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
         title,
         category: category || "Outros",
         image: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80",
+        images: ["https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80"],
       },
     ]);
   };
 
-  const handleGalleryEdit = (item: { id: number; title: string; category: string; image: string }) => {
+  const handleGalleryEdit = (item: { id: number; title: string; category: string; image: string; images?: string[] }) => {
     const nextTitle = window.prompt("Editar título do álbum", item.title);
     if (!nextTitle) {
       return;
@@ -762,6 +786,22 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
     }
 
     setGalleryItemsState((prev) => prev.filter((item) => item.id !== id));
+    if (selectedAlbumId === id) {
+      setSelectedAlbumId(null);
+    }
+  };
+
+  const handleOpenAlbum = (id: number) => {
+    setSelectedAlbumId((current) => (current === id ? null : id));
+  };
+
+  const handleAddImageToAlbum = () => {
+    if (!selectedAlbum || !albumImageUrl.trim()) {
+      return;
+    }
+
+    setGalleryItemsState((prev) => prev.map((item) => (item.id === selectedAlbum.id ? { ...item, image: albumImageUrl.trim(), images: [...(item.images ?? [item.image]), albumImageUrl.trim()] } : item)));
+    setAlbumImageUrl("");
   };
 
   const handleWorshipAdd = () => {
@@ -1194,11 +1234,11 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                     <p className="mt-1 text-xl font-semibold text-white">{membersData.filter((item) => item.status === "ativo").length}</p>
                   </div>
                   <div className="rounded-2xl border border-amber-300/20 bg-amber-500/10 p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs uppercase tracking-[0.2em] text-amber-200">Congregações</div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs uppercase tracking-[0.2em] text-amber-200">Congregações</span>
                       <Church className="h-4 w-4 text-amber-100" />
                     </div>
-                    <div className="mt-1 text-xl font-semibold text-white">{congregationsList.length}</div>
+                    <p className="mt-1 text-xl font-semibold text-white">{congregationsList.length}</p>
                   </div>
                 </div>
               </CardContent>
@@ -1699,6 +1739,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                       title: newGalleryTitle.trim(),
                       category: newGalleryCategory.trim() || "Outros",
                       image: newGalleryImage.trim() || "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80",
+                      images: [newGalleryImage.trim() || "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80"],
                     },
                   ]);
                   setNewGalleryTitle("");
@@ -1715,6 +1756,48 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                 + Novo álbum
               </button>
             </div>
+            {selectedAlbum ? (
+              <div className="mb-4 rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-emerald-200">Álbum aberto</p>
+                    <h3 className="mt-1 text-lg font-semibold text-white">{selectedAlbum.title}</h3>
+                    <p className="text-sm text-slate-300">{selectedAlbum.category}</p>
+                  </div>
+                  <button type="button" onClick={() => setSelectedAlbumId(null)} className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100">
+                    Fechar álbum
+                  </button>
+                </div>
+                <div className="mt-4 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+                  <Image src={selectedAlbum.image} alt={selectedAlbum.title} width={900} height={560} className="h-64 w-full rounded-2xl object-cover" />
+                  <div className="space-y-3">
+                    <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-3 text-sm text-slate-300">
+                      <p className="font-semibold text-slate-100">Visão interna do álbum</p>
+                      <p className="mt-1">Este álbum reúne os registros mais relevantes do ministério para a igreja acompanhar o histórico visual da temporada.</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                      <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-400">Adicionar imagem ao álbum</label>
+                      <input
+                        value={albumImageUrl}
+                        onChange={(event) => setAlbumImageUrl(event.target.value)}
+                        className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
+                        placeholder="Cole uma URL da imagem"
+                      />
+                      <button type="button" onClick={handleAddImageToAlbum} className="mt-3 rounded-xl bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-950">
+                        + Adicionar imagem
+                      </button>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {(selectedAlbum.images ?? [selectedAlbum.image]).map((item, index) => (
+                        <div key={`${selectedAlbum.id}-${index}`} className="overflow-hidden rounded-2xl border border-white/10">
+                          <Image src={item} alt={`${selectedAlbum.title} ${index + 1}`} width={600} height={400} className="h-24 w-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
             <div className="grid gap-3 sm:grid-cols-2">
               {filteredGallery.map((item) => (
                 <article key={item.id} className="overflow-hidden rounded-xl border border-white/12 bg-white/5">
@@ -1735,10 +1818,10 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                     </div>
                     <p className="text-xs text-slate-400">{item.category}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <button type="button" className="rounded-lg border border-emerald-300/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-100">
-                        Abrir álbum
+                      <button type="button" onClick={() => handleOpenAlbum(item.id)} className="rounded-lg border border-emerald-300/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-100">
+                        {selectedAlbumId === item.id ? "Fechar álbum" : "Abrir álbum"}
                       </button>
-                      <button type="button" className="rounded-lg border border-sky-300/30 bg-sky-500/10 px-2.5 py-1.5 text-xs font-semibold text-sky-100">
+                      <button type="button" onClick={() => handleOpenAlbum(item.id)} className="rounded-lg border border-sky-300/30 bg-sky-500/10 px-2.5 py-1.5 text-xs font-semibold text-sky-100">
                         + Adicionar imagem
                       </button>
                     </div>
