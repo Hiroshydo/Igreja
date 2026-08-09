@@ -1187,11 +1187,17 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <div className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-3">
-                    <p className="text-xs uppercase tracking-[0.2em] text-emerald-200">Membros ativos</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs uppercase tracking-[0.2em] text-emerald-200">Membros ativos</p>
+                      <Users className="h-4 w-4 text-emerald-100" />
+                    </div>
                     <p className="mt-1 text-xl font-semibold text-white">{membersData.filter((item) => item.status === "ativo").length}</p>
                   </div>
                   <div className="rounded-2xl border border-amber-300/20 bg-amber-500/10 p-3">
-                    <div className="text-xs uppercase tracking-[0.2em] text-amber-200">Congregações</div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs uppercase tracking-[0.2em] text-amber-200">Congregações</div>
+                      <Church className="h-4 w-4 text-amber-100" />
+                    </div>
                     <div className="mt-1 text-xl font-semibold text-white">{congregationsList.length}</div>
                   </div>
                 </div>

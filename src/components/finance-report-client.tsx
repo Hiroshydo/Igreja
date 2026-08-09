@@ -1,6 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Banknote,
+  BarChart3,
+  Calculator,
+  FileSpreadsheet,
+  History,
+  ReceiptText,
+  ShieldCheck,
+  Sparkles,
+  Wallet,
+} from "lucide-react";
 
 interface FinanceMovementItem {
   id: string;
@@ -118,6 +131,9 @@ export function FinanceReportClient() {
     attachmentUrl: "",
     attachmentName: "",
   });
+
+  const currency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
   async function loadReport() {
     setLoading(true);
@@ -351,6 +367,49 @@ export function FinanceReportClient() {
     const openingValue = Number(String(openingBalance).replace(/[^0-9,.-]/g, "")) || 0;
     return openingValue + financeSummary.balance;
   }, [financeSummary.balance, openingBalance]);
+
+  const financeHighlights = useMemo(() => {
+    const expenses = report?.summary.totalExpenses ?? financeSummary.expenses;
+    const income = report?.summary.totalIncome ?? financeSummary.income;
+    const balance = report?.summary.balance ?? financeSummary.balance;
+    const topCategory = report?.categoryReport?.reduce((current, item) => (item.total > current.total ? item : current), report.categoryReport[0] ?? { category: "—", total: 0, count: 0, percentage: 0 });
+    const efficiency = income > 0 ? Math.round((balance / income) * 100) : 0;
+    const goalProgress = Math.min(100, Math.round((Math.max(0, balance) / 50000) * 100));
+
+    return {
+      expenses,
+      income,
+      balance,
+      topCategory: topCategory?.category ?? "—",
+      topCategoryValue: topCategory?.total ?? 0,
+      efficiency: Math.max(0, Math.min(100, efficiency)),
+      goalProgress,
+    };
+  }, [financeSummary.balance, financeSummary.expenses, financeSummary.income, report]);
+
+  const weekFlow = useMemo(() => {
+    const sourceRows = movements.length > 0 ? movements : report?.detailRows ?? [];
+    const lastDays = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - index));
+      return date.toISOString().slice(0, 10);
+    });
+
+    return lastDays.map((day) => {
+      const total = sourceRows.reduce((sum, row) => {
+        const rowDay = row.occurredAt?.slice(0, 10);
+        if (rowDay !== day) {
+          return sum;
+        }
+        return sum + Number(row.amount ?? 0) * (row.type === "despesa" ? -1 : 1);
+      }, 0);
+
+      return {
+        day: day.slice(5),
+        total: Math.max(0, total),
+      };
+    });
+  }, [movements, report]);
 
   function buildWorkbookCsv() {
     const rows = movements.length > 0 ? movements : report?.detailRows ?? [];
@@ -603,33 +662,128 @@ export function FinanceReportClient() {
 
       {report ? (
         <>
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <article className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-emerald-200">Receitas</div>
-              <div className="mt-2 text-2xl font-semibold text-white">R$ {report.summary.totalIncome.toLocaleString("pt-BR")}</div>
-            </article>
-            <article className="rounded-2xl border border-rose-300/20 bg-rose-500/10 p-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-rose-200">Despesas</div>
-              <div className="mt-2 text-2xl font-semibold text-white">R$ {report.summary.totalExpenses.toLocaleString("pt-BR")}</div>
-            </article>
-            <article className="rounded-2xl border border-amber-300/20 bg-amber-500/10 p-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-amber-200">Movimentações</div>
-              <div className="mt-2 text-2xl font-semibold text-white">{report.summary.movementCount}</div>
-            </article>
-            <article className="rounded-2xl border border-cyan-300/20 bg-cyan-500/10 p-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-cyan-200">Saldo</div>
-              <div className="mt-2 text-2xl font-semibold text-white">R$ {report.summary.balance.toLocaleString("pt-BR")}</div>
-            </article>
+          <section className="rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,41,59,0.92))] p-5 shadow-[0_20px_60px_-25px_rgba(16,185,129,0.35)]">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-emerald-100">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Gestão financeira premium
+                </div>
+                <h3 className="mt-3 text-xl font-semibold text-slate-50">Visão executiva do tesouraria e do fluxo de caixa</h3>
+                <p className="mt-2 max-w-2xl text-sm text-slate-400">Indicadores estratégicos, metas operacionais e ações rápidas para decisões mais seguras.</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300">
+                <span className="text-slate-500">Saldo projetado:</span> <span className="ml-2 font-semibold text-white">{currency(projectedClosing)}</span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+              <div className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-2">
+                  {[
+                    { label: "Receitas", value: currency(financeHighlights.income), icon: ArrowUpRight, tone: "emerald" },
+                    { label: "Despesas", value: currency(financeHighlights.expenses), icon: ArrowDownLeft, tone: "rose" },
+                    { label: "Saldo líquido", value: currency(financeHighlights.balance), icon: Wallet, tone: "amber" },
+                    { label: "Movimentações", value: `${report.summary.movementCount}`, icon: ReceiptText, tone: "cyan" },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    const toneClasses = item.tone === "emerald" ? "border-emerald-300/20 bg-emerald-500/10 text-emerald-100" : item.tone === "rose" ? "border-rose-300/20 bg-rose-500/10 text-rose-100" : item.tone === "amber" ? "border-amber-300/20 bg-amber-500/10 text-amber-100" : "border-cyan-300/20 bg-cyan-500/10 text-cyan-100";
+
+                    return (
+                      <article key={item.label} className={`rounded-2xl border p-4 ${toneClasses}`}>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[11px] uppercase tracking-[0.2em] opacity-80">{item.label}</p>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <p className="mt-3 text-xl font-semibold text-white">{item.value}</p>
+                      </article>
+                    );
+                  })}
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-100">Resumo estratégico</p>
+                      <p className="text-sm text-slate-400">Foco operacional e saúde do fluxo do mês.</p>
+                    </div>
+                    <div className="rounded-full border border-amber-300/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-100">
+                      {financeHighlights.efficiency}% de eficiência
+                    </div>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Maior categoria</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-100">{financeHighlights.topCategory}</p>
+                      <p className="mt-1 text-xs text-slate-400">{currency(financeHighlights.topCategoryValue)}</p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Meta de fechamento</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-100">R$ 50.000</p>
+                      <p className="mt-1 text-xs text-slate-400">{financeHighlights.goalProgress}% da meta</p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Média por movimento</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-100">{currency(financeSummary.average)}</p>
+                      <p className="mt-1 text-xs text-slate-400">Indicador diário</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-amber-300 to-cyan-400" style={{ width: `${financeHighlights.goalProgress}%` }} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+                    <BarChart3 className="h-4 w-4" />
+                    Fluxo da semana
+                  </div>
+                  <div className="mt-4 flex h-36 items-end gap-2">
+                    {weekFlow.map((item) => (
+                      <div key={item.day} className="flex flex-1 flex-col items-center gap-2">
+                        <div className="flex h-24 w-full items-end rounded-xl bg-slate-950/60 p-1">
+                          <div className="w-full rounded-lg bg-gradient-to-t from-emerald-500 via-amber-400 to-cyan-400" style={{ height: `${Math.max(12, Math.min(100, item.total / 180))}%` }} />
+                        </div>
+                        <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{item.day}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+                    <Calculator className="h-4 w-4" />
+                    Ações profissionais
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    <button type="button" onClick={() => handleGenerateWorkbook()} className="flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-cyan-100">
+                      <FileSpreadsheet className="h-4 w-4" />
+                      Gerar planilha CSV
+                    </button>
+                    <button type="button" onClick={() => setClosingMessage("Informe a senha do pastor para fechar o caixa.")} className="flex w-full items-center justify-center gap-2 rounded-xl border border-amber-300/30 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-100">
+                      <ShieldCheck className="h-4 w-4" />
+                      Solicitar fechamento
+                    </button>
+                    <button type="button" onClick={() => setOpeningBalance("0") } className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200">
+                      <History className="h-4 w-4" />
+                      Reiniciar saldo inicial
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-slate-950/50 p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Operações de caixa</h3>
-                <p className="mt-1 text-sm text-slate-400">Saldo inicial, projeção de fechamento e planilha operacional em um único painel.</p>
+                <p className="mt-1 text-sm text-slate-400">Saldo inicial, projeção de fechamento e abertura de planilha em um painel mais premium.</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300">
-                <span className="text-slate-500">Saldo projetado:</span> <span className="ml-2 font-semibold text-white">R$ {projectedClosing.toLocaleString("pt-BR")}</span>
+                <span className="text-slate-500">Saldo projetado:</span> <span className="ml-2 font-semibold text-white">{currency(projectedClosing)}</span>
               </div>
             </div>
             <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
@@ -637,15 +791,15 @@ export function FinanceReportClient() {
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div className="rounded-xl border border-emerald-300/20 bg-emerald-500/10 p-3">
                     <p className="text-[11px] uppercase tracking-[0.2em] text-emerald-200">Saldo inicial</p>
-                    <p className="mt-1 text-lg font-semibold text-white">R$ {Number(String(openingBalance).replace(/[^0-9,.-]/g, "") || 0).toLocaleString("pt-BR")}</p>
+                    <p className="mt-1 text-lg font-semibold text-white">{currency(Number(String(openingBalance).replace(/[^0-9,.-]/g, "") || 0))}</p>
                   </div>
                   <div className="rounded-xl border border-amber-300/20 bg-amber-500/10 p-3">
                     <p className="text-[11px] uppercase tracking-[0.2em] text-amber-200">Soma líquida</p>
-                    <p className="mt-1 text-lg font-semibold text-white">R$ {financeSummary.balance.toLocaleString("pt-BR")}</p>
+                    <p className="mt-1 text-lg font-semibold text-white">{currency(financeSummary.balance)}</p>
                   </div>
                   <div className="rounded-xl border border-cyan-300/20 bg-cyan-500/10 p-3">
                     <p className="text-[11px] uppercase tracking-[0.2em] text-cyan-200">Média por movimento</p>
-                    <p className="mt-1 text-lg font-semibold text-white">R$ {financeSummary.average.toLocaleString("pt-BR")}</p>
+                    <p className="mt-1 text-lg font-semibold text-white">{currency(financeSummary.average)}</p>
                   </div>
                 </div>
                 <label className="mt-4 block text-sm text-slate-300">
@@ -654,14 +808,16 @@ export function FinanceReportClient() {
                 </label>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Ações profissionais</p>
-                <div className="mt-3 space-y-2">
-                  <button type="button" onClick={() => handleGenerateWorkbook()} className="flex w-full items-center justify-center rounded-xl border border-cyan-300/30 bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-cyan-100">
-                    Gerar planilha CSV
-                  </button>
-                  <button type="button" onClick={() => setClosingMessage("Informe a senha do pastor para fechar o caixa.")} className="flex w-full items-center justify-center rounded-xl border border-amber-300/30 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-100">
-                    Solicitar fechamento
-                  </button>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Novas possibilidades</p>
+                <div className="mt-3 space-y-2 text-sm text-slate-300">
+                  <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2">
+                    <Banknote className="h-4 w-4 text-amber-200" />
+                    Acompanhamento premium para entradas e saídas.
+                  </div>
+                  <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2">
+                    <Sparkles className="h-4 w-4 text-emerald-200" />
+                    Fluxo visual com metas e projeções para o próximo fechamento.
+                  </div>
                 </div>
               </div>
             </div>
