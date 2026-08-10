@@ -329,7 +329,16 @@ where p.active_congregation_id is null
   and p.congregation_id is not null;
 
 with single_membership as (
-  select pc.profile_id, min(pc.congregation_id) as congregation_id
+  select
+    pc.profile_id,
+    (
+      select pc2.congregation_id
+      from public.profile_congregations pc2
+      where pc2.profile_id = pc.profile_id
+        and pc2.is_active = true
+      order by pc2.congregation_id
+      limit 1
+    ) as congregation_id
   from public.profile_congregations pc
   where pc.is_active = true
   group by pc.profile_id
