@@ -53,6 +53,56 @@ function isSchemaCacheMissingTable(error: { code?: string; message?: string } | 
   return error.code === "PGRST205" || Boolean(error.message?.includes("Could not find the table"));
 }
 
+function isSchemaCompatibilityError(error: { code?: string; message?: string } | null | undefined) {
+  if (!error) {
+    return false;
+  }
+
+  const message = error.message?.toLowerCase() ?? "";
+  return (
+    isSchemaCacheMissingTable(error) ||
+    error.code === "PGRST204" ||
+    message.includes("could not find the 'active_congregation_id' column") ||
+    message.includes("could not find the 'profile_congregations' table") ||
+    message.includes("column active_congregation_id does not exist")
+  );
+}
+
+async function loadLegacyProfileCongregation(profileId: string): Promise<AccessibleCongregation[]> {
+  const admin = createAdminSupabaseClient();
+  const { data, error } = await admin
+    .from("profiles")
+    .select("congregation_id, congregation:congregations(id, name, is_active)")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  if (error) {
+    if (isSchemaCompatibilityError(error)) {
+      return [];
+    }
+
+    throw new AppError("Não foi possível carregar a congregação legada do perfil", 500, "legacy_profile_congregation_fetch_failed");
+  }
+
+  const row = data as {
+    congregation_id: string | null;
+    congregation: { id: string; name: string; is_active: boolean } | null;
+  } | null;
+
+  if (!row?.congregation_id || !row.congregation) {
+    return [];
+  }
+
+  return [
+    {
+      id: row.congregation_id,
+      name: row.congregation.name,
+      isActive: Boolean(row.congregation.is_active),
+      isDefault: true,
+    },
+  ];
+}
+
 async function loadRoleAccess(profileId: string, congregationId: string | null) {
   if (!hasServerEnv()) {
     return {
@@ -138,8 +188,8 @@ async function listProfileCongregations(profileId: string): Promise<AccessibleCo
     .order("is_default", { ascending: false });
 
   if (error) {
-    if (isSchemaCacheMissingTable(error)) {
-      return [];
+    if (isSchemaCompatibilityError(error)) {
+      return loadLegacyProfileCongregation(profileId);
     }
 
     throw new AppError("Não foi possível carregar as congregações vinculadas", 500, "profile_congregations_fetch_failed");
@@ -190,10 +240,19 @@ export async function setAuthenticatedActiveCongregation(profileId: string, cong
   }
 
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase
+  let { error } = await supabase
     .from("profiles")
     .update({ active_congregation_id: congregationId })
     .eq("id", profileId);
+
+  if (error && isSchemaCompatibilityError(error)) {
+    const legacyUpdate = await supabase
+      .from("profiles")
+      .update({ congregation_id: congregationId })
+      .eq("id", profileId);
+
+    error = legacyUpdate.error;
+  }
 
   if (error) {
     throw new AppError("Não foi possível atualizar a congregação ativa", 500, "active_congregation_update_failed");
@@ -228,26 +287,45 @@ export async function getAuthContext(): Promise<AccessContext | null> {
 
   if (hasServerEnv()) {
     const admin = createAdminSupabaseClient();
-    const { data: profile, error: profileError } = await admin
+    let profileQuery = await admin
       .from("profiles")
       .select("id, active_congregation_id, full_name, email, is_active")
       .eq("id", user.id)
       .maybeSingle();
 
+    if (profileQuery.error && isSchemaCompatibilityError(profileQuery.error)) {
+      profileQuery = await admin
+        .from("profiles")
+        .select("id, congregation_id, full_name, email, is_active")
+        .eq("id", user.id)
+        .maybeSingle();
+    }
+
+    const { data: profile, error: profileError } = profileQuery;
+
     if (profileError) {
-      if (isSchemaCacheMissingTable(profileError)) {
+      if (isSchemaCompatibilityError(profileError)) {
         // Fallback para ambientes com Auth pronto, mas sem schema de aplicacao provisionado.
       } else {
-      throw new AppError("Não foi possível carregar o perfil do usuário", 500, "profile_fetch_failed");
+        throw new AppError("Não foi possível carregar o perfil do usuário", 500, "profile_fetch_failed");
       }
     }
 
-    const typedProfile = profile as Database["public"]["Tables"]["profiles"]["Row"] | null;
+    const typedProfile = profile as (Database["public"]["Tables"]["profiles"]["Row"] & {
+      congregation_id?: string | null;
+    }) | null;
 
     if (typedProfile) {
       fullName = typedProfile.full_name ?? fullName;
       availableCongregations = await listProfileCongregations(typedProfile.id);
-      congregationId = normalizeActiveCongregation(typedProfile.active_congregation_id ?? null, availableCongregations);
+      congregationId = normalizeActiveCongregation(
+        typedProfile.active_congregation_id ?? typedProfile.congregation_id ?? null,
+        availableCongregations,
+      );
+
+      if (!congregationId && availableCongregations.length === 1 && availableCongregations[0]?.isActive) {
+        congregationId = availableCongregations[0].id;
+      }
 
       if (typedProfile.is_active === false) {
         throw new AppError("Conta bloqueada", 403, "account_blocked");
