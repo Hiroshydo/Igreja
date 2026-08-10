@@ -174,8 +174,8 @@ export const financeService = {
       return [];
     }
 
-    const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("finance_transactions")
       .select(
         `id, congregation_id, account_id, type, category, amount, occurred_at, description, origin, reference, document_reference, observations, event_id, created_by, updated_by, created_at, updated_at, deleted_at, account:finance_accounts(name, category)`
@@ -278,7 +278,6 @@ export const financeService = {
     const nextType = input.type ?? beforeData.type;
     const nextCategory = typeof input.category === "string" ? normalizeFinanceCategoryValue(input.category) : beforeData.category;
 
-    if (typeof input.accountId !== "undefined") updatePayload.account_id = input.accountId || null;
     if (typeof input.type !== "undefined") updatePayload.type = input.type as "receita" | "despesa";
     if (typeof input.category !== "undefined") updatePayload.category = nextCategory;
     if (typeof input.amount !== "undefined") updatePayload.amount = normalizeMoney(input.amount);

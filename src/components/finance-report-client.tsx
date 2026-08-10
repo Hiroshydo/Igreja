@@ -226,8 +226,8 @@ export function FinanceReportClient() {
         const nextMovements = Array.isArray(movementPayload.data)
           ? (movementPayload.data as FinanceMovementApiRow[]).map((row) => ({
               id: row.id,
-              occurredAt: row.occurred_at ?? row.occurredAt,
-              congregationId: row.congregation_id ?? row.congregationId,
+              occurredAt: row.occurred_at ?? row.occurredAt ?? "",
+              congregationId: row.congregation_id ?? row.congregationId ?? "",
               congregationName: row.congregationName ?? "Congregação",
               type: row.type,
               category: row.category,

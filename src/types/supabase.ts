@@ -467,6 +467,44 @@ export interface Database {
         };
         Relationships: [];
       };
+      announcements: {
+        Row: {
+          id: string;
+          congregation_id: string;
+          title: string;
+          body: string;
+          visibility: string;
+          publish_at: string | null;
+          expires_at: string | null;
+          created_by: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          congregation_id: string;
+          title: string;
+          body: string;
+          visibility?: string;
+          publish_at?: string | null;
+          expires_at?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+        };
+        Update: {
+          title?: string;
+          body?: string;
+          visibility?: string;
+          publish_at?: string | null;
+          expires_at?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          deleted_at?: string | null;
+        };
+        Relationships: [];
+      };
       audit_logs: {
         Row: {
           id: string;

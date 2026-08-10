@@ -64,6 +64,10 @@ Comunidade Viva/
 └── README.md
 ```
 
+## 🔐 Segurança
+
+O modelo de autorização por congregação, o fluxo pós-login e as regras de RLS estão documentados em `SECURITY.md`.
+
 ## 🔧 Tecnologias
 
 | Camada | Tecnologia |

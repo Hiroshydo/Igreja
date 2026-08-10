@@ -37,6 +37,10 @@ const congregationScopedResources = new Set<PermissionResource>([
   "discipleship",
 ]);
 
+type AccessRouteResult =
+  | { response: NextResponse; context: null }
+  | { response: null; context: AccessContext };
+
 function normalizePermission(resource: string, action: string): PermissionKey {
   return `${resource}.${action}` as PermissionKey;
 }
@@ -49,7 +53,6 @@ function isSchemaCacheMissingTable(error: { code?: string; message?: string } | 
   return error.code === "PGRST205" || Boolean(error.message?.includes("Could not find the table"));
 }
 
-async function loadRoleAccess(profileId: string) {
 async function loadRoleAccess(profileId: string, congregationId: string | null) {
   if (!hasServerEnv()) {
     return {
@@ -286,29 +289,36 @@ export function toAuthenticatedAppUser(context: AccessContext): AuthenticatedApp
   };
 }
 
-export async function requireAuthenticatedRoute(request: NextRequest) {
+export async function requireAuthenticatedRoute(request: NextRequest): Promise<AccessRouteResult> {
   const context = await getAuthContext();
 
   if (!context) {
     return {
       response: NextResponse.json({ success: false, error: "Não autenticado" }, { status: 401 }),
+      context: null,
     };
   }
 
-  return { context };
+  return { response: null, context };
 }
 
 export async function requireRouteAccess(options: {
   request: NextRequest;
   resource: PermissionResource;
   action: PermissionAction;
-}) {
+}): Promise<AccessRouteResult> {
   const authenticated = await requireAuthenticatedRoute(options.request);
   if (authenticated.response) {
     return authenticated;
   }
 
   const { context } = authenticated;
+  if (!context) {
+    return {
+      response: NextResponse.json({ success: false, error: "Não autenticado" }, { status: 401 }),
+      context: null,
+    };
+  }
 
   if (congregationScopedResources.has(options.resource) && !context.congregationId) {
     return {
@@ -316,6 +326,7 @@ export async function requireRouteAccess(options: {
         { success: false, error: "Selecione uma congregação ativa antes de continuar", code: "active_congregation_required" },
         { status: 403 },
       ),
+      context: null,
     };
   }
 
@@ -323,10 +334,11 @@ export async function requireRouteAccess(options: {
   if (!hasPermission(context.permissions, context.roleCodes, permission)) {
     return {
       response: NextResponse.json({ success: false, error: "Acesso negado" }, { status: 403 }),
+      context: null,
     };
   }
 
-  return { context };
+  return { response: null, context };
 }
 
 export function getRequestAuditMetadata(request: NextRequest) {
