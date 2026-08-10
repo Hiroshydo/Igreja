@@ -1,5 +1,5 @@
 import { AppError } from "@/lib/http";
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 import type { AccessContext, Ministry } from "@/types";
 import type { MinistryCreateInput, MinistryUpdateInput } from "@/lib/validation";
@@ -41,8 +41,8 @@ export const ministriesService = {
       return [];
     }
 
-    const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("ministries")
       .select("*")
       .eq("congregation_id", congregationId)
@@ -58,23 +58,11 @@ export const ministriesService = {
 
   async create(input: MinistryCreateInput, context: AccessContext): Promise<Ministry> {
     if (!context.congregationId) {
-      return {
-        id: crypto.randomUUID(),
-        name: input.name,
-        description: input.description,
-        leader: input.leader ?? "",
-        leaderEmail: input.leaderEmail,
-        leaderPhone: input.leaderPhone,
-        members: input.members,
-        category: input.category ?? "Geral",
-        image: input.image,
-        meetingDay: input.meetingDay,
-        meetingTime: input.meetingTime,
-      };
+      throw new AppError("Selecione uma congregação ativa antes de criar ministérios", 403, "active_congregation_required");
     }
 
-    const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("ministries")
       .insert({
         congregation_id: context.congregationId,
@@ -103,18 +91,11 @@ export const ministriesService = {
 
   async getById(id: string, congregationId: string | null): Promise<Ministry> {
     if (!congregationId) {
-      return {
-        id,
-        name: "Ministério sem congregação",
-        description: "Aguardando vinculação",
-        leader: "",
-        members: 0,
-        category: "Geral",
-      };
+      throw new AppError("Selecione uma congregação ativa antes de consultar ministérios", 403, "active_congregation_required");
     }
 
-    const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("ministries")
       .select("*")
       .eq("id", id)
@@ -135,19 +116,7 @@ export const ministriesService = {
 
   async update(id: string, input: MinistryUpdateInput, context: AccessContext): Promise<Ministry> {
     if (!context.congregationId) {
-      return {
-        id,
-        name: input.name ?? "Ministério",
-        description: input.description ?? "Aguardando atualização",
-        leader: input.leader ?? "",
-        leaderEmail: input.leaderEmail,
-        leaderPhone: input.leaderPhone,
-        members: input.members ?? 0,
-        category: input.category ?? "Geral",
-        image: input.image,
-        meetingDay: input.meetingDay,
-        meetingTime: input.meetingTime,
-      };
+      throw new AppError("Selecione uma congregação ativa antes de editar ministérios", 403, "active_congregation_required");
     }
 
     const payload: Database["public"]["Tables"]["ministries"]["Update"] = {
@@ -165,8 +134,8 @@ export const ministriesService = {
     if (typeof input.meetingDay === "string") payload.meeting_day = input.meetingDay || null;
     if (typeof input.meetingTime === "string") payload.meeting_time = input.meetingTime || null;
 
-    const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("ministries")
       .update(payload)
       .eq("id", id)
@@ -188,11 +157,11 @@ export const ministriesService = {
 
   async remove(id: string, context: AccessContext): Promise<void> {
     if (!context.congregationId) {
-      return;
+      throw new AppError("Selecione uma congregação ativa antes de excluir ministérios", 403, "active_congregation_required");
     }
 
-    const admin = createAdminSupabaseClient();
-    const { error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { error } = await supabase
       .from("ministries")
       .update({
         deleted_at: new Date().toISOString(),

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 
 import { requireRouteAccess } from "@/lib/auth/session";
 import { jsonError, jsonSuccess } from "@/lib/http";
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 interface DashboardStatsPayload {
   totalMembers: number;
@@ -46,8 +46,12 @@ export async function GET(request: NextRequest) {
       return access.response;
     }
 
-    const admin = createAdminSupabaseClient();
-    const canSeeAllCongregations = access.context.roleCodes.includes("DEV") || access.context.permissions.includes("system.manage");
+    const supabase = await createServerSupabaseClient();
+    const congregationId = access.context.congregationId;
+
+    if (!congregationId) {
+      throw new Error("Congregação ativa ausente para o dashboard");
+    }
 
     const [
       congregationsResponse,
@@ -59,38 +63,45 @@ export async function GET(request: NextRequest) {
       schedulesResponse,
       discipleshipResponse,
     ] = await Promise.all([
-      admin
+      supabase
         .from("congregations")
         .select("id, name")
+        .eq("id", congregationId)
         .order("name", { ascending: true }),
-      admin
+      supabase
         .from("members")
         .select("id, congregation_id, status, role_label")
+        .eq("congregation_id", congregationId)
         .is("deleted_at", null),
-      admin
+      supabase
         .from("finance_transactions")
         .select("id, congregation_id, type, amount")
+        .eq("congregation_id", congregationId)
         .is("deleted_at", null),
-      admin
+      supabase
         .from("media_assets")
         .select("id, congregation_id")
-        .is("deleted_at", null),
-      admin
+        .eq("congregation_id", congregationId),
+      supabase
         .from("events")
         .select("id, congregation_id, category")
+        .eq("congregation_id", congregationId)
         .eq("category", "estudo")
         .is("deleted_at", null),
-      admin
+      supabase
         .from("prayer_requests")
         .select("id, congregation_id")
+        .eq("congregation_id", congregationId)
         .is("deleted_at", null),
-      admin
+      supabase
         .from("schedules")
         .select("id, congregation_id")
+        .eq("congregation_id", congregationId)
         .eq("status", "pendente"),
-      admin
+      supabase
         .from("events")
         .select("id, congregation_id, category")
+        .eq("congregation_id", congregationId)
         .or("category.eq.estudo,category.eq.reuniao")
         .is("deleted_at", null),
     ]);
@@ -108,19 +119,15 @@ export async function GET(request: NextRequest) {
       throw new Error("Falha ao carregar estatísticas do dashboard");
     }
 
-    const allowedCongregations = canSeeAllCongregations
-      ? congregationRows
-      : congregationRows.filter((item) => item.id === access.context.congregationId);
+    const allowedCongregations = congregationRows;
 
-    const allowedCongregationIdSet = new Set(allowedCongregations.map((item) => item.id));
-
-    const scopedMembers = memberRows.filter((row) => allowedCongregationIdSet.has(row.congregation_id));
-    const scopedFinances = financeRows.filter((row) => allowedCongregationIdSet.has(row.congregation_id));
-    const scopedMedia = mediaRows.filter((row) => allowedCongregationIdSet.has(row.congregation_id));
-    const scopedEducation = educationRows.filter((row) => allowedCongregationIdSet.has(row.congregation_id));
-    const scopedPrayer = prayerRows.filter((row) => allowedCongregationIdSet.has(row.congregation_id));
-    const scopedSchedules = scheduleRows.filter((row) => allowedCongregationIdSet.has(row.congregation_id));
-    const scopedDiscipleship = discipleshipRows.filter((row) => allowedCongregationIdSet.has(row.congregation_id));
+    const scopedMembers = memberRows;
+    const scopedFinances = financeRows;
+    const scopedMedia = mediaRows;
+    const scopedEducation = educationRows;
+    const scopedPrayer = prayerRows;
+    const scopedSchedules = scheduleRows;
+    const scopedDiscipleship = discipleshipRows;
 
     const membersByCongregation = allowedCongregations.map((congregation) => {
       const members = scopedMembers.filter((member) => member.congregation_id === congregation.id);

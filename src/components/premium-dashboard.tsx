@@ -410,10 +410,9 @@ interface MemberFormState {
   role: string;
   joinDate: string;
   avatar: string;
-  congregationId: string;
 }
 
-function createEmptyMemberForm(defaultCongregationId = ""): MemberFormState {
+function createEmptyMemberForm(): MemberFormState {
   return {
     name: "",
     email: "",
@@ -422,7 +421,6 @@ function createEmptyMemberForm(defaultCongregationId = ""): MemberFormState {
     role: "",
     joinDate: new Date().toISOString().slice(0, 10),
     avatar: "",
-    congregationId: defaultCongregationId,
   };
 }
 
@@ -515,7 +513,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
   const [congregationsList, setCongregationsList] = useState<Array<{ id: string; name: string; city: string | null; leader: string; members: number; attendance: number; status: string }>>(congregationsData);
-  const [memberForm, setMemberForm] = useState<MemberFormState>(() => createEmptyMemberForm(access.congregationId ?? ""));
+  const [memberForm, setMemberForm] = useState<MemberFormState>(() => createEmptyMemberForm());
   const [congregationDraft, setCongregationDraft] = useState({ id: "", name: "", city: "", leader: "", members: 0, attendance: 0, status: "Ativa" });
   const [editingCongregationId, setEditingCongregationId] = useState<string | null>(null);
   const [isSavingCongregation, setIsSavingCongregation] = useState(false);
@@ -738,7 +736,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
 
   const startMemberCreate = () => {
     setEditingMemberId(null);
-    setMemberForm(createEmptyMemberForm(access.congregationId ?? ""));
+    setMemberForm(createEmptyMemberForm());
   };
 
   const startMemberEdit = (member: Member) => {
@@ -751,7 +749,6 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
       role: member.role ?? "",
       joinDate: member.joinDate,
       avatar: member.avatar ?? "",
-      congregationId: access.congregationId ?? "",
     });
   };
 
@@ -785,7 +782,6 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
       role: memberForm.role,
       joinDate: memberForm.joinDate,
       avatar: memberForm.avatar,
-      congregationId: memberForm.congregationId || undefined,
     };
 
     const response = editingMemberId
@@ -806,7 +802,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
       return prev.map((item) => (item.id === editingMemberId ? (response.data as Member) : item));
     });
 
-    setMemberForm(createEmptyMemberForm(access.congregationId ?? ""));
+    setMemberForm(createEmptyMemberForm());
     setEditingMemberId(null);
     setIsSavingMember(false);
   };
@@ -1615,7 +1611,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                   className="rounded-xl bg-amber-300 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-200"
                   onClick={() => {
                     setEditingMemberId(null);
-                    setMemberForm(createEmptyMemberForm(access.congregationId ?? ""));
+                    setMemberForm(createEmptyMemberForm());
                     setActiveTab("admin-membros");
                   }}
                 >
@@ -1725,19 +1721,14 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                 </div>
               </div>
 
-              <div>
-                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Congregação</label>
-                <select
-                  value={memberForm.congregationId}
-                  onChange={(event) => setMemberForm((prev) => ({ ...prev, congregationId: event.target.value }))}
-                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-300/50"
-                >
-                  <option value="">Selecione uma congregação</option>
-                  {congregationsList.map((congregation) => (
-                    <option key={congregation.id} value={congregation.id}>{congregation.name} {congregation.city ? `- ${congregation.city}` : ""}</option>
-                  ))}
-                </select>
-              </div>
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Congregação ativa</label>
+                  <input
+                    value={congregationsList.find((congregation) => congregation.id === access.congregationId)?.name ?? "Contexto ativo do servidor"}
+                    readOnly
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none"
+                  />
+                </div>
 
               <div>
                 <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-400">Data de integração</label>
@@ -1763,7 +1754,7 @@ export function PremiumDashboard({ access }: PremiumDashboardProps) {
                   className="rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-200 hover:bg-white/10"
                   onClick={() => {
                     setEditingMemberId(null);
-                    setMemberForm(createEmptyMemberForm(access.congregationId ?? ""));
+                    setMemberForm(createEmptyMemberForm());
                   }}
                 >
                   Limpar

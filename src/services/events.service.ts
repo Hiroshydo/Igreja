@@ -1,5 +1,5 @@
 import { AppError } from "@/lib/http";
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 import type { Event, AccessContext } from "@/types";
 import type { EventCreateInput, EventUpdateInput } from "@/lib/validation";
@@ -44,8 +44,8 @@ export const eventsService = {
       return [];
     }
 
-    const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("events")
       .select("*")
       .eq("congregation_id", congregationId)
@@ -61,22 +61,11 @@ export const eventsService = {
 
   async create(input: EventCreateInput, context: AccessContext): Promise<Event> {
     if (!context.congregationId) {
-      return {
-        id: crypto.randomUUID(),
-        title: input.title,
-        description: input.description,
-        date: input.date,
-        time: input.time,
-        endTime: input.endTime,
-        location: input.location,
-        category: input.category,
-        attendees: input.attendees,
-        organizer: input.organizer,
-      };
+      throw new AppError("Selecione uma congregação ativa antes de criar eventos", 403, "active_congregation_required");
     }
 
-    const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("events")
       .insert({
         congregation_id: context.congregationId,
@@ -103,18 +92,11 @@ export const eventsService = {
 
   async getById(id: string, congregationId: string | null): Promise<Event> {
     if (!congregationId) {
-      return {
-        id,
-        title: "Evento sem congregação",
-        date: new Date().toISOString().slice(0, 10),
-        time: "00:00",
-        location: "—",
-        category: "outro",
-      };
+      throw new AppError("Selecione uma congregação ativa antes de consultar eventos", 403, "active_congregation_required");
     }
 
-    const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("events")
       .select("*")
       .eq("id", id)
@@ -135,18 +117,7 @@ export const eventsService = {
 
   async update(id: string, input: EventUpdateInput, context: AccessContext): Promise<Event> {
     if (!context.congregationId) {
-      return {
-        id,
-        title: input.title ?? "Evento",
-        description: input.description,
-        date: input.date ?? new Date().toISOString().slice(0, 10),
-        time: input.time ?? "00:00",
-        endTime: input.endTime,
-        location: input.location ?? "—",
-        category: input.category ?? "outro",
-        attendees: input.attendees,
-        organizer: input.organizer,
-      };
+      throw new AppError("Selecione uma congregação ativa antes de editar eventos", 403, "active_congregation_required");
     }
 
     const payload: Database["public"]["Tables"]["events"]["Update"] = {
@@ -169,8 +140,8 @@ export const eventsService = {
       payload.end_at = input.endTime ? toIsoDateTime(input.date, input.endTime) : null;
     }
 
-    const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("events")
       .update(payload)
       .eq("id", id)
@@ -192,11 +163,11 @@ export const eventsService = {
 
   async remove(id: string, context: AccessContext): Promise<void> {
     if (!context.congregationId) {
-      return;
+      throw new AppError("Selecione uma congregação ativa antes de excluir eventos", 403, "active_congregation_required");
     }
 
-    const admin = createAdminSupabaseClient();
-    const { error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { error } = await supabase
       .from("events")
       .update({
         deleted_at: new Date().toISOString(),

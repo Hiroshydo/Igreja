@@ -14,5 +14,9 @@ export default async function Home() {
     redirect("/login");
   }
 
+  if (!authContext.congregationId) {
+    redirect("/selecionar-congregacao");
+  }
+
   return <PremiumDashboard access={toAuthenticatedAppUser(authContext)} />;
 }

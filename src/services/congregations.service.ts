@@ -31,12 +31,23 @@ function mapCongregation(row: any): CongregationRecord {
 }
 
 export const congregationsService = {
-  async list(): Promise<CongregationRecord[]> {
+  async list(context: AccessContext): Promise<CongregationRecord[]> {
     const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    let query = admin
       .from("congregations")
       .select("id, name, code, city, state, email, phone, legal_name, tax_id, is_active")
       .order("name", { ascending: true });
+
+    const canManageSystem = context.roleCodes.includes("DEV") || context.permissions.includes("system.manage");
+    if (!canManageSystem) {
+      if (!context.congregationId) {
+        return [];
+      }
+
+      query = query.eq("id", context.congregationId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       throw new AppError("Não foi possível buscar congregações", 500, "congregations_fetch_failed");

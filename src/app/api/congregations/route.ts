@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       return access.response;
     }
 
-    const congregations = await congregationsService.list();
+    const congregations = await congregationsService.list(access.context);
     return jsonSuccess(congregations);
   } catch (error) {
     return jsonError(error, "Erro ao buscar congregações");

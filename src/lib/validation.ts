@@ -1,5 +1,29 @@
 import { z } from "zod";
 
+const financeAmountSchema = z
+  .union([z.number(), z.string().trim().min(1)])
+  .transform((value, ctx) => {
+    const normalizedValue = typeof value === "string" ? value.replace(",", ".") : value;
+    const numericValue = typeof normalizedValue === "number" ? normalizedValue : Number(normalizedValue);
+
+    if (!Number.isFinite(numericValue)) {
+      ctx.addIssue({ code: "custom", message: "Valor financeiro deve ser numérico e finito." });
+      return z.NEVER;
+    }
+
+    if (numericValue <= 0) {
+      ctx.addIssue({ code: "custom", message: "Valor financeiro deve ser maior que zero." });
+      return z.NEVER;
+    }
+
+    if (Math.abs(Math.round(numericValue * 100) - numericValue * 100) > 0.000001) {
+      ctx.addIssue({ code: "custom", message: "Valor financeiro deve respeitar duas casas decimais." });
+      return z.NEVER;
+    }
+
+    return Number(numericValue.toFixed(2));
+  });
+
 export const memberCreateSchema = z.object({
   name: z.string().min(3),
   email: z.string().email().optional().or(z.literal("")),
@@ -9,7 +33,6 @@ export const memberCreateSchema = z.object({
   status: z.enum(["ativo", "inativo", "pendente"]).default("ativo"),
   role: z.string().optional().or(z.literal("")),
   avatar: z.string().url().optional().or(z.literal("")),
-  congregationId: z.string().optional().or(z.literal("")),
 });
 
 export const memberUpdateSchema = memberCreateSchema.partial();
@@ -46,10 +69,9 @@ export const ministryUpdateSchema = ministryCreateSchema.partial();
 
 export const financeMovementCreateSchema = z.object({
   accountId: z.string().min(1).optional().or(z.literal("")),
-  congregationId: z.string().min(1).optional().or(z.literal("")),
   type: z.enum(['receita', 'despesa']),
   category: z.string().min(1),
-  amount: z.union([z.number().nonnegative(), z.string().min(1)]),
+  amount: financeAmountSchema,
   occurredAt: z.string().min(1),
   description: z.string().optional().or(z.literal("")),
   origin: z.string().optional().or(z.literal("")),
@@ -57,6 +79,7 @@ export const financeMovementCreateSchema = z.object({
   documentReference: z.string().optional().or(z.literal("")),
   observations: z.string().optional().or(z.literal("")),
   eventId: z.string().optional().or(z.literal("")),
+  deletedReason: z.string().trim().min(3).optional().or(z.literal("")),
 });
 
 export const financeMovementUpdateSchema = financeMovementCreateSchema.partial();

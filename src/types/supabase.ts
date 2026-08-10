@@ -45,6 +45,7 @@ export interface Database {
         Row: {
           id: string;
           congregation_id: string | null;
+          active_congregation_id: string | null;
           full_name: string | null;
           email: string | null;
           is_active: boolean;
@@ -56,6 +57,7 @@ export interface Database {
         Insert: {
           id: string;
           congregation_id?: string | null;
+          active_congregation_id?: string | null;
           full_name?: string | null;
           email?: string | null;
           is_active?: boolean;
@@ -64,6 +66,7 @@ export interface Database {
         };
         Update: {
           congregation_id?: string | null;
+          active_congregation_id?: string | null;
           full_name?: string | null;
           email?: string | null;
           is_active?: boolean;
@@ -123,6 +126,31 @@ export interface Database {
           profile_id?: string;
           role_id?: string;
           congregation_id?: string | null;
+        };
+        Relationships: [];
+      };
+      profile_congregations: {
+        Row: {
+          id: string;
+          profile_id: string;
+          congregation_id: string;
+          is_active: boolean;
+          is_default: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          congregation_id: string;
+          is_active?: boolean;
+          is_default?: boolean;
+        };
+        Update: {
+          profile_id?: string;
+          congregation_id?: string;
+          is_active?: boolean;
+          is_default?: boolean;
         };
         Relationships: [];
       };
@@ -357,6 +385,8 @@ export interface Database {
           event_id: string | null;
           created_by: string | null;
           updated_by: string | null;
+          deleted_by: string | null;
+          deleted_reason: string | null;
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -377,6 +407,8 @@ export interface Database {
           event_id?: string | null;
           created_by?: string | null;
           updated_by?: string | null;
+          deleted_by?: string | null;
+          deleted_reason?: string | null;
         };
         Update: {
           account_id?: string;
@@ -391,6 +423,8 @@ export interface Database {
           observations?: string | null;
           event_id?: string | null;
           updated_by?: string | null;
+          deleted_by?: string | null;
+          deleted_reason?: string | null;
           deleted_at?: string | null;
         };
         Relationships: [];
@@ -430,6 +464,44 @@ export interface Database {
           size_bytes?: number;
           url?: string | null;
           is_public?: boolean;
+        };
+        Relationships: [];
+      };
+      announcements: {
+        Row: {
+          id: string;
+          congregation_id: string;
+          title: string;
+          body: string;
+          visibility: string;
+          publish_at: string | null;
+          expires_at: string | null;
+          created_by: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          congregation_id: string;
+          title: string;
+          body: string;
+          visibility?: string;
+          publish_at?: string | null;
+          expires_at?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+        };
+        Update: {
+          title?: string;
+          body?: string;
+          visibility?: string;
+          publish_at?: string | null;
+          expires_at?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          deleted_at?: string | null;
         };
         Relationships: [];
       };
