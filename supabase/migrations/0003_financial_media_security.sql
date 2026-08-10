@@ -69,6 +69,7 @@ alter table public.finance_transactions enable row level security;
 alter table public.finance_categories enable row level security;
 alter table public.media_assets enable row level security;
 
+drop policy if exists finance_accounts_congregation_scope on public.finance_accounts;
 create policy finance_accounts_congregation_scope on public.finance_accounts
   for all to authenticated
   using (congregation_id in (
@@ -78,6 +79,7 @@ create policy finance_accounts_congregation_scope on public.finance_accounts
     select congregation_id from public.profiles where id = auth.uid() and is_active = true
   ));
 
+drop policy if exists finance_transactions_congregation_scope on public.finance_transactions;
 create policy finance_transactions_congregation_scope on public.finance_transactions
   for all to authenticated
   using (congregation_id in (
@@ -87,6 +89,7 @@ create policy finance_transactions_congregation_scope on public.finance_transact
     select congregation_id from public.profiles where id = auth.uid() and is_active = true
   ));
 
+drop policy if exists finance_categories_congregation_scope on public.finance_categories;
 create policy finance_categories_congregation_scope on public.finance_categories
   for all to authenticated
   using (congregation_id in (
@@ -96,6 +99,7 @@ create policy finance_categories_congregation_scope on public.finance_categories
     select congregation_id from public.profiles where id = auth.uid() and is_active = true
   ));
 
+drop policy if exists media_assets_congregation_scope on public.media_assets;
 create policy media_assets_congregation_scope on public.media_assets
   for all to authenticated
   using (congregation_id in (
@@ -105,10 +109,12 @@ create policy media_assets_congregation_scope on public.media_assets
     select congregation_id from public.profiles where id = auth.uid() and is_active = true
   ));
 
+drop policy if exists audit_logs_service_only_insert on public.audit_logs;
 create policy audit_logs_service_only_insert on public.audit_logs
   for insert to authenticated
   with check (true);
 
+drop policy if exists audit_logs_read_own_congregation on public.audit_logs;
 create policy audit_logs_read_own_congregation on public.audit_logs
   for select to authenticated
   using (
