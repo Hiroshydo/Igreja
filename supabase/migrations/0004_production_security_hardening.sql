@@ -44,8 +44,12 @@ begin
         from public.profiles p
         join public.profile_congregations pc
           on pc.profile_id = p.id
+        join public.congregations c
+          on c.id = pc.congregation_id
         where p.id = auth.uid()
           and p.is_active = true
+          and pc.is_active = true
+          and c.is_active = true
           and pc.congregation_id = $1
       )
     $q$
@@ -84,29 +88,36 @@ security definer
 set search_path = public
 as $$
 declare
-  v_claim text;
-  v_claim_congregation uuid;
+  v_profile_active_congregation uuid;
   v_fallback_congregation uuid;
 begin
-  v_claim := coalesce(
-    auth.jwt() ->> 'active_congregation_id',
-    auth.jwt() -> 'app_metadata' ->> 'active_congregation_id',
-    auth.jwt() -> 'user_metadata' ->> 'active_congregation_id'
-  );
+  if auth.uid() is null then
+    return null;
+  end if;
 
-  if v_claim is not null and length(trim(v_claim)) > 0 then
-    begin
-      v_claim_congregation := v_claim::uuid;
-    exception
-      when others then
-        v_claim_congregation := null;
-    end;
+  if exists (
+    select 1
+    from pg_attribute
+    where attrelid = 'public.profiles'::regclass
+      and attname = 'active_congregation_id'
+      and not attisdropped
+  ) then
+    execute $q$
+      select p.active_congregation_id
+      from public.profiles p
+      where p.id = auth.uid()
+        and p.is_active = true
+      limit 1
+    $q$
+    into v_profile_active_congregation;
+  end if;
 
-    if v_claim_congregation is not null
-      and public.user_is_linked_to_congregation(v_claim_congregation)
-    then
-      return v_claim_congregation;
+  if v_profile_active_congregation is not null then
+    if public.user_is_linked_to_congregation(v_profile_active_congregation) then
+      return v_profile_active_congregation;
     end if;
+
+    return null;
   end if;
 
   if to_regclass('public.profile_congregations') is not null then
@@ -115,9 +126,13 @@ begin
       from public.profile_congregations pc
       join public.profiles p
         on p.id = pc.profile_id
+      join public.congregations c
+        on c.id = pc.congregation_id
       where pc.profile_id = auth.uid()
         and p.is_active = true
-      order by pc.congregation_id
+        and pc.is_active = true
+        and c.is_active = true
+      order by pc.is_default desc, pc.updated_at desc, pc.created_at desc
       limit 1
     $q$
     into v_fallback_congregation;
@@ -147,6 +162,65 @@ begin
   return null;
 end;
 $$;
+
+create or replace function public.set_active_congregation(
+  p_congregation_id uuid
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_profile_id uuid;
+begin
+  v_profile_id := auth.uid();
+
+  if v_profile_id is null then
+    raise exception 'unauthenticated';
+  end if;
+
+  if p_congregation_id is null then
+    raise exception 'congregation_required';
+  end if;
+
+  if not public.user_is_linked_to_congregation(p_congregation_id) then
+    raise exception 'congregation_access_denied';
+  end if;
+
+  if exists (
+    select 1
+    from pg_attribute
+    where attrelid = 'public.profiles'::regclass
+      and attname = 'active_congregation_id'
+      and not attisdropped
+  ) then
+    execute $q$
+      update public.profiles
+      set active_congregation_id = $1
+      where id = $2
+        and is_active = true
+    $q$
+    using p_congregation_id, v_profile_id;
+  end if;
+
+  -- Compatibilidade legada para ambientes sem active_congregation_id ou com leituras antigas.
+  update public.profiles
+  set congregation_id = p_congregation_id
+  where id = v_profile_id
+    and is_active = true;
+
+  if not found then
+    raise exception 'inactive_or_missing_profile';
+  end if;
+
+  return p_congregation_id;
+end;
+$$;
+
+revoke all on function public.set_active_congregation(uuid) from public;
+grant execute on function public.set_active_congregation(uuid) to authenticated;
+grant execute on function public.set_active_congregation(uuid) to service_role;
 
 create or replace function public.user_has_scoped_permission(
   p_resource text,
@@ -206,12 +280,15 @@ as $$
 $$;
 
 -- Escrita de auditoria por mecanismo controlado no banco.
+drop function if exists public.write_audit_log(text, text, text, jsonb, jsonb, text, text, text, uuid);
+
 create or replace function public.write_audit_log(
   p_action text,
   p_entity_name text,
   p_entity_id text default null,
   p_before_data jsonb default null,
   p_after_data jsonb default null,
+  p_actor_user_id uuid default null,
   p_actor_email text default null,
   p_ip_address text default null,
   p_user_agent text default null,
@@ -223,32 +300,76 @@ security definer
 set search_path = public
 as $$
 declare
+  v_role text;
   v_user_id uuid;
   v_congregation_id uuid;
   v_actor_email text;
   v_log_id uuid;
 begin
+  v_role := auth.role();
   v_user_id := auth.uid();
 
-  if v_user_id is null then
-    raise exception 'unauthenticated';
-  end if;
+  if v_role = 'service_role' then
+    if p_actor_user_id is null or p_congregation_id is null then
+      raise exception 'service_role_requires_actor_and_congregation';
+    end if;
 
-  select p.email
-    into v_actor_email
-  from public.profiles p
-  where p.id = v_user_id
-    and p.is_active = true
-  limit 1;
+    v_user_id := p_actor_user_id;
+    v_congregation_id := p_congregation_id;
 
-  v_congregation_id := coalesce(p_congregation_id, public.current_active_congregation_id());
+    select p.email
+      into v_actor_email
+    from public.profiles p
+    where p.id = v_user_id
+      and p.is_active = true
+      and (
+        (
+          to_regclass('public.profile_congregations') is not null
+          and exists (
+            select 1
+            from public.profile_congregations pc
+            join public.congregations c
+              on c.id = pc.congregation_id
+            where pc.profile_id = p.id
+              and pc.congregation_id = v_congregation_id
+              and pc.is_active = true
+              and c.is_active = true
+          )
+        )
+        or p.congregation_id = v_congregation_id
+        or exists (
+          select 1
+          from public.profile_roles pr
+          where pr.profile_id = p.id
+            and pr.congregation_id = v_congregation_id
+        )
+      )
+    limit 1;
 
-  if v_congregation_id is null then
-    raise exception 'inactive_or_unlinked_profile';
-  end if;
+    if v_actor_email is null then
+      raise exception 'actor_not_linked_to_congregation';
+    end if;
+  else
+    if v_user_id is null then
+      raise exception 'unauthenticated';
+    end if;
 
-  if not public.user_is_linked_to_congregation(v_congregation_id) then
-    raise exception 'cross_congregation_audit_insert_denied';
+    select p.email
+      into v_actor_email
+    from public.profiles p
+    where p.id = v_user_id
+      and p.is_active = true
+    limit 1;
+
+    v_congregation_id := coalesce(p_congregation_id, public.current_active_congregation_id());
+
+    if v_congregation_id is null then
+      raise exception 'inactive_or_unlinked_profile';
+    end if;
+
+    if not public.user_is_linked_to_congregation(v_congregation_id) then
+      raise exception 'cross_congregation_audit_insert_denied';
+    end if;
   end if;
 
   insert into public.audit_logs (
@@ -282,10 +403,10 @@ end;
 $$;
 
 revoke all on function public.write_audit_log(
-  text, text, text, jsonb, jsonb, text, text, text, uuid
+  text, text, text, jsonb, jsonb, uuid, text, text, text, uuid
 ) from public;
 grant execute on function public.write_audit_log(
-  text, text, text, jsonb, jsonb, text, text, text, uuid
+  text, text, text, jsonb, jsonb, uuid, text, text, text, uuid
 ) to service_role;
 
 -- Baseline obrigatorio de permissoes financeiras por papel.

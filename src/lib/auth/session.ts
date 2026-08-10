@@ -62,6 +62,7 @@ function isSchemaCompatibilityError(error: { code?: string; message?: string } |
   return (
     isSchemaCacheMissingTable(error) ||
     error.code === "PGRST204" ||
+    message.includes("could not find the function public.set_active_congregation") ||
     message.includes("could not find the 'active_congregation_id' column") ||
     message.includes("could not find the 'profile_congregations' table") ||
     message.includes("column active_congregation_id does not exist")
@@ -211,7 +212,8 @@ async function listProfileCongregations(profileId: string): Promise<AccessibleCo
 }
 
 export async function listAuthenticatedCongregations(profileId: string) {
-  return listProfileCongregations(profileId);
+  const items = await listProfileCongregations(profileId);
+  return items.filter((item) => item.isActive);
 }
 
 function normalizeActiveCongregation(
@@ -240,10 +242,9 @@ export async function setAuthenticatedActiveCongregation(profileId: string, cong
   }
 
   const supabase = await createServerSupabaseClient();
-  let { error } = await supabase
-    .from("profiles")
-    .update({ active_congregation_id: congregationId })
-    .eq("id", profileId);
+  let { error } = await (supabase as any).rpc("set_active_congregation", {
+    p_congregation_id: congregationId,
+  });
 
   if (error && isSchemaCompatibilityError(error)) {
     const legacyUpdate = await supabase
