@@ -40,7 +40,9 @@ create index if not exists idx_finance_transactions_congregation_on_occurred_at 
 create index if not exists idx_finance_categories_congregation on public.finance_categories (congregation_id);
 create index if not exists idx_media_assets_congregation on public.media_assets (congregation_id);
 
+drop trigger if exists trg_finance_categories_updated_at on public.finance_categories;
 create trigger trg_finance_categories_updated_at before update on public.finance_categories for each row execute function public.set_updated_at();
+drop trigger if exists trg_media_assets_updated_at on public.media_assets;
 create trigger trg_media_assets_updated_at before update on public.media_assets for each row execute function public.set_updated_at();
 
 insert into public.finance_categories (congregation_id, code, name, type, description, is_active, created_by)
