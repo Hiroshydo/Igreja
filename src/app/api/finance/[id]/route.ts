@@ -1,10 +1,15 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
 
 import { requireRouteAccess } from "@/lib/auth/session";
 import { jsonError, jsonSuccess } from "@/lib/http";
 import { financeMovementUpdateSchema } from "@/lib/validation";
 import { writeAuditLog } from "@/services/audit.service";
 import { financeService } from "@/services/finance.service";
+
+const financeDeleteSchema = z.object({
+  reason: z.string().trim().min(3).optional().or(z.literal("")),
+});
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
@@ -36,7 +41,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     await writeAuditLog({
       request,
       context: access.context,
-      action: "update",
+      action: "finance_update",
       entityName: "finance_transactions",
       entityId: String(updated.id),
       beforeData,
@@ -58,15 +63,23 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
 
     const { id } = await context.params;
     const beforeData = await financeService.getById(id, access.context.congregationId);
-    await financeService.remove(id, access.context);
+    const parsedBody = request.headers.get("content-length") === "0"
+      ? { reason: "Exclusão lógica solicitada pelo usuário autenticado" }
+      : financeDeleteSchema.parse(await request.json().catch(() => ({ reason: "Exclusão lógica solicitada pelo usuário autenticado" })));
+    const deletedReason = parsedBody.reason || "Exclusão lógica solicitada pelo usuário autenticado";
+
+    await financeService.remove(id, access.context, deletedReason);
 
     await writeAuditLog({
       request,
       context: access.context,
-      action: "delete",
+      action: "finance_delete",
       entityName: "finance_transactions",
       entityId: id,
       beforeData,
+      afterData: {
+        deletedReason,
+      },
     });
 
     return jsonSuccess({ ok: true }, { message: "Movimentação excluída com sucesso" });

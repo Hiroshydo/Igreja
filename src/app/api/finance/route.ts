@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     await writeAuditLog({
       request,
       context: access.context,
-      action: "create",
+      action: "finance_create",
       entityName: "finance_transactions",
       entityId: String(created.id),
       afterData: created,

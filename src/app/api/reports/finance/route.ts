@@ -17,7 +17,6 @@ export async function GET(request: NextRequest) {
       period: searchParams.get("period") ?? undefined,
       startDate: searchParams.get("startDate") ?? undefined,
       endDate: searchParams.get("endDate") ?? undefined,
-      congregationId: searchParams.get("congregationId") ?? undefined,
       eventId: searchParams.get("eventId") ?? undefined,
       category: searchParams.get("category") ?? undefined,
       type: (searchParams.get("type") as "receita" | "despesa" | undefined) ?? undefined,

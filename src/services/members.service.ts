@@ -1,5 +1,5 @@
 import { AppError } from "@/lib/http";
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 import type { Member } from "@/types";
 import type { AccessContext } from "@/types";
@@ -37,8 +37,8 @@ export const membersService = {
       return [];
     }
 
-    const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("members")
       .select("*")
       .eq("congregation_id", congregationId)
@@ -53,26 +53,15 @@ export const membersService = {
   },
 
   async create(input: MemberCreateInput, context: AccessContext): Promise<Member> {
-    const targetCongregationId = input.congregationId || context.congregationId;
-    if (!targetCongregationId) {
-      return {
-        id: crypto.randomUUID(),
-        name: input.name,
-        email: input.email ?? "",
-        phone: input.phone ?? undefined,
-        birthDate: input.birthDate ?? undefined,
-        joinDate: input.joinDate || new Date().toISOString().slice(0, 10),
-        status: input.status,
-        role: input.role ?? undefined,
-        avatar: input.avatar ?? undefined,
-      };
+    if (!context.congregationId) {
+      throw new AppError("Selecione uma congregação ativa antes de criar membros", 403, "active_congregation_required");
     }
 
-    const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("members")
       .insert({
-        congregation_id: targetCongregationId,
+        congregation_id: context.congregationId,
         full_name: input.name,
         email: input.email || null,
         phone: input.phone || null,
@@ -96,18 +85,11 @@ export const membersService = {
 
   async getById(id: string, congregationId: string | null): Promise<Member> {
     if (!congregationId) {
-      return {
-        id,
-        name: "Membro sem congregação",
-        email: "",
-        phone: undefined,
-        joinDate: new Date().toISOString().slice(0, 10),
-        status: "pendente",
-      } as Member;
+      throw new AppError("Selecione uma congregação ativa antes de consultar membros", 403, "active_congregation_required");
     }
 
-    const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("members")
       .select("*")
       .eq("id", id)
@@ -128,17 +110,7 @@ export const membersService = {
 
   async update(id: string, input: MemberUpdateInput, context: AccessContext): Promise<Member> {
     if (!context.congregationId) {
-      return {
-        id,
-        name: input.name ?? "Membro",
-        email: input.email ?? "",
-        phone: input.phone ?? undefined,
-        birthDate: input.birthDate ?? undefined,
-        joinDate: input.joinDate ?? new Date().toISOString().slice(0, 10),
-        status: input.status ?? "pendente",
-        role: input.role ?? undefined,
-        avatar: input.avatar ?? undefined,
-      };
+      throw new AppError("Selecione uma congregação ativa antes de editar membros", 403, "active_congregation_required");
     }
 
     const payload: Database["public"]["Tables"]["members"]["Update"] = {
@@ -154,8 +126,8 @@ export const membersService = {
     if (typeof input.role === "string") payload.role_label = input.role || null;
     if (typeof input.avatar === "string") payload.avatar_url = input.avatar || null;
 
-    const admin = createAdminSupabaseClient();
-    const { data, error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("members")
       .update(payload)
       .eq("id", id)
@@ -177,11 +149,11 @@ export const membersService = {
 
   async remove(id: string, context: AccessContext): Promise<void> {
     if (!context.congregationId) {
-      return;
+      throw new AppError("Selecione uma congregação ativa antes de excluir membros", 403, "active_congregation_required");
     }
 
-    const admin = createAdminSupabaseClient();
-    const { error } = await admin
+    const supabase = await createServerSupabaseClient();
+    const { error } = await supabase
       .from("members")
       .update({
         deleted_at: new Date().toISOString(),

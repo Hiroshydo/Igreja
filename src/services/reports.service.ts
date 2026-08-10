@@ -1,5 +1,6 @@
 import { AppError } from "@/lib/http";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { hasServerEnv } from "@/lib/env";
 import type { AccessContext } from "@/types";
 import ExcelJS from "exceljs";
@@ -25,7 +26,6 @@ export interface FinanceReportFilters {
   period?: string;
   startDate?: string;
   endDate?: string;
-  congregationId?: string;
   eventId?: string;
   category?: string;
   type?: 'receita' | 'despesa';
@@ -96,27 +96,13 @@ export const financeReportsService = {
     }
 
     if (!context.congregationId) {
-      return {
-        summary: {
-          totalIncome: 0,
-          totalExpenses: 0,
-          totalOutputs: 0,
-          balance: 0,
-          movementCount: 0,
-          largestIncome: 0,
-          largestOutput: 0,
-          largestExpense: 0,
-        },
-        congregationReport: [],
-        categoryReport: [],
-        eventReport: [],
-        detailRows: [],
-      } satisfies FinanceReportPayload;
+      throw new AppError("Selecione uma congregação ativa antes de consultar relatórios financeiros", 403, "active_congregation_required");
     }
 
+    const supabase = await createServerSupabaseClient();
     const admin = createAdminSupabaseClient();
 
-    const baseQuery = admin
+    const baseQuery = supabase
       .from("finance_transactions")
       .select(`
         id,
@@ -130,6 +116,7 @@ export const financeReportsService = {
         origin,
         reference,
         document_reference,
+        observations,
         created_by,
         created_at,
         updated_at,

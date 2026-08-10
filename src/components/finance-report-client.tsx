@@ -36,6 +36,34 @@ interface CongregationOption {
   name: string;
 }
 
+interface FinanceMovementApiRow {
+  id: string;
+  occurred_at?: string;
+  occurredAt?: string;
+  congregation_id?: string;
+  congregationId?: string;
+  congregationName?: string;
+  type: "receita" | "despesa";
+  category: string;
+  description?: string | null;
+  amount?: number | string;
+  origin?: string | null;
+  reference?: string | null;
+  document_reference?: string | null;
+  documentReference?: string | null;
+  observations?: string | null;
+  created_by?: string | null;
+  createdBy?: string | null;
+}
+
+const DOCUMENT_TYPES = [
+  { value: "dizimos", label: "Dízimos", type: "receita" as const },
+  { value: "ofertas", label: "Ofertas", type: "receita" as const },
+  { value: "doacoes", label: "Doações", type: "receita" as const },
+  { value: "eventos", label: "Eventos", type: "despesa" as const },
+  { value: "outras_despesas", label: "Outras despesas", type: "despesa" as const },
+] as const;
+
 interface CashClosureRecord {
   id: string;
   kind: "fechamento" | "planilha";
@@ -106,8 +134,6 @@ interface FinanceReportPayload {
   }>;
 }
 
-const DOCUMENT_TYPES = ["Dízimo", "Oferta", "Doação", "Despesa"] as const;
-
 function buildBrasiliaTimestamp(datePart: string) {
   const now = new Date();
   const formatter = new Intl.DateTimeFormat("en-GB", {
@@ -135,7 +161,23 @@ export function FinanceReportClient() {
   const [closingPassword, setClosingPassword] = useState("");
   const [closingMessage, setClosingMessage] = useState<string | null>(null);
   const [openingBalance, setOpeningBalance] = useState("0");
-  const [cashHistory, setCashHistory] = useState<CashClosureRecord[]>([]);
+  const [cashHistory, setCashHistory] = useState<CashClosureRecord[]>(() => {
+    if (typeof window === "undefined") {
+      return [];
+    }
+
+    const storedHistory = window.localStorage.getItem("ecclesia-finance-cash-history");
+    if (!storedHistory) {
+      return [];
+    }
+
+    try {
+      return JSON.parse(storedHistory) as CashClosureRecord[];
+    } catch {
+      window.localStorage.removeItem("ecclesia-finance-cash-history");
+      return [];
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -143,7 +185,7 @@ export function FinanceReportClient() {
   const [form, setForm] = useState({
     occurredAt: new Date().toISOString().slice(0, 10),
     type: "receita" as "receita" | "despesa",
-    category: "Dízimo",
+    category: "dizimos",
     description: "",
     amount: "",
     origin: "",
@@ -168,7 +210,7 @@ export function FinanceReportClient() {
       const [reportResponse, movementResponse, congregationsResponse] = await Promise.all([
         fetch("/api/reports/finance"),
         fetch("/api/finance"),
-        fetch("/api/congregations"),
+        fetch("/api/me/congregations"),
       ]);
 
       if (!reportResponse.ok) {
@@ -182,7 +224,7 @@ export function FinanceReportClient() {
       if (movementResponse.ok) {
         const movementPayload = await movementResponse.json();
         const nextMovements = Array.isArray(movementPayload.data)
-          ? movementPayload.data.map((row: any) => ({
+          ? (movementPayload.data as FinanceMovementApiRow[]).map((row) => ({
               id: row.id,
               occurredAt: row.occurred_at ?? row.occurredAt,
               congregationId: row.congregation_id ?? row.congregationId,
@@ -204,7 +246,7 @@ export function FinanceReportClient() {
       if (congregationsResponse.ok) {
         const congregationPayload = await congregationsResponse.json();
         const nextCongregations = Array.isArray(congregationPayload.data)
-          ? congregationPayload.data.map((row: any) => ({ id: row.id, name: row.name }))
+          ? (congregationPayload.data as CongregationOption[]).map((row) => ({ id: row.id, name: row.name }))
           : [];
         setCongregations(nextCongregations);
         setForm((prev) => ({
@@ -220,23 +262,13 @@ export function FinanceReportClient() {
   }
 
   useEffect(() => {
-    void loadReport();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void loadReport();
+    }, 0);
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const storedHistory = window.localStorage.getItem("ecclesia-finance-cash-history");
-    if (storedHistory) {
-      try {
-        const parsed = JSON.parse(storedHistory) as CashClosureRecord[];
-        setCashHistory(parsed);
-      } catch {
-        window.localStorage.removeItem("ecclesia-finance-cash-history");
-      }
-    }
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, []);
 
   useEffect(() => {
@@ -299,8 +331,8 @@ export function FinanceReportClient() {
       return;
     }
 
-    const documentType = form.category;
-    const movementType: "receita" | "despesa" = documentType === "Despesa" ? "despesa" : "receita";
+    const selectedDocumentType = DOCUMENT_TYPES.find((item) => item.value === form.category);
+    const movementType: "receita" | "despesa" = selectedDocumentType?.type ?? form.type;
     const generatedReference = form.reference.trim() || buildReferenceNumber(form.occurredAt);
     const occurredAtWithTime = buildBrasiliaTimestamp(form.occurredAt);
     const authorizationNote = `Autorizado por: ${form.authorizedBy.trim()}`;
@@ -312,9 +344,8 @@ export function FinanceReportClient() {
     try {
       const payload = {
         occurredAt: occurredAtWithTime,
-        congregationId: form.congregationId || undefined,
         type: movementType,
-        category: documentType,
+        category: form.category,
         description: form.description,
         amount: normalizedAmount,
         origin: form.origin || "Painel administrativo",
@@ -343,7 +374,7 @@ export function FinanceReportClient() {
       setForm({
         occurredAt: new Date().toISOString().slice(0, 10),
         type: "receita",
-        category: "Dízimo",
+        category: "dizimos",
         description: "",
         amount: "",
         origin: "",
@@ -371,7 +402,11 @@ export function FinanceReportClient() {
     }
 
     try {
-      const response = await fetch(`/api/finance/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/finance/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: "Exclusão solicitada no painel financeiro" }),
+      });
       if (!response.ok) {
         const body = await response.json().catch(() => null);
         throw new Error(body?.error ?? "Não foi possível excluir a movimentação");
@@ -402,14 +437,7 @@ export function FinanceReportClient() {
     });
   }
 
-  const workbookHref = useMemo(() => {
-    const params = new URLSearchParams();
-    if (form.congregationId) {
-      params.set("congregationId", form.congregationId);
-    }
-    const query = params.toString();
-    return query ? `/api/reports/finance/export?${query}` : "/api/reports/finance/export";
-  }, [form.congregationId]);
+  const workbookHref = useMemo(() => "/api/reports/finance/export", []);
 
   const financeSummary = useMemo(() => {
     const income = movements.filter((item) => item.type === "receita").reduce((sum, item) => sum + Number(item.amount ?? 0), 0);
@@ -533,7 +561,7 @@ export function FinanceReportClient() {
       return;
     }
 
-    const movementType = form.category === "Despesa" ? "despesa" : "receita";
+    const movementType = DOCUMENT_TYPES.find((item) => item.value === form.category)?.type ?? "receita";
     const preview = [
       { label: "Lançamento", value: amount },
       { label: movementType === "receita" ? "Saldo esperado" : "Saída prevista", value: movementType === "receita" ? amount : amount * -1 },
@@ -589,19 +617,13 @@ export function FinanceReportClient() {
             <input type="date" value={form.occurredAt} onChange={(event) => setForm((prev) => ({ ...prev, occurredAt: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" />
           </label>
           <label className="text-sm text-slate-300">
-            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Congregação</span>
-            <select value={form.congregationId} onChange={(event) => setForm((prev) => ({ ...prev, congregationId: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100">
-              {congregations.map((congregation) => (
-                <option key={congregation.id} value={congregation.id}>{congregation.name}</option>
-              ))}
-            </select>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {congregations.map((congregation) => (
-                <button key={congregation.id} type="button" onClick={() => setForm((prev) => ({ ...prev, congregationId: congregation.id }))} className={`rounded-full border px-2.5 py-1 text-xs ${form.congregationId === congregation.id ? "border-emerald-300/40 bg-emerald-500/20 text-emerald-100" : "border-white/10 bg-white/5 text-slate-300"}`}>
-                  {congregation.name}
-                </button>
-              ))}
-            </div>
+            <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Congregação ativa</span>
+            <input
+              value={report?.congregationReport[0]?.congregationName ?? movements[0]?.congregationName ?? congregations[0]?.name ?? "Contexto ativo do servidor"}
+              readOnly
+              className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
+            />
+            <p className="mt-2 text-xs text-slate-400">Troque a congregação ativa no fluxo de seleção, não neste formulário.</p>
           </label>
           <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-1">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Tipo do documento</span>
@@ -611,13 +633,13 @@ export function FinanceReportClient() {
                 setForm((prev) => ({
                   ...prev,
                   category: event.target.value,
-                  type: event.target.value === "Despesa" ? "despesa" : "receita",
+                  type: DOCUMENT_TYPES.find((item) => item.value === event.target.value)?.type ?? "receita",
                 }))
               }
               className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
             >
               {DOCUMENT_TYPES.map((item) => (
-                <option key={item} value={item}>{item}</option>
+                <option key={item.value} value={item.value}>{item.label}</option>
               ))}
             </select>
           </label>
@@ -635,7 +657,7 @@ export function FinanceReportClient() {
           </label>
           <label className="text-sm text-slate-300 md:col-span-2 xl:col-span-2">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Descrição</span>
-            <input value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder={form.category === "Despesa" ? "Ex: Conta de energia, aluguel, manutenção" : "Ex: Oferta do domingo, dízimo, doação"} />
+            <input value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100" placeholder={form.type === "despesa" ? "Ex: Conta de energia, aluguel, manutenção" : "Ex: Oferta do domingo, dízimo, doação"} />
           </label>
           <label className="text-sm text-slate-300">
             <span className="mb-1 block text-xs uppercase tracking-[0.2em] text-slate-500">Referência</span>
@@ -690,7 +712,7 @@ export function FinanceReportClient() {
           </button>
           <button type="button" onClick={() => {
             setEditingId(null);
-            setForm({ occurredAt: new Date().toISOString().slice(0, 10), type: "receita", category: "Dízimo", description: "", amount: "", origin: "", congregationId: form.congregationId || congregations[0]?.id || "", reference: "", documentReference: "", observations: "", authorizedBy: "", pastorPassword: "", attachmentUrl: "", attachmentName: "" });
+            setForm({ occurredAt: new Date().toISOString().slice(0, 10), type: "receita", category: "dizimos", description: "", amount: "", origin: "", congregationId: form.congregationId || congregations[0]?.id || "", reference: "", documentReference: "", observations: "", authorizedBy: "", pastorPassword: "", attachmentUrl: "", attachmentName: "" });
           }} className="rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-200 hover:bg-white/10">
             Limpar
           </button>

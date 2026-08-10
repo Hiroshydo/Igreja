@@ -16,6 +16,10 @@ export default async function FinanceReportsPage() {
     redirect("/login");
   }
 
+  if (!authContext.congregationId) {
+    redirect("/selecionar-congregacao");
+  }
+
   const canReadFinance = hasPermission(authContext.permissions, authContext.roleCodes, "finance.read");
   if (!canReadFinance) {
     return (

@@ -213,16 +213,16 @@ export async function POST(request: NextRequest) {
       .eq("origin", "Carga demo Supabase 2026");
 
     const financeEntries: Array<{ type: "receita" | "despesa"; category: string; amount: number; description: string }> = [
-      { type: "receita", category: "Dízimo", amount: 5236.0, description: "Entrada de dízimos" },
-      { type: "receita", category: "Doação", amount: 1234.0, description: "Entrada de doações" },
-      { type: "receita", category: "Oferta", amount: 980.0, description: "Oferta de culto" },
-      { type: "despesa", category: "Despesa", amount: 389.5, description: "Água" },
-      { type: "despesa", category: "Despesa", amount: 742.9, description: "Luz" },
-      { type: "despesa", category: "Despesa", amount: 418.75, description: "Telefone e internet" },
-      { type: "despesa", category: "Despesa", amount: 520.0, description: "Segurança" },
-      { type: "despesa", category: "Despesa", amount: 347.2, description: "Gasolina" },
-      { type: "despesa", category: "Despesa", amount: 468.4, description: "Comida" },
-      { type: "despesa", category: "Despesa", amount: 612.85, description: "Viagem" },
+      { type: "receita", category: "dizimos", amount: 5236.0, description: "Entrada de dízimos" },
+      { type: "receita", category: "doacoes", amount: 1234.0, description: "Entrada de doações" },
+      { type: "receita", category: "ofertas", amount: 980.0, description: "Oferta de culto" },
+      { type: "despesa", category: "outras_despesas", amount: 389.5, description: "Água" },
+      { type: "despesa", category: "outras_despesas", amount: 742.9, description: "Luz" },
+      { type: "despesa", category: "outras_despesas", amount: 418.75, description: "Telefone e internet" },
+      { type: "despesa", category: "outras_despesas", amount: 520.0, description: "Segurança" },
+      { type: "despesa", category: "outras_despesas", amount: 347.2, description: "Gasolina" },
+      { type: "despesa", category: "outras_despesas", amount: 468.4, description: "Comida" },
+      { type: "despesa", category: "outras_despesas", amount: 612.85, description: "Viagem" },
     ];
 
     const financeInsertPayload = financeEntries.map((entry, index) => {
@@ -282,7 +282,7 @@ export async function POST(request: NextRequest) {
       },
     ];
 
-    const { error: lyricsError } = await admin.from("announcements").insert(lyricsRows as any);
+    const { error: lyricsError } = await admin.from("announcements").insert(lyricsRows);
     if (lyricsError) {
       throw new Error("Não foi possível cadastrar letras de demonstração");
     }

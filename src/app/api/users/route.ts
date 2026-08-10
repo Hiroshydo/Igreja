@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
         {
           id: authUser.user.id,
           congregation_id: access.context.congregationId,
+          active_congregation_id: access.context.congregationId,
           full_name: body.fullName || body.username,
           email,
           is_active: true,
@@ -58,6 +59,24 @@ export async function POST(request: NextRequest) {
 
     if (profileError) {
       throw new AppError("Não foi possível criar o perfil do usuário", 500, "profile_creation_failed");
+    }
+
+    if (access.context.congregationId) {
+      const { error: congregationLinkError } = await admin
+        .from("profile_congregations")
+        .upsert(
+          {
+            profile_id: authUser.user.id,
+            congregation_id: access.context.congregationId,
+            is_active: true,
+            is_default: true,
+          },
+          { onConflict: "profile_id,congregation_id" },
+        );
+
+      if (congregationLinkError) {
+        throw new AppError("Não foi possível vincular o usuário à congregação", 500, "profile_congregation_creation_failed");
+      }
     }
 
     await profileService.assignRole(authUser.user.id, body.roleCode, access.context);

@@ -40,6 +40,7 @@ export type PermissionKey = `${PermissionResource}.${PermissionAction}`;
 
 export interface AccessContext {
   userId: string;
+  profileId: string;
   email: string | null;
   fullName: string;
   congregationId: string | null;
@@ -49,11 +50,19 @@ export interface AccessContext {
 
 export interface AuthenticatedAppUser {
   id: string;
+  profileId: string;
   email: string | null;
   fullName: string;
   congregationId: string | null;
   roleCodes: string[];
   permissions: string[];
+}
+
+export interface AccessibleCongregation {
+  id: string;
+  name: string;
+  isActive: boolean;
+  isDefault: boolean;
 }
 
 export interface Member {
@@ -139,6 +148,8 @@ export interface FinanceTransaction {
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string | null;
+  deletedBy?: string | null;
+  deletedReason?: string | null;
   account?: {
     name: string;
     category: string;
@@ -147,7 +158,6 @@ export interface FinanceTransaction {
 
 export interface FinanceMovementInput {
   accountId?: string;
-  congregationId?: string;
   type: 'receita' | 'despesa';
   category: string;
   amount: number | string;
@@ -158,6 +168,7 @@ export interface FinanceMovementInput {
   documentReference?: string;
   observations?: string;
   eventId?: string;
+  deletedReason?: string;
 }
 
 export interface FinanceSummaryReport {
